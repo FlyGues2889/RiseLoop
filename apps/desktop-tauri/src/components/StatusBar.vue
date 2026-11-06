@@ -34,7 +34,7 @@ async function confirmClear() {
   <header class="bar" data-tauri-drag-region>
     <div class="brand" data-tauri-drag-region>
       <div class="name" data-tauri-drag-region>
-        SitLoop
+        Rise Loop
       </div>
       <span v-if="modeBadge" class="mode">{{ modeBadge }}</span>
     </div>
@@ -112,6 +112,7 @@ async function confirmClear() {
   font-size: 1.2rem;
   font-weight: 700;
   letter-spacing: 0.01em;
+  white-space: nowrap;
 }
 
 .mode {

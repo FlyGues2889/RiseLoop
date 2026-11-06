@@ -2,7 +2,7 @@ import { pickAction, selectActions, toPayload } from "./actions.js";
 import { DURATION_BY_STATE, STATE_NAMES, decide, emptyCounters } from "./machine.js";
 import { MEDICAL_DISCLAIMER, SafetyShortCircuit, detectInPayload } from "./safety.js";
 
-const STORAGE_KEY = "sitloop.local.v1";
+const STORAGE_KEY = "riseloop.local.v1";
 const DEFAULT_THRESHOLD_MINUTES = 45;
 const COOLDOWN_MINUTES = 10;
 
@@ -145,7 +145,7 @@ export function createLocalEngine({
     mode: "local",
 
     health() {
-      return Promise.resolve({ status: "ok", service: "SitLoop Local Engine", version: "1.0.0" });
+      return Promise.resolve({ status: "ok", service: "Rise Loop Local Engine", version: "1.0.0" });
     },
 
     register(email, password) {

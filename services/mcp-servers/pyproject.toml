@@ -1,7 +1,7 @@
 [project]
-name = "sitloop-mcp-servers"
+name = "riseloop-mcp-servers"
 version = "0.1.0"
-description = "SitLoop MCP servers: exactly 3 tools"
+description = "Rise Loop MCP servers: exactly 3 tools"
 requires-python = ">=3.11"
 dependencies = [
     "mcp>=2.0",

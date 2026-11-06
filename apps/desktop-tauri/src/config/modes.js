@@ -16,8 +16,8 @@ export const MODES = {
     badge: "本地模式",
     aiEnabled: false,
     demoAccount: {
-      email: "demo@sitloop.app",
-      password: "sitloop-demo-pass",
+      email: "demo@riseloop.app",
+      password: "riseloop-demo-pass",
     },
   },
 };

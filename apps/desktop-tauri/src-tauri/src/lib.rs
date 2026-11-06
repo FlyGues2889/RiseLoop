@@ -12,8 +12,8 @@ use tauri_plugin_notification::NotificationExt;
 
 use timer::{SittingTimer, TimerSnapshot, DEFAULT_THRESHOLD_MINUTES};
 
-const THRESHOLD_EVENT: &str = "sitloop://threshold";
-const TICK_EVENT: &str = "sitloop://tick";
+const THRESHOLD_EVENT: &str = "riseloop://threshold";
+const TICK_EVENT: &str = "riseloop://tick";
 
 fn focus_main_window(app: &tauri::AppHandle) {
     if let Some(window) = app.get_webview_window("main") {
@@ -44,20 +44,20 @@ pub fn run() {
             let timer = Arc::new(SittingTimer::new(DEFAULT_THRESHOLD_MINUTES));
             app.manage(timer.clone());
 
-            let open_item = MenuItem::with_id(app, "open", "打开 SitLoop", true, None::<&str>)?;
+            let open_item = MenuItem::with_id(app, "open", "打开 Rise Loop", true, None::<&str>)?;
             let pause_item = MenuItem::with_id(app, "pause", "暂停计时", true, None::<&str>)?;
             let reset_item = MenuItem::with_id(app, "reset", "重新计时", true, None::<&str>)?;
             let quit_item = MenuItem::with_id(app, "quit", "退出", true, None::<&str>)?;
             let menu = Menu::with_items(app, &[&open_item, &pause_item, &reset_item, &quit_item])?;
 
             let tray_timer = timer.clone();
-            TrayIconBuilder::with_id("sitloop-tray")
+            TrayIconBuilder::with_id("riseloop-tray")
                 .icon(
                     app.default_window_icon()
                         .cloned()
                         .expect("missing app icon"),
                 )
-                .tooltip("SitLoop 久坐提醒")
+                .tooltip("Rise Loop 久坐提醒")
                 .menu(&menu)
                 .show_menu_on_left_click(false)
                 .on_menu_event(move |app, event| match event.id().as_ref() {

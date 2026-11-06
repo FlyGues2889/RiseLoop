@@ -1,5 +1,5 @@
 {
-  "name": "@sitloop/api-client",
+  "name": "@riseloop/api-client",
   "version": "0.1.0",
   "private": true,
   "type": "module",

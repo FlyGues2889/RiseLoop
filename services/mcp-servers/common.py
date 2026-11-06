@@ -74,8 +74,8 @@ class MemoryRedis:
 def build_backend() -> Backend:
     import redis.asyncio as aioredis
 
-    redis_url = os.environ.get("SITLOOP_REDIS_URL") or "redis://127.0.0.1:6379/0"
-    database_url = os.environ.get("SITLOOP_RDS_DSN") or os.environ.get("SITLOOP_DATABASE_URL")
+    redis_url = os.environ.get("RISELOOP_REDIS_URL") or "redis://127.0.0.1:6379/0"
+    database_url = os.environ.get("RISELOOP_RDS_DSN") or os.environ.get("RISELOOP_DATABASE_URL")
     redis_client = aioredis.from_url(redis_url, decode_responses=True)
     return Backend(redis=redis_client, pg=_PgProxy(database_url), database_url=database_url)
 
@@ -90,7 +90,7 @@ class _PgProxy:
             import asyncpg
 
             if not self._dsn:
-                raise RuntimeError("SITLOOP_RDS_DSN is required for SQL tools")
+                raise RuntimeError("RISELOOP_RDS_DSN is required for SQL tools")
             self._pool = await asyncpg.create_pool(self._dsn, min_size=1, max_size=5)
         return self._pool
 

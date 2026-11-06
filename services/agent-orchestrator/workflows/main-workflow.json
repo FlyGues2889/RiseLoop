@@ -1,5 +1,5 @@
 {
-  "name": "sitloop-main-workflow",
+  "name": "riseloop-main-workflow",
   "version": "0.1.0",
   "entry": "planning-agent",
   "mcp_tools": [

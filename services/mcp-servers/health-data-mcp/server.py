@@ -11,9 +11,9 @@ import health_tools
 from common import build_backend
 
 server = MCPServer(
-    "sitloop-health-data",
-    title="SitLoop 健康数据 MCP",
-    instructions="提供 SitLoop 实时状态读取与干预结果写入，禁止用于任何医疗诊断。",
+    "riseloop-health-data",
+    title="Rise Loop 健康数据 MCP",
+    instructions="提供 Rise Loop 实时状态读取与干预结果写入，禁止用于任何医疗诊断。",
 )
 
 _backend = None

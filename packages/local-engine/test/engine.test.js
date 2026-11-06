@@ -178,7 +178,7 @@ test("reset 清空本地数据", async () => {
   await assess(instance);
   instance.reset();
   assert.equal(instance.hasProfile(), false);
-  assert.equal(storage.getItem("sitloop.local.v1"), null);
+  assert.equal(storage.getItem("riseloop.local.v1"), null);
 });
 test("周复盘汇总干预记录", async () => {
   const instance = engine();

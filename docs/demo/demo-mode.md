@@ -13,7 +13,7 @@
 | 状态机 | `packages/local-engine/src/machine.js` | 与 `packages/intervention-engine` 同一套迁移规则（upgrade / rollback / degrade / short_circuit） |
 | 动作库 | `data/actions/actions.json` | 唯一数据源，构建时只读导入，端侧不另写副本 |
 | 安全前置 | `packages/local-engine/src/safety.js` | 红旗关键词与字段双路检测，命中即中断并提示就医 |
-| 持久化 | 浏览器 `localStorage` | 键 `sitloop.local.v1`（评估、会话、迁移、执行记录）与 `sitloop.local.logs.v1`（会话记录） |
+| 持久化 | 浏览器 `localStorage` | 键 `riseloop.local.v1`（评估、会话、迁移、执行记录）与 `riseloop.local.logs.v1`（会话记录） |
 | 适配层 | `apps/desktop-tauri/src/state/local.js` | 把本地引擎包装成与 `api-client` 相同的方法签名 |
 
 无需启动 `cloud-api`、RDS、Redis 或任何本机进程。
@@ -43,7 +43,7 @@
 
 - 存储：浏览器 `localStorage`，位于应用数据目录。
 - 生命周期：持久保留，直到用户清除浏览器数据或调用本地引擎 `reset()`。
-- 清除：顶栏个人菜单 →「清除数据」，二次确认后同时删除 `sitloop.local.v1`、`sitloop.local.logs.v1`、登录令牌与内存状态，并回到登录页。
+- 清除：顶栏个人菜单 →「清除数据」，二次确认后同时删除 `riseloop.local.v1`、`riseloop.local.logs.v1`、登录令牌与内存状态，并回到登录页。
 - 不上传：本地模式不连接任何华为云资源。
 - 切换：退出本地模式会回到云端登录页，本地数据保留；再次进入可继续上次评估。
 

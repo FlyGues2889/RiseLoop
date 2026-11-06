@@ -1,4 +1,4 @@
--- SitLoop RDS (PostgreSQL 兼容) 初始迁移
+-- Rise Loop RDS (PostgreSQL 兼容) 初始迁移
 -- 说明：主键由 cloud-api 生成 UUID；本文件可重复执行（IF NOT EXISTS）。
 
 CREATE TABLE IF NOT EXISTS users (

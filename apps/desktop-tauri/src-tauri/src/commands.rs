@@ -4,7 +4,7 @@ use tauri::State;
 
 use crate::timer::{SittingTimer, TimerSnapshot};
 
-const KEYRING_SERVICE: &str = "com.sitloop.app";
+const KEYRING_SERVICE: &str = "com.riseloop.app";
 const KEYRING_ACCOUNT: &str = "session-token";
 
 #[tauri::command]

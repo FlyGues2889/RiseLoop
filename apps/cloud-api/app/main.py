@@ -16,7 +16,7 @@ from .core.config import Settings, get_settings
 from .core.safety import SafetyCheckMiddleware
 from .repositories.store import build_store
 
-logger = logging.getLogger("sitloop.cloud")
+logger = logging.getLogger("riseloop.cloud")
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:

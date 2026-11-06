@@ -2,7 +2,7 @@
   <img width="100" height="100" alt="appIcon" src="https://github.com/user-attachments/assets/0e1c0e36-9ebb-4f14-ada9-4752b2f02970" />
 </center>
 
-# SitLoop
+# Rise Loop
 
 **状态机驱动的久坐行为干预系统。**
 

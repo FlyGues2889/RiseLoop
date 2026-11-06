@@ -1,12 +1,12 @@
 [package]
-name = "sit-loop"
+name = "rise-loop"
 version = "0.1.0"
-description = "SitLoop desktop client"
-authors = ["SitLoop Team"]
+description = "Rise Loop desktop client"
+authors = ["Rise Loop Team"]
 edition = "2024"
 
 [lib]
-name = "sit_loop_lib"
+name = "rise_loop_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]

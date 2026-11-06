@@ -1,4 +1,4 @@
-# SitLoop Cloud API
+# Rise Loop Cloud API
 
 Base URL：本地 `http://127.0.0.1:8000`，线上为 ELB 绑定的 HTTPS 域名。OpenAPI：`/docs`、`/openapi.json`。
 
@@ -29,7 +29,7 @@ Base URL：本地 `http://127.0.0.1:8000`，线上为 ELB 绑定的 HTTPS 域名
 ```bash
 TOKEN=$(curl -s -X POST localhost:8000/auth/register \
   -H 'Content-Type: application/json' \
-  -d '{"email":"demo@sitloop.app","password":"demo-pass-1"}' | python -c "import sys,json;print(json.load(sys.stdin)['access_token'])")
+  -d '{"email":"demo@riseloop.app","password":"demo-pass-1"}' | python -c "import sys,json;print(json.load(sys.stdin)['access_token'])")
 
 curl -s -X POST localhost:8000/assessment \
   -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \

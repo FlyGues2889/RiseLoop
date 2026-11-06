@@ -1,4 +1,4 @@
-# SitLoop MCP Servers
+# Rise Loop MCP Servers
 
 固定 3 个工具，按 AGENTS.MD 红线不可扩展。
 
@@ -13,8 +13,8 @@
 ```bash
 pip install "mcp>=2" asyncpg redis
 
-export SITLOOP_REDIS_URL=redis://:<password>@<dcs-host>:6379/0
-export SITLOOP_RDS_DSN=postgresql://<user>:<password>@<rds-host>:5432/sitloop
+export RISELOOP_REDIS_URL=redis://:<password>@<dcs-host>:6379/0
+export RISELOOP_RDS_DSN=postgresql://<user>:<password>@<rds-host>:5432/riseloop
 
 python services/mcp-servers/health-data-mcp/server.py
 python services/mcp-servers/action-library-mcp/server.py

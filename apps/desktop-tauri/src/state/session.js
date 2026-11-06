@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
-import { createApiClient, ApiError, describeError } from "@sitloop/api-client";
+import { createApiClient, ApiError, describeError } from "@riseloop/api-client";
 import { computed, reactive } from "vue";
 
 import { DEMO_UNAVAILABLE, MODES } from "../config/modes.js";

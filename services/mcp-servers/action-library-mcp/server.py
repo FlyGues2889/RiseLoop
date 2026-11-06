@@ -11,9 +11,9 @@ import action_tools
 from common import build_backend
 
 server = MCPServer(
-    "sitloop-action-library",
-    title="SitLoop 动作库 MCP",
-    instructions="按状态、部位与时长为 SitLoop 选择动作库条目，仅返回动作数据，不做状态迁移。",
+    "riseloop-action-library",
+    title="Rise Loop 动作库 MCP",
+    instructions="按状态、部位与时长为 Rise Loop 选择动作库条目，仅返回动作数据，不做状态迁移。",
 )
 
 _backend = None

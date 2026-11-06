@@ -7,7 +7,7 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const API_DIR = resolve(ROOT, "apps", "cloud-api");
 const DESKTOP_DIR = resolve(ROOT, "apps", "desktop-tauri");
 const HEALTH_URL = "http://127.0.0.1:8000/health/live";
-const SERVICE_NAME = "SitLoop Cloud API";
+const SERVICE_NAME = "Rise Loop Cloud API";
 const IS_WINDOWS = process.platform === "win32";
 const children = new Set();
 
@@ -20,7 +20,7 @@ async function probe(port = 8000) {
     if (body?.service === SERVICE_NAME) return { state: "ready" };
     return {
       state: "foreign",
-      detail: body?.service ? `占用者：${body.service}` : "占用者：非 SitLoop 服务",
+      detail: body?.service ? `占用者：${body.service}` : "占用者：非 Rise Loop 服务",
     };
   } catch {
     return { state: "down" };
@@ -73,7 +73,7 @@ if (existing.state === "ready") {
       ["-m", "uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", "8000"],
       {
         cwd: API_DIR,
-        env: { ...process.env, SITLOOP_CLOUD_PROVIDER: "mock", SITLOOP_ENV: "demo" },
+        env: { ...process.env, RISELOOP_CLOUD_PROVIDER: "mock", RISELOOP_ENV: "demo" },
         stdio: "inherit",
         shell: IS_WINDOWS,
       }
@@ -100,7 +100,7 @@ if (existing.state === "ready") {
   }
 }
 
-console.log("[demo] 启动 SitLoop 桌面端");
+console.log("[demo] 启动 Rise Loop 桌面端");
 track(
   spawn("pnpm", ["tauri", "dev"], {
     cwd: DESKTOP_DIR,

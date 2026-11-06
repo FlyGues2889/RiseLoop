@@ -8,12 +8,12 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
-        env_prefix="SITLOOP_",
+        env_prefix="RISELOOP_",
         extra="ignore",
         case_sensitive=False,
     )
 
-    app_name: str = "SitLoop Cloud API"
+    app_name: str = "Rise Loop Cloud API"
     version: str = "0.1.0"
     env: str = "local"
     cloud_provider: Literal["mock", "huawei"] = "mock"
@@ -25,7 +25,7 @@ class Settings(BaseSettings):
         "tauri://localhost",
     ]
 
-    jwt_secret: str = "sitloop-local-dev-secret-change-me"
+    jwt_secret: str = "riseloop-local-dev-secret-change-me"
     jwt_ttl_seconds: int = 3600
 
     sitting_threshold_minutes: int = 45

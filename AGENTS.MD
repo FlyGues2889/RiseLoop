@@ -1,4 +1,4 @@
-# 项目级 AI 工作流提示词：SitLoop 久坐行为干预系统
+# 项目级 AI 工作流提示词：Rise Loop 久坐行为干预系统
 
 ## 1. 你的角色
 
@@ -34,7 +34,7 @@
 ## 5. 目录结构（必须遵守）
 
 ```text
-sitloop/
+riseloop/
 ├── apps/
 │   ├── desktop-tauri/       # 瘦客户端（Tauri 2 + Vue 3，pnpm workspace）
 │   │   ├── src/             # Vue3 UI（JavaScript），只调 api-client

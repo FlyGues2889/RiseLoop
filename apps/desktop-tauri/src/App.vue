@@ -23,12 +23,12 @@ onMounted(async () => {
   if (tauri) {
     try {
       unlisteners.value.push(
-        await listen("sitloop://tick", (event) => {
+        await listen("riseloop://tick", (event) => {
           state.timer = event.payload;
         })
       );
       unlisteners.value.push(
-        await listen("sitloop://threshold", () => {
+        await listen("riseloop://threshold", () => {
           tickHeartbeat();
         })
       );

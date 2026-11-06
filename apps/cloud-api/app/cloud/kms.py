@@ -9,7 +9,7 @@ from .base import ServiceStatus
 
 KEY_BYTES = 32
 NONCE_BYTES = 12
-AAD = b"sitloop:field"
+AAD = b"riseloop:field"
 
 
 class KmsService:

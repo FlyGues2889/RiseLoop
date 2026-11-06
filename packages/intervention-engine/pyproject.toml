@@ -1,7 +1,7 @@
 [project]
-name = "sitloop-intervention-engine"
+name = "riseloop-intervention-engine"
 version = "0.1.0"
-description = "SitLoop four-state intervention state machine (pure functions)"
+description = "Rise Loop four-state intervention state machine (pure functions)"
 requires-python = ">=3.11"
 dependencies = ["pydantic>=2.6"]
 

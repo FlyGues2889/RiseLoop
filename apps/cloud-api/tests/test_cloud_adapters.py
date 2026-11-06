@@ -52,14 +52,14 @@ async def test_obs_huawei_presign_contains_signature():
     service = ObsService(
         _settings(
             cloud_provider="huawei",
-            obs_endpoint="https://sitloop.obs.cn-north-4.myhuaweicloud.com",
-            obs_bucket="sitloop",
+            obs_endpoint="https://riseloop.obs.cn-north-4.myhuaweicloud.com",
+            obs_bucket="riseloop",
             obs_ak="AK",
             obs_sk="SK",
         )
     )
     url = await service.presign_put("exports/weekly.json", expires_seconds=600)
-    assert url.startswith("https://sitloop.obs.cn-north-4.myhuaweicloud.com/exports/weekly.json?")
+    assert url.startswith("https://riseloop.obs.cn-north-4.myhuaweicloud.com/exports/weekly.json?")
     assert "AccessKeyId=AK" in url
     assert "Signature=" in url
 

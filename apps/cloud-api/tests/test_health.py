@@ -15,7 +15,7 @@ def test_live_returns_service_metadata():
         assert response.status_code == 200
         data = response.json()
         assert data["status"] == "ok"
-        assert data["service"] == "SitLoop Cloud API"
+        assert data["service"] == "Rise Loop Cloud API"
         assert data["version"] == "0.1.0"
 
 
@@ -63,7 +63,7 @@ def test_dependency_report_never_leaks_credentials():
 def test_huawei_mode_with_rds_dsn_is_configured():
     with make_client(
         cloud_provider="huawei",
-        rds_dsn="postgresql+asyncpg://user:pass@127.0.0.1:1/sitloop",
+        rds_dsn="postgresql+asyncpg://user:pass@127.0.0.1:1/riseloop",
     ) as client:
         response = client.get("/health/deps")
         by_name = {item["name"]: item for item in response.json()["dependencies"]}

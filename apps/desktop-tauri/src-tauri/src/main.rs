@@ -2,5 +2,5 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
-    sit_loop_lib::run()
+    rise_loop_lib::run()
 }

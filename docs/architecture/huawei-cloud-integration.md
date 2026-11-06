@@ -1,6 +1,6 @@
-# 华为云接入指南（SitLoop）
+# 华为云接入指南（Rise Loop）
 
-本文件说明 SitLoop 云端需要接入哪些华为云服务、代码里已经预留的接口，以及从零开通到验证的步骤。
+本文件说明 Rise Loop 云端需要接入哪些华为云服务、代码里已经预留的接口，以及从零开通到验证的步骤。
 
 ## 1. 接入清单
 
@@ -30,8 +30,8 @@
 1. 控制台 → 数据库 → RDS for PostgreSQL → 购买实例。
 2. 规格：演示期 2 vCPU / 4 GB 起；**多可用区**、**自动备份**、**存储加密（KMS）** 三项必须开启。
 3. 网络：选择上一步 VPC/子网；安全组仅放行 `cloud-api` 所在 ECS 的 5432 私网访问，不对公网开放。
-4. 创建数据库 `sitloop` 与业务账号，记录内网地址、端口、库名、用户名、密码。
-5. 验证：`psql "host=<内网地址> port=5432 dbname=sitloop user=<用户>"`。
+4. 创建数据库 `riseloop` 与业务账号，记录内网地址、端口、库名、用户名、密码。
+5. 验证：`psql "host=<内网地址> port=5432 dbname=riseloop user=<用户>"`。
 
 ### 3.2 DCS for Redis
 
@@ -45,9 +45,9 @@
 1. 在 CodeArts 控制台创建「规划 Agent」「执行 Agent」，分别配置提示词与可用 Skill/MCP 工具。
 2. 发布后获取调用地址与鉴权信息（API Key / Token，以控制台发布页展示为准）。
 3. 填入：
-   - `SITLOOP_CODEARTS_ENDPOINT`：智能体调用地址
-   - `SITLOOP_CODEARTS_API_KEY`：鉴权密钥
-   - `SITLOOP_CODEARTS_PLANNING_AGENT_ID` / `SITLOOP_CODEARTS_EXECUTING_AGENT_ID`：两个 Agent 的 ID
+   - `RISELOOP_CODEARTS_ENDPOINT`：智能体调用地址
+   - `RISELOOP_CODEARTS_API_KEY`：鉴权密钥
+   - `RISELOOP_CODEARTS_PLANNING_AGENT_ID` / `RISELOOP_CODEARTS_EXECUTING_AGENT_ID`：两个 Agent 的 ID
 4. 不同 CodeArts 版本的请求体字段可能不同。本项目把差异收敛在 `app/cloud/codearts.py`：
    - 鉴权头：`_headers()`
    - 请求体：`invoke()` 中的 `body = {"agent_id": ..., "input": ...}`
@@ -57,26 +57,26 @@
 
 1. 创建**私有**桶，开启服务端加密；配置 CORS 允许 Tauri 下载域。
 2. 上传安装包与演示视频；记录 endpoint、桶名、region。
-3. `SITLOOP_OBS_ENDPOINT` 填**桶域名**（如 `https://sitloop.obs.cn-north-4.myhuaweicloud.com`）。`presign_put/presign_get` 使用 OBS V2 查询串签名，有效期默认 1 小时；`mock` 模式返回 `mock://` 占位地址，仅用于流程自测。
+3. `RISELOOP_OBS_ENDPOINT` 填**桶域名**（如 `https://riseloop.obs.cn-north-4.myhuaweicloud.com`）。`presign_put/presign_get` 使用 OBS V2 查询串签名，有效期默认 1 小时；`mock` 模式返回 `mock://` 占位地址，仅用于流程自测。
 
 ### 3.5 KMS（推荐）
 
 1. 创建密钥，授权给子用户。
-2. 记录 endpoint 与 key id；`SITLOOP_KMS_MASTER_KEY` 填 32 字节数据密钥的 Base64（生产由 KMS `GenerateDataKey` 注入，不落盘）。
-3. `app/cloud/kms.py` 用 AES-256-GCM 做字段级加解密，输出 `v1:<base64(nonce+ciphertext)>`；用于 `assessments`、`intervention_logs` 中的健康字段。`mock` 模式由 `SITLOOP_JWT_SECRET` 派生本地密钥，仅限开发。
+2. 记录 endpoint 与 key id；`RISELOOP_KMS_MASTER_KEY` 填 32 字节数据密钥的 Base64（生产由 KMS `GenerateDataKey` 注入，不落盘）。
+3. `app/cloud/kms.py` 用 AES-256-GCM 做字段级加解密，输出 `v1:<base64(nonce+ciphertext)>`；用于 `assessments`、`intervention_logs` 中的健康字段。`mock` 模式由 `RISELOOP_JWT_SECRET` 派生本地密钥，仅限开发。
 
 ### 3.6 计算与公网入口
 
 1. 创建 ECS（或 CCE 集群），与 RDS/DCS 同 VPC。
 2. 构建镜像并推送 SWR：
    ```bash
-   docker build -t <region>.myhuaweicloud.com/<组织>/sitloop-cloud-api:0.1.0 apps/cloud-api
+   docker build -t <region>.myhuaweicloud.com/<组织>/riseloop-cloud-api:0.1.0 apps/cloud-api
    docker login <region>.myhuaweicloud.com
-   docker push <region>.myhuaweicloud.com/<组织>/sitloop-cloud-api:0.1.0
+   docker push <region>.myhuaweicloud.com/<组织>/riseloop-cloud-api:0.1.0
    ```
 3. ECS 上用环境变量文件或 CCE Secret 注入配置，启动：
    ```bash
-   docker run -d --name sitloop-api -p 8000:8000 --env-file .env <镜像地址>
+   docker run -d --name riseloop-api -p 8000:8000 --env-file .env <镜像地址>
    ```
 4. 绑定 ELB/EIP，配置域名与 SSL 证书，只暴露 443。安全组不要对公网开放 5432/6379。
 
@@ -86,13 +86,13 @@
 
 | 变量 | 说明 |
 |---|---|
-| `SITLOOP_CLOUD_PROVIDER` | `mock`（本地无云资源）或 `huawei` |
-| `SITLOOP_RDS_DSN` / `SITLOOP_RDS_*` | 优先用完整 DSN；否则由 host/port/db/user/password 拼接 |
-| `SITLOOP_REDIS_URL` / `SITLOOP_REDIS_*` | 优先用完整 URL |
-| `SITLOOP_CODEARTS_*` | 智能体地址、密钥、两个 Agent ID |
-| `SITLOOP_OBS_*` | 桶域名、桶名、AK/SK（预签名分发） |
-| `SITLOOP_KMS_*` | endpoint、key id、32 字节主密钥、AK/SK（字段加密） |
-| `SITLOOP_CORS_ORIGINS` | JSON 数组，Tauri 本地调试默认 `http://localhost:1420` |
+| `RISELOOP_CLOUD_PROVIDER` | `mock`（本地无云资源）或 `huawei` |
+| `RISELOOP_RDS_DSN` / `RISELOOP_RDS_*` | 优先用完整 DSN；否则由 host/port/db/user/password 拼接 |
+| `RISELOOP_REDIS_URL` / `RISELOOP_REDIS_*` | 优先用完整 URL |
+| `RISELOOP_CODEARTS_*` | 智能体地址、密钥、两个 Agent ID |
+| `RISELOOP_OBS_*` | 桶域名、桶名、AK/SK（预签名分发） |
+| `RISELOOP_KMS_*` | endpoint、key id、32 字节主密钥、AK/SK（字段加密） |
+| `RISELOOP_CORS_ORIGINS` | JSON 数组，Tauri 本地调试默认 `http://localhost:1420` |
 
 `.env` 已在 `.gitignore` 中，禁止提交。生产环境用 CCE Secret 或 ECS 环境变量注入，不写入镜像。
 
@@ -109,7 +109,7 @@ python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
 | `GET /health/deps` | 五个依赖明细 | 不含任何密码/密钥 |
 | `GET /health/ready` | 就绪检查 | RDS、Redis、CodeArts 全部可达时 200，否则 503 |
 
-- 本地开发保持 `SITLOOP_CLOUD_PROVIDER=mock`，无需云资源即可跑通。
+- 本地开发保持 `RISELOOP_CLOUD_PROVIDER=mock`，无需云资源即可跑通。
 - 切到 `huawei` 后逐个填写配置，先看 `/health/deps` 的 `configured` 与 `reachable`，再联调业务接口。
 
 ## 6. 安全与合规

@@ -1,5 +1,5 @@
-import { ApiError } from "@sitloop/api-client";
-import { SafetyShortCircuit, createLocalEngine } from "@sitloop/local-engine";
+import { ApiError } from "@riseloop/api-client";
+import { SafetyShortCircuit, createLocalEngine } from "@riseloop/local-engine";
 
 import actionsData from "../../../../data/actions/actions.json";
 
@@ -8,7 +8,7 @@ export const localEngine = createLocalEngine({
   library: actionsData,
 });
 
-const LOG_KEY = "sitloop.local.logs.v1";
+const LOG_KEY = "riseloop.local.logs.v1";
 
 function wrap(method) {
   return async (...args) => {

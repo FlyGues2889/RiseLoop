@@ -1,12 +1,12 @@
-# PRD：SitLoop 久坐行为干预系统
+# PRD：Rise Loop 久坐行为干预系统
 
 ## 1. 文档信息
 
 | 项 | 内容 |
 |---|---|
-| 产品名称 | SitLoop（久坐行为干预系统） |
+| 产品名称 | Rise Loop（久坐行为干预系统） |
 | 参赛赛道 | 华为 ICT 大赛 · 创新赛 · 赛题1（基于华为云产品打造 AI 创新应用） |
-| 文档版本 | v2.3（SitLoop 命名 + 客户端骨架落地） |
+| 文档版本 | v2.3（Rise Loop 命名 + 客户端骨架落地） |
 | 产品形态 | 华为云智能核心 + Tauri 瘦客户端 |
 | 客户端栈 | Tauri 2 + Vue 3 + JavaScript + Vite，pnpm 管理；工程位于 `apps/desktop-tauri` |
 | 演示形态 | Tauri 桌面端 + 公网 HTTPS 云端 API；初赛提交演示视频，不做浏览器端 |

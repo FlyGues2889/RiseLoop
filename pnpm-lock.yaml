@@ -13,10 +13,10 @@ importers:
       '@m3e/web':
         specifier: ^2.11.3
         version: 2.11.3(@floating-ui/utils@0.2.12)(lit@3.3.3)(tslib@2.9.1)
-      '@sitloop/api-client':
+      '@riseloop/api-client':
         specifier: workspace:*
         version: link:../../packages/api-client
-      '@sitloop/local-engine':
+      '@riseloop/local-engine':
         specifier: workspace:*
         version: link:../../packages/local-engine
       '@tauri-apps/api':
