@@ -166,15 +166,6 @@ m3e-list.assessForm {
   --m3e-slider-tick-size: 3px;
 }
 
-.checkbox {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 2px 0 20px;
-  color: var(--md-sys-color-on-surface-variant);
-  font-size: 13px;
-  cursor: pointer;
-}
 
 .block {
   width: 100%;

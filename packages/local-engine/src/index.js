@@ -37,6 +37,60 @@ function localError(status, code, payload = null) {
   return error;
 }
 
+const TRANSITION_TYPES = ["upgrade", "rollback", "degrade", "hold", "short_circuit"];
+
+function painTrend(scores) {
+  if (scores.length < 4) return "unknown";
+  const middle = Math.floor(scores.length / 2);
+  const first = scores.slice(0, middle).reduce((sum, value) => sum + value, 0) / middle;
+  const rest = scores.slice(middle);
+  const second = rest.reduce((sum, value) => sum + value, 0) / rest.length;
+  const delta = second - first;
+  if (delta <= -0.5) return "improving";
+  if (delta >= 0.5) return "worsening";
+  return "stable";
+}
+
+function buildHighlights(review) {
+  const highlights = [];
+  if (review.interventions.total === 0) {
+    highlights.push(`过去 ${review.days} 天还没有干预记录，先完成一次评估即可开始。`);
+  } else if (review.interventions.completion_rate >= 80) {
+    highlights.push(`完成率 ${review.interventions.completion_rate}%，节奏保持得很好。`);
+  }
+  if (review.pain.trend === "improving") {
+    highlights.push("疼痛评分在下降，当前动作强度是合适的。");
+  } else if (review.pain.trend === "worsening") {
+    highlights.push("疼痛评分在上升，建议缩短单次时长并观察。");
+  }
+  if (review.safety_events) {
+    highlights.push(`出现 ${review.safety_events} 次安全中断，请优先就医确认。`);
+  }
+  return highlights;
+}
+
+function buildSuggestions(review) {
+  const suggestions = [];
+  const rate = review.interventions.completion_rate;
+  if (review.interventions.total && rate < 50) {
+    suggestions.push("完成率偏低，把单次可用时间调到 3 分钟以内更容易坚持。");
+  }
+  const top = review.top_obstacles[0];
+  const mapping = {
+    busy: "主要阻碍是太忙，建议把动作绑定到接水、开会结束等固定触发点。",
+    too_hard: "主要阻碍是动作太难，可切换到更温和的动作。",
+    no_space: "主要阻碍是没地方做，优先选择坐姿或站姿动作。",
+    forgot: "主要阻碍是忘记，保持 45 分钟提醒并允许托盘常驻。",
+  };
+  if (top && mapping[top.obstacle]) {
+    suggestions.push(mapping[top.obstacle]);
+  }
+  if (suggestions.length === 0) {
+    suggestions.push("保持当前节奏，每 45 分钟起身一次即可。");
+  }
+  return suggestions;
+}
+
 export function createLocalEngine({
   storage = globalThis.localStorage,
   library = [],
@@ -301,8 +355,65 @@ export function createLocalEngine({
       return Promise.reject(localError(501, "local_mode_unavailable", { detail: "local_mode_unavailable" }));
     },
 
-    weeklyReview() {
-      return Promise.reject(localError(501, "local_mode_unavailable", { detail: "local_mode_unavailable" }));
+    weeklyReview(days = 7) {
+      const since = now() - days * 24 * 60 * 60 * 1000;
+      const logs = db.interventions.filter(
+        (item) => new Date(item.created_at).getTime() >= since
+      );
+      const transitions = db.transitions.filter(
+        (item) => new Date(item.created_at).getTime() >= since
+      );
+
+      const total = logs.length;
+      const completed = logs.filter((item) => item.completion === "completed").length;
+      const scores = logs
+        .filter((item) => Number.isFinite(item.pain_score))
+        .map((item) => Number(item.pain_score));
+
+      const obstacles = new Map();
+      for (const item of logs) {
+        if (!item.obstacle) continue;
+        obstacles.set(item.obstacle, (obstacles.get(item.obstacle) ?? 0) + 1);
+      }
+
+      const transitionCounts = {};
+      for (const key of TRANSITION_TYPES) transitionCounts[key] = 0;
+      for (const item of transitions) {
+        if (transitionCounts[item.transition_type] !== undefined) {
+          transitionCounts[item.transition_type] += 1;
+        }
+      }
+
+      const review = {
+        days,
+        generated_at: new Date(now()).toISOString(),
+        current_state: session().state,
+        interventions: {
+          total,
+          completed,
+          completion_rate: total ? Math.round((completed / total) * 1000) / 10 : 0,
+        },
+        pain: {
+          average: scores.length
+            ? Math.round((scores.reduce((sum, value) => sum + value, 0) / scores.length) * 10) / 10
+            : null,
+          latest: scores.length ? scores[scores.length - 1] : null,
+          trend: painTrend(scores),
+        },
+        transitions: transitionCounts,
+        top_obstacles: [...obstacles.entries()]
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 3)
+          .map(([obstacle, count]) => ({ obstacle, count })),
+        safety_events: transitionCounts.short_circuit,
+        sitting_events: 0,
+        highlights: [],
+        suggestions: [],
+        disclaimer: MEDICAL_DISCLAIMER,
+      };
+      review.highlights = buildHighlights(review);
+      review.suggestions = buildSuggestions(review);
+      return Promise.resolve(review);
     },
 
     snapshot() {

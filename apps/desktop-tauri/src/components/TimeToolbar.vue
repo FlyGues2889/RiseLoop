@@ -50,20 +50,23 @@ function onThreshold(event) {
 </script>
 
 <template>
-  <m3e-list variant="segmented">
+  <m3e-list variant="segmented" class="timer-bar" :class="{ paused: !running, overdue }">
     <m3e-list-item>
       <span slot="overline">连续久坐</span>
-      <span class="time mono">{{ timeText }}</span><br>
-      <span class="material-symbols-rounded" slot="trailing">{{ leadIcon }}</span>
-      <div class="row progress-row">
+      <div class="time-row">
+        <span class="material-symbols-rounded lead-icon">{{ leadIcon }}</span>
+        <span class="time mono">{{ timeText }}</span>
+        <span class="remaining">
+          {{ overdue ? "已达提醒阈值" : "距提醒" }}
+          <b v-if="!overdue" class="mono">{{ remainingText }}</b>
+        </span>
+      </div>
+      <div class="progress-row">
         <m3e-linear-progress-indicator variant="wavy" class="track" :value.prop="progress"
           :max="100"></m3e-linear-progress-indicator>
-      </div><br>
-      <span class="remaining">
-        {{ overdue ? "已达提醒阈值" : "距提醒" }}
-        <b v-if="!overdue" class="mono">{{ remainingText }}</b>
-      </span>
+      </div>
     </m3e-list-item>
+
     <m3e-list-item>
       提醒间隔
       <m3e-select class="threshold" :value.prop="String(state.timer.threshold_minutes)" @change="onThreshold">
@@ -78,27 +81,19 @@ function onThreshold(event) {
       </m3e-button>
     </m3e-list-item>
   </m3e-list>
-
-
 </template>
 
 <style scoped>
 .timer-bar {
-  display: grid;
-  gap: 10px;
-  padding: 12px 14px;
-  background: var(--md-sys-color-surface-1);
+  display: block;
 }
 
-.row {
+.time-row {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: 8px;
   min-width: 0;
-}
-
-.spacer {
-  flex: 1 1 auto;
+  margin-top: 4px;
 }
 
 .lead-icon {
@@ -114,6 +109,18 @@ function onThreshold(event) {
   color: var(--md-sys-color-primary);
 }
 
+.remaining {
+  margin-left: auto;
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.remaining b {
+  color: var(--md-sys-color-on-surface);
+  font-weight: 600;
+}
+
 .paused .time,
 .paused .lead-icon {
   color: var(--md-sys-color-on-surface-variant);
@@ -124,26 +131,11 @@ function onThreshold(event) {
   color: var(--md-sys-color-tertiary);
 }
 
-.caption {
-  color: var(--md-sys-color-on-surface-variant);
-  font-size: 12px;
-  white-space: nowrap;
-}
-
-
-.threshold {
-  flex: 0 0 auto;
-  display: inline-block;
-  width: 108px;
-}
-
 .progress-row {
-  gap: 10px;
+  margin-top: 10px;
 }
 
 .track {
-  flex: 1 1 auto;
-  min-width: 60px;
   --m3e-progress-indicator-color: var(--md-sys-color-primary);
   --m3e-progress-indicator-track-color: var(--md-sys-color-surface-container-highest);
 }
@@ -152,15 +144,9 @@ function onThreshold(event) {
   --m3e-progress-indicator-color: var(--md-sys-color-tertiary);
 }
 
-.remaining {
-  flex: 0 0 auto;
-  color: var(--md-sys-color-on-surface-variant);
-  font-size: 12px;
-  white-space: nowrap;
-}
-
-.remaining b {
-  color: var(--md-sys-color-on-surface);
-  font-weight: 600;
+.threshold {
+  display: inline-block;
+  width: 108px;
+  margin-left: 12px;
 }
 </style>

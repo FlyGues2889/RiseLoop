@@ -41,7 +41,7 @@ export const localApi = {
   currentIntervention: wrap(() => localEngine.currentIntervention()),
   feedback: wrap((payload) => localEngine.feedback(payload)),
   askQuestion: wrap(() => localEngine.askQuestion()),
-  weeklyReview: wrap(() => localEngine.weeklyReview()),
+  weeklyReview: wrap((days) => localEngine.weeklyReview(days)),
   actions: wrap((state, options) => localEngine.actions(state, options)),
 };
 

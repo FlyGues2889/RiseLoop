@@ -47,7 +47,7 @@ sitloop/
 │   └── mcp-servers/         # health-data-mcp / action-library-mcp（合计 3 个工具）
 ├── packages/
 │   ├── intervention-engine/ # 状态机纯逻辑 + 表驱动单测（云端运行时）
-│   ├── local-engine/        # 本地模式状态机 + 动作匹配 + localStorage 适配（云端模式不加载）
+│   ├── local-engine/        # 本地模式状态机 + 动作匹配 + 本地周复盘 + localStorage 适配（云端模式不加载）
 │   ├── shared-types/        # OpenAPI 生成类型
 │   ├── api-client/          # Tauri 调用云端 API
 │   └── ui-kit/              # Vue3 组件库

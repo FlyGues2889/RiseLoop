@@ -180,3 +180,34 @@ test("reset 清空本地数据", async () => {
   assert.equal(instance.hasProfile(), false);
   assert.equal(storage.getItem("sitloop.local.v1"), null);
 });
+test("周复盘汇总干预记录", async () => {
+  const instance = engine();
+  await assess(instance);
+  await instance.feedback({ action_id: "a-s1", completion: "completed", feeling: "better", pain_score: 2 });
+  await instance.feedback({
+    action_id: "a-s1",
+    completion: "skipped",
+    feeling: "same",
+    pain_score: 4,
+    obstacle: "busy",
+  });
+
+  const review = await instance.weeklyReview(7);
+  assert.equal(review.interventions.total, 2);
+  assert.equal(review.interventions.completed, 1);
+  assert.equal(review.interventions.completion_rate, 50);
+  assert.equal(review.pain.average, 3);
+  assert.equal(review.pain.latest, 4);
+  assert.equal(review.pain.trend, "unknown");
+  assert.equal(review.top_obstacles[0].obstacle, "busy");
+  assert.equal(review.current_state, "S1");
+  assert.ok(review.suggestions.length > 0);
+});
+
+test("周复盘无记录时给出提示", async () => {
+  const instance = engine();
+  const review = await instance.weeklyReview(7);
+  assert.equal(review.interventions.total, 0);
+  assert.equal(review.interventions.completion_rate, 0);
+  assert.match(review.highlights[0], /还没有干预记录/);
+});

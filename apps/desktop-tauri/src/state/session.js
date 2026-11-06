@@ -3,7 +3,7 @@ import { createApiClient, ApiError, describeError } from "@sitloop/api-client";
 import { computed, reactive } from "vue";
 
 import { DEMO_UNAVAILABLE, MODES } from "../config/modes.js";
-import { loadLocalLogs, localApi, localEngine, saveLocalLogs } from "./local.js";
+import { clearLocalLogs, loadLocalLogs, localApi, localEngine, saveLocalLogs } from "./local.js";
 
 let activeBaseUrl = MODES.cloud.baseUrl;
 let memoryToken = null;
@@ -47,6 +47,7 @@ export const state = reactive({
   ai: { question: "", answer: null, citations: [], busy: false },
   weekly: null,
   weeklyBusy: false,
+  weeklyError: null,
 });
 
 export const sittingMinutes = computed(() => Math.floor(state.timer.sitting_seconds / 60));
@@ -97,6 +98,21 @@ export async function restoreSession() {
 function clearToken() {
   memoryToken = null;
   return invoke("clear_session_token").catch(() => {});
+}
+
+function resetViewState() {
+  state.phase = "auth";
+  state.currentState = null;
+  state.assessment = null;
+  state.pending = null;
+  state.lastFeedback = null;
+  state.safety = null;
+  state.error = null;
+  state.heartbeat = null;
+  state.weekly = null;
+  state.weeklyBusy = false;
+  state.weeklyError = null;
+  state.ai = { question: "", answer: null, citations: [], busy: false };
 }
 
 function useCloud() {
@@ -155,11 +171,7 @@ export async function enterDemo() {
 export async function exitDemo() {
   await clearToken();
   useCloud();
-  state.phase = "auth";
-  state.currentState = null;
-  state.assessment = null;
-  state.pending = null;
-  state.lastFeedback = null;
+  resetViewState();
   pushLog("已退出本地模式，回到云端模式");
 }
 
@@ -197,10 +209,7 @@ export async function logout() {
     return;
   }
   await clearToken();
-  state.phase = "auth";
-  state.currentState = null;
-  state.assessment = null;
-  state.pending = null;
+  resetViewState();
   pushLog("已退出并从钥匙串清除令牌");
 }
 
@@ -376,13 +385,14 @@ export async function askQuestion() {
 }
 
 export async function loadWeeklyReview() {
-  if (!aiEnabled.value || state.weeklyBusy) return;
+  if (state.phase !== "main" || state.weeklyBusy) return;
   state.weeklyBusy = true;
-  state.error = null;
+  state.weeklyError = null;
   try {
     state.weekly = await activeApi.weeklyReview(7);
   } catch (error) {
-    handleError(error);
+    state.weekly = null;
+    state.weeklyError = describeError(error);
   } finally {
     state.weeklyBusy = false;
   }
@@ -397,4 +407,27 @@ export function dismissSafety() {
   state.phase = "main";
   state.pending = null;
   state.error = null;
+}
+
+export async function clearAllData() {
+  const reset = await timerCommand("timer_reset");
+  localEngine.reset();
+  clearLocalLogs();
+  await clearToken();
+  useCloud();
+  resetViewState();
+  state.email = "";
+  state.password = "";
+  state.log = [];
+  state.busy = false;
+  state.timer = reset
+    ? { ...reset, running: false }
+    : {
+        running: false,
+        sitting_seconds: 0,
+        remaining_seconds: 2700,
+        threshold_seconds: 2700,
+        threshold_minutes: 45,
+        overdue: false,
+      };
 }

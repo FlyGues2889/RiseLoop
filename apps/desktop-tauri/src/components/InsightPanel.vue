@@ -1,5 +1,6 @@
 <script setup>
-import { computed } from "vue";
+import { computed, onMounted, watch } from "vue";
+import ErrorBanner from "./ErrorBanner.vue";
 import { aiEnabled, askQuestion, loadWeeklyReview, state } from "../state/session.js";
 
 const trendLabel = computed(() => {
@@ -7,19 +8,35 @@ const trendLabel = computed(() => {
   return map[state.weekly?.pain?.trend] || "—";
 });
 
-const weekly = computed(() => state.weekly);
+const completionRate = computed(() =>
+  Math.round(state.weekly?.interventions?.completion_rate ?? 0)
+);
+
+const hasNotes = computed(() =>
+  Boolean(state.weekly?.highlights?.length || state.weekly?.suggestions?.length)
+);
+
+onMounted(() => {
+  loadWeeklyReview();
+});
+
+watch(
+  () => state.lastFeedback,
+  (feedback) => {
+    if (feedback) loadWeeklyReview();
+  }
+);
 </script>
 
 <template>
   <m3e-card variant="elevated">
     <div class="surface-body">
-      <h2 class="page-head">你的努力</h2>
-      <p class="page-head lead">
-        汇总追踪数据，获取更好的健康建议。
-      <p class="hint" v-if="!aiEnabled">
-        本地模式不连接云端智能体，服务不可用。
-      </p>
-      </p>
+      <header class="page-head">
+        <h2>你的努力</h2>
+        <p class="lead">汇总最近 7 天的执行记录，帮你看清趋势。</p>
+      </header>
+
+      <p class="hint" v-if="!aiEnabled">本地模式不连接云端智能体，智能问答不可用。</p>
 
       <m3e-list variant="segmented">
         <m3e-list-item>
@@ -27,15 +44,16 @@ const weekly = computed(() => state.weekly);
           追踪数据
           <span class="label" slot="trailing">最近 7 天</span>
         </m3e-list-item>
+
         <m3e-list-item>
-          <div class="stats" v-if="weekly">
+          <div class="stats" v-if="state.weekly">
             <div>
               <small>完成率</small>
-              <b class="mono">{{ weekly.interventions.completion_rate }}%</b>
+              <b class="mono">{{ completionRate }}%</b>
             </div>
             <div>
               <small>干预次数</small>
-              <b class="mono">{{ weekly.interventions.total }}</b>
+              <b class="mono">{{ state.weekly.interventions.total }}</b>
             </div>
             <div>
               <small>疼痛趋势</small>
@@ -43,48 +61,38 @@ const weekly = computed(() => state.weekly);
             </div>
             <div>
               <small>安全中断</small>
-              <b class="mono">{{ weekly.safety_events }}</b>
+              <b class="mono">{{ state.weekly.safety_events }}</b>
             </div>
           </div>
-          <span v-else class="center" style="scale: 0.8;">
-            <span class="material-symbols-rounded" slot="leading">error</span><br>
-            <span v-if="!aiEnabled">本地模式不可用</span>
-          </span>
-
+          <ErrorBanner v-else-if="state.weeklyError" :error="state.weeklyError" />
+          <p class="placeholder" v-else-if="state.weeklyBusy">正在汇总…</p>
+          <p class="placeholder" v-else>近 7 天暂无记录</p>
         </m3e-list-item>
+
         <m3e-list-item>
           <span class="material-symbols-rounded" slot="leading">lightbulb</span>
-
-          <ul class="notes" v-if="weekly?.highlights?.length || weekly?.suggestions?.length">
-            <li v-for="item in weekly.highlights" :key="`h-${item}`">{{ item }}</li>
-            <li v-for="item in weekly.suggestions" :key="`s-${item}`" class="muted">{{ item }}</li>
+          <ul class="notes" v-if="hasNotes">
+            <li v-for="item in state.weekly.highlights" :key="`h-${item}`">{{ item }}</li>
+            <li v-for="item in state.weekly.suggestions" :key="`s-${item}`" class="muted">{{ item }}</li>
           </ul>
-          <span v-else>
-            <small><span v-if="!aiEnabled">本地模式下建议项不可用。</span></small>
-          </span>
-
+          <p class="placeholder" v-else-if="state.weeklyBusy">正在生成建议…</p>
+          <p class="placeholder" v-else>完成一次干预后这里会出现建议。</p>
         </m3e-list-item>
       </m3e-list>
 
-      <m3e-list variant="segmented">
+      <m3e-list variant="segmented" v-if="aiEnabled">
         <m3e-list-item>
           <span class="material-symbols-rounded" slot="leading">chat</span>
-          AI智能问答
+          智能问答
         </m3e-list-item>
         <m3e-list-item>
-
-          <span class="center" style="scale: 0.8;" v-if="!aiEnabled">
-            <span class="material-symbols-rounded" slot="leading">error</span><br>
-            <span>本地模式不可用</span>
-          </span>
-
-          <div class="body" v-if="aiEnabled">
+          <div class="body">
             <m3e-form-field variant="filled" class="ask">
               <label slot="label" for="ai-question">向智能体提问</label>
-              <input id="ai-question" v-model="state.ai.question" type="text" :disabled="!aiEnabled"
+              <input id="ai-question" v-model="state.ai.question" type="text"
                 placeholder="例如：开会时颈肩紧张，怎么快速缓解？" @keyup.enter="askQuestion" />
               <m3e-button slot="suffix" variant="text" size="small"
-                :disabled.prop="!aiEnabled || state.ai.busy || !state.ai.question.trim()" @click="askQuestion">
+                :disabled.prop="state.ai.busy || !state.ai.question.trim()" @click="askQuestion">
                 {{ state.ai.busy ? "回答中…" : "提问" }}
               </m3e-button>
             </m3e-form-field>
@@ -96,7 +104,6 @@ const weekly = computed(() => state.weekly);
               </p>
             </div>
           </div>
-
         </m3e-list-item>
       </m3e-list>
     </div>
@@ -104,21 +111,6 @@ const weekly = computed(() => state.weekly);
 </template>
 
 <style scoped>
-.header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--md-sys-color-on-surface-variant);
-}
-
-.pending {
-  color: var(--md-sys-color-outline);
-  font-size: 11px;
-  font-weight: 400;
-}
-
 .body {
   padding: 4px 0 18px;
   border-top: 1px solid var(--md-sys-color-outline-variant);
@@ -145,18 +137,6 @@ const weekly = computed(() => state.weekly);
   font-size: 11px;
 }
 
-.weekly {
-  margin-top: 18px;
-  padding-top: 16px;
-  border-top: 1px solid var(--md-sys-color-outline-variant);
-}
-
-.weekly-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
 .label {
   color: var(--md-sys-color-outline);
   font-size: 12px;
@@ -171,9 +151,9 @@ const weekly = computed(() => state.weekly);
 
 .stats small {
   display: block;
+  margin-bottom: 2px;
   color: var(--md-sys-color-outline);
   font-size: 11px;
-  margin-bottom: 2px;
 }
 
 .stats b {
@@ -191,5 +171,11 @@ const weekly = computed(() => state.weekly);
 
 .notes .muted {
   color: var(--md-sys-color-outline);
+}
+
+.placeholder {
+  margin-top: 12px;
+  color: var(--md-sys-color-outline);
+  font-size: 12px;
 }
 </style>

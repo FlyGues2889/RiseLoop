@@ -84,9 +84,6 @@ p {
   font-size: 12px;
 }
 
-.hint-inline {
-  margin-left: 8px;
-}
 
 .disclaimer {
   color: var(--md-sys-color-outline);
@@ -98,15 +95,6 @@ p {
   font-variant-numeric: tabular-nums;
 }
 
-.field-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-}
-
-.center {
-  text-align: center;
-}
 
 /* ---------- 统一内容容器（登录页规范） ---------- */
 
@@ -128,9 +116,6 @@ p {
   font-size: 13px;
 }
 
-.primary-action {
-  width: 100%;
-}
 
 .medical-note {
   margin-top: 18px;
