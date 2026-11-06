@@ -16,6 +16,9 @@ importers:
       '@sitloop/api-client':
         specifier: workspace:*
         version: link:../../packages/api-client
+      '@sitloop/local-engine':
+        specifier: workspace:*
+        version: link:../../packages/local-engine
       '@tauri-apps/api':
         specifier: ^2
         version: 2.12.4
@@ -40,6 +43,8 @@ importers:
         version: 8.3.5
 
   packages/api-client: {}
+
+  packages/local-engine: {}
 
 packages:
 

@@ -22,14 +22,14 @@
 
 ## 4. 架构红线（违反即重做）
 
-1. **Tauri 端禁止**：状态迁移逻辑、直连 RDS/Redis、保存智能体密钥、硬编码动作库、向前端暴露原始 JWT。
+1. **Tauri 端禁止**：云端模式下的状态迁移逻辑（离线演示仅允许走 `packages/local-engine`）、直连 RDS/Redis、保存智能体密钥、硬编码动作库、向前端暴露原始 JWT。
 2. **本期禁止新增浏览器端**：不得私下实现 Web Demo 或第二套业务逻辑；演示以 Tauri + 录屏为准。
 3. **Skill 禁止**：直接操作数据库、互相隐式调用。所有数据访问必须经 MCP 工具。
 4. **cloud-api 禁止**：绕过 `safety-check` 中间件输出运动推荐；把智能体密钥下发客户端。
 5. **MCP 工具固定 3 个**：`read_realtime_state`、`get_actions_by_state`、`write_intervention_result`。新增数据访问须复用现有工具或放入 Skill 内部，不得私自扩工具。
 6. **RDS/Redis 职责**：RDS 存事实（用户、评估、迁移历史、执行记录、动作库、问答日志、安全事件）；Redis 存实时状态（session state、久坐计时、待响应干预、安全短缓存）。不得混用。
 7. **华为云绑定**：核心 AI 必须走 CodeArts 智能体与华为 AI 技术，禁止纯第三方大模型套壳。
-8. **演示模式仅切基地址**：本地演示通道只允许把 API baseUrl 指向本机 `cloud-api`（`cloud_provider=mock`），禁止借此在端侧新增状态迁移、硬编码动作库或第二套业务逻辑；禁止在云端故障时自动切换；正式评审不得以演示模式替代云端公网链路验证。
+8. **本地模式边界**：本地模式运行在 `packages/local-engine`（纯 JS 状态机 + `data/actions` 只读动作库 + 浏览器 `localStorage`），不发起任何网络请求；云端模式必须走 `cloud-api` + `intervention-engine`，两者互不自动切换；正式评审不得以本地模式替代云端公网链路验证。两套状态机必须保持同一迁移规则，修改任一侧须同步另一侧并补测试。
 
 ## 5. 目录结构（必须遵守）
 
@@ -46,7 +46,8 @@ sitloop/
 │   ├── skills/              # posture-assessment / intervention-state-machine / safety-check / qa-responder
 │   └── mcp-servers/         # health-data-mcp / action-library-mcp（合计 3 个工具）
 ├── packages/
-│   ├── intervention-engine/ # 状态机纯逻辑 + 表驱动单测（运行时仅在云端）
+│   ├── intervention-engine/ # 状态机纯逻辑 + 表驱动单测（云端运行时）
+│   ├── local-engine/        # 本地模式状态机 + 动作匹配 + localStorage 适配（云端模式不加载）
 │   ├── shared-types/        # OpenAPI 生成类型
 │   ├── api-client/          # Tauri 调用云端 API
 │   └── ui-kit/              # Vue3 组件库
@@ -105,7 +106,7 @@ sitloop/
 
 ## 9. 每次输出前自查清单
 
-- [ ] 是否把状态迁移写进了端侧或 API 层？→ 必须收口到 `intervention-engine`。
+- [ ] 是否把状态迁移写进了端侧或 API 层？→ 云端链路收口到 `intervention-engine`，本地模式收口到 `local-engine`，两端规则必须一致。
 - [ ] 是否让 Skill 直连数据库？→ 必须改为 MCP 工具调用。
 - [ ] MCP 工具是否仍为 3 个？→ 超出即重做。
 - [ ] Redis 是否被当成普通缓存滥用？→ 必须只存实时状态类 Key。

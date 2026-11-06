@@ -47,7 +47,12 @@ impl SittingTimer {
 
     pub fn start(&self) -> TimerSnapshot {
         let mut inner = self.lock();
-        if !inner.running {
+        if elapsed(&inner) >= inner.threshold {
+            inner.accumulated = Duration::ZERO;
+            inner.notified = false;
+            inner.started_at = Some(Instant::now());
+            inner.running = true;
+        } else if !inner.running {
             inner.running = true;
             inner.started_at = Some(Instant::now());
         }
@@ -217,6 +222,47 @@ mod tests {
         assert!(seeded.overdue);
         assert_eq!(seeded.sitting_seconds, 46 * 60);
         assert!(timer.tick().is_some());
+    }
+
+    #[test]
+    fn start_after_threshold_restarts_a_fresh_round() {
+        let timer = SittingTimer::new(DEFAULT_THRESHOLD_MINUTES);
+        timer.start();
+        timer.seed_elapsed(DEFAULT_THRESHOLD_MINUTES + 5);
+        assert!(timer.snapshot().overdue);
+
+        let restarted = timer.start();
+        assert!(restarted.running);
+        assert!(!restarted.overdue);
+        assert!(restarted.sitting_seconds <= 1);
+        assert_eq!(restarted.remaining_seconds, DEFAULT_THRESHOLD_MINUTES * 60);
+    }
+
+    #[test]
+    fn start_resets_when_triggered_then_paused() {
+        let timer = SittingTimer::new(DEFAULT_THRESHOLD_MINUTES);
+        timer.start();
+        timer.seed_elapsed(DEFAULT_THRESHOLD_MINUTES + 1);
+        assert!(timer.tick().is_some());
+        timer.pause();
+        assert!(!timer.snapshot().running);
+
+        let restarted = timer.start();
+        assert!(restarted.running);
+        assert!(!restarted.overdue);
+        assert!(restarted.sitting_seconds <= 1);
+    }
+
+    #[test]
+    fn reset_keeps_running_state_for_resume() {
+        let timer = SittingTimer::new(DEFAULT_THRESHOLD_MINUTES);
+        timer.start();
+        timer.seed_elapsed(20);
+        timer.pause();
+        assert!(!timer.snapshot().running);
+        timer.reset();
+        assert!(!timer.snapshot().running, "暂停态 reset 不应自动开始");
+        assert_eq!(timer.snapshot().sitting_seconds, 0);
     }
 
     #[test]

@@ -12,11 +12,13 @@ import { enterDemo, login, register, state } from "../state/session.js";
 
       <form @submit.prevent="login">
         <m3e-form-field variant="filled" class="field">
+          <span class="material-symbols-rounded" slot="prefix">email</span>
           <label slot="label" for="auth-email">邮箱</label>
           <input id="auth-email" v-model="state.email" type="email" autocomplete="username" required />
         </m3e-form-field>
 
         <m3e-form-field variant="filled" class="field">
+          <span class="material-symbols-rounded" slot="prefix">password</span>
           <label slot="label" for="auth-password">密码</label>
           <input id="auth-password" v-model="state.password" type="password" autocomplete="current-password"
             minlength="8" placeholder="至少 8 位" required />
@@ -34,8 +36,8 @@ import { enterDemo, login, register, state } from "../state/session.js";
 
       <div class="alt">
         <span>或者进入</span>
-        <m3e-button variant="text" size="small" :disabled.prop="state.busy" @click="enterDemo">
-          本地演示模式
+        <m3e-button variant="text" size="extra-small" :disabled.prop="state.busy" @click="enterDemo">
+          本地模式
         </m3e-button>
       </div>
 
@@ -52,6 +54,10 @@ import { enterDemo, login, register, state } from "../state/session.js";
 </template>
 
 <style scoped>
+.surface-card {
+  max-width: 32rem;
+}
+
 .field {
   display: block;
   margin-bottom: 1rem;

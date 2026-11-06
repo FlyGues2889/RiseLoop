@@ -10,12 +10,12 @@ import { state } from "../state/session.js";
         <span class="count">{{ state.log.length }}</span>
       </span>
       <m3e-list class="list">
-        <m3e-list-item v-for="(item, index) in state.log" :key="index">
+        <div v-for="(item, index) in state.log" :key="index">
           <div class="row">
             <span class="time mono">{{ item.at }}</span>
             <span class="text">{{ item.message }}</span>
           </div>
-        </m3e-list-item>
+        </div>
       </m3e-list>
     </m3e-expansion-panel>
   </aside>
@@ -53,7 +53,6 @@ import { state } from "../state/session.js";
   gap: 12px;
   font-size: 12px;
   color: var(--md-sys-color-on-surface-variant);
-  line-height: 1.6;
 }
 
 .time {

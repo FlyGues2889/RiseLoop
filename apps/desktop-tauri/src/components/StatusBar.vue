@@ -1,9 +1,10 @@
 <script setup>
 import { computed } from "vue";
+import WindowControls from "./WindowControls.vue";
 import { logout, modeBadge, state } from "../state/session.js";
 
 const stateLabel = computed(() => {
-  const map = { S0: "S0 急性缓解", S1: "S1 激活", S2: "S2 强化", S3: "S3 维持" };
+  const map = { S0: "急性缓解状态", S1: "激活状态", S2: "强化状态", S3: "维持状态" };
   return map[state.currentState] || "未评估";
 });
 
@@ -15,15 +16,15 @@ const isSignedIn = computed(() => state.phase !== "auth");
 
 const profileLabel = computed(() => {
   if (!isSignedIn.value) return "未登录";
-  if (state.mode === "demo") return "演示账号";
+  if (state.mode === "demo") return "本地账号";
   return state.email || "已登录";
 });
 </script>
 
 <template>
-  <header class="bar">
-    <div class="brand">
-      <div class="name">
+  <header class="bar" data-tauri-drag-region>
+    <div class="brand" data-tauri-drag-region>
+      <div class="name" data-tauri-drag-region>
         SitLoop
       </div>
       <span v-if="modeBadge" class="mode">{{ modeBadge }}</span>
@@ -37,6 +38,8 @@ const profileLabel = computed(() => {
           <span class="material-symbols-rounded icon">account_circle</span>
         </m3e-menu-trigger>
       </m3e-icon-button>
+
+      <WindowControls />
     </div>
   </header>
 
@@ -45,10 +48,9 @@ const profileLabel = computed(() => {
       <span slot="icon" class="material-symbols-rounded">account_circle</span>
       {{ profileLabel }}
     </m3e-menu-item>
-    <m3e-divider v-if="isSignedIn"></m3e-divider>
     <m3e-menu-item v-if="isSignedIn" @click="logout">
       <span slot="icon" class="material-symbols-rounded">logout</span>
-      {{ state.mode === "demo" ? "退出演示" : "退出登录" }}
+      退出
     </m3e-menu-item>
   </m3e-menu>
 </template>
@@ -59,8 +61,9 @@ const profileLabel = computed(() => {
   align-items: center;
   justify-content: space-between;
   gap: 28px;
-  padding: 0.8rem 2.4rem;
+  padding: 0.8rem 0.9rem 0.8rem 2.4rem;
   color: var(--md-sys-color-primary);
+  user-select: none;
 }
 
 .brand {

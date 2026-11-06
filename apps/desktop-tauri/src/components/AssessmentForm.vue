@@ -41,85 +41,96 @@ function onPainChange(event) {
 <template>
   <m3e-card variant="elevated" class="surface-card">
     <div class="surface-body">
-    <header class="page-head">
-      <h1>评估</h1>
-      <p class="lead">您的哪个部位不太舒服？告诉我们，让我们帮你评估。</p>
-    </header>
+      <header class="page-head">
+        <h1>评估</h1>
+        <p>初次见面，请填写一些基本信息。这能帮助生成相对准确的建议和方案。</p>
+      </header>
 
-    <div class="field">
-      <span class="field-label">不适部位</span>
-      <m3e-chip-set class="chips">
-        <m3e-filter-chip
-          v-for="option in bodyPartOptions"
-          :key="option.value"
-          :value="option.value"
-          :selected.prop="form.body_parts.includes(option.value)"
-          @change="togglePart(option.value)"
-        >
-          {{ option.label }}
-        </m3e-filter-chip>
-      </m3e-chip-set>
-    </div>
+      <m3e-callout class="disclaimer medical-note">
+        <span class="material-symbols-rounded" slot="icon">medical_information</span>
+        <span slot="label">指导提示</span>
+        <p>
+          本产品为健康行为指导工具，不提供医疗诊断或治疗建议。<br>
+          如出现持续疼痛、放射痛、麻木加重、肢体无力或外伤后剧痛，请及时就医。
+        </p>
+      </m3e-callout><br>
 
-    <div class="field-row">
-      <m3e-form-field variant="filled" class="field">
-        <label slot="label" for="sedentary-minutes">每日久坐时长（分钟）</label>
-        <input id="sedentary-minutes" v-model.number="form.sedentary_minutes" type="number" min="0" max="1440" />
-      </m3e-form-field>
-      <m3e-form-field variant="filled" class="field">
-        <label slot="label" for="available-minutes">单次可用时间（分钟）</label>
-        <input id="available-minutes" v-model.number="form.available_minutes" type="number" min="1" max="120" />
-      </m3e-form-field>
-    </div>
+      <m3e-list variant="segmented" class="assessForm">
+        <m3e-list-item>
+          <span class="material-symbols-rounded" slot="leading">avg_time</span>
+          时间安排
+        </m3e-list-item>
+        <m3e-list-item>
+          每日久坐时长
+          <span slot="supporting-text">每天久坐的时间大致总和</span>
+          <m3e-form-field variant="filled" class="field" slot="trailing">
+            <input id="sedentary-minutes" v-model.number="form.sedentary_minutes" type="number" min="0" max="1440" />
+            <span slot="suffix-text">分钟</span>
+          </m3e-form-field>
+        </m3e-list-item>
+        <m3e-list-item>
+          每次休息可用时长
+          <span slot="supporting-text">您希望休息阶段的时长</span>
+          <m3e-form-field variant="filled" class="field" slot="trailing">
+            <input id="available-minutes" v-model.number="form.available_minutes" type="number" min="1" max="120" />
+            <span slot="suffix-text">分钟</span>
+          </m3e-form-field>
+        </m3e-list-item>
+      </m3e-list>
 
-    <div class="field">
-      <div class="slider-head">
-        <span class="field-label">当前疼痛评分</span>
-        <span class="value mono">{{ form.pain_score }}<small> / 10</small></span>
-      </div>
-      <m3e-slider
-        class="slider"
-        size="medium"
-        min="0"
-        max="10"
-        step="1"
-        @input="onPainChange"
-        @change="onPainChange"
-      >
-        <m3e-slider-thumb :value.prop="form.pain_score"></m3e-slider-thumb>
-      </m3e-slider>
-    </div>
+      <m3e-list variant="segmented">
+        <m3e-list-item>
+          <span class="material-symbols-rounded" slot="leading">exercise</span>
+          身体情况
+        </m3e-list-item>
 
-    <label class="checkbox">
-      <m3e-checkbox
-        :checked.prop="form.acute_discomfort"
-        @change="form.acute_discomfort = $event.target.checked"
-      ></m3e-checkbox>
-      现在就有明显酸痛或主动报告不适
-    </label>
+        <m3e-list-item>
+          另外，在下面的部位里，您有哪些部位不太舒服？<br><br>
+          <m3e-chip-set class="chips">
+            <m3e-filter-chip v-for="option in bodyPartOptions" :key="option.value" :value="option.value"
+              :selected.prop="form.body_parts.includes(option.value)" @change="togglePart(option.value)">
+              {{ option.label }}
+            </m3e-filter-chip>
+          </m3e-chip-set>
+        </m3e-list-item>
+        <m3e-list-item>
+          就您来说，最严重的部分有多痛？<br>
+          <m3e-slider class="slider" max="10" step="1" @input="onPainChange" @change="onPainChange">
+            <m3e-slider-thumb :value.prop="form.pain_score"></m3e-slider-thumb>
+          </m3e-slider>
 
-    <ErrorBanner :error="state.error" />
+          <div class="slider-head">
+            <span class="field-label"></span>
+            <span class="value mono">{{ form.pain_score }}<small> / 10</small></span>
+          </div>
+        </m3e-list-item>
+        <m3e-list-item>
+          <m3e-checkbox :checked.prop="form.acute_discomfort" @change="form.acute_discomfort = $event.target.checked"
+            slot="leading"></m3e-checkbox>
+          我现在就有明显的酸痛等不适症状
+        </m3e-list-item>
+      </m3e-list>
 
-    <m3e-button class="block" variant="filled" size="medium" :disabled.prop="state.busy" @click="submitAssessment(form)">
-      {{ state.busy ? "提交中…" : "生成干预计划" }}
-    </m3e-button>
+      <ErrorBanner :error="state.error" />
 
-    <m3e-callout class="disclaimer medical-note">
-      <span class="material-symbols-rounded" slot="icon">medical_information</span>
-      <span slot="label">指导提示</span>
-      <p>
-        本产品为健康行为指导工具，不提供医疗诊断或治疗建议。<br>
-        如出现持续疼痛、放射痛、麻木加重、肢体无力或外伤后剧痛，请及时就医。
-      </p>
-    </m3e-callout>
+      <m3e-button class="block" variant="filled" size="medium" :disabled.prop="state.busy"
+        @click="submitAssessment(form)">
+        {{ state.busy ? "提交中…" : "生成干预计划" }}
+      </m3e-button>
     </div>
   </m3e-card>
 </template>
 
 <style scoped>
-.field {
-  display: block;
+m3e-list.assessForm {
   margin-bottom: 1rem;
+
+  --m3e-form-field-font-size:1.4rem
+}
+
+.field {
+  width: 14rem;
+  margin-top: 1.4rem;
 }
 
 .field-label {
@@ -136,13 +147,14 @@ function onPainChange(event) {
 }
 
 .value {
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--md-sys-color-secondary);
 }
 
 .value small {
   color: var(--md-sys-color-outline);
-  font-size: 12px;
+  font-size: 1rem;
   font-weight: 400;
 }
 
@@ -166,6 +178,6 @@ function onPainChange(event) {
 
 .block {
   width: 100%;
-  margin-top: 4px;
+  margin-top: 2rem;
 }
 </style>

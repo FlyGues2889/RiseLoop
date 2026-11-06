@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref } from "vue";
 import ErrorBanner from "./ErrorBanner.vue";
+import TimeToolbar from "./TimeToolbar.vue";
 import {
   continueAfterFeedback,
   fastForward,
@@ -88,140 +89,129 @@ async function demoFastForward() {
 <template>
   <m3e-card variant="elevated" class="surface-card">
     <div class="surface-body">
-    <article v-if="result">
-      <div class="result-head">
-        <span class="tag" :class="`tag-${result.tone}`">{{ result.label }}</span>
-        <h1 class="transition mono">
-          {{ result.from_state }}<i>→</i>{{ result.to_state }}
-        </h1>
-        <p class="reason">{{ result.reason }}</p>
-      </div>
-
-      <div class="facts">
-        <div>
-          <small>建议时长</small>
-          <span class="mono">{{ result.duration_range }}</span>
+      <article v-if="result">
+        <div class="result-head">
+          <span class="tag" :class="`tag-${result.tone}`">{{ result.label }}</span>
+          <h1 class="transition mono">
+            {{ result.from_state }}<i>→</i>{{ result.to_state }}
+          </h1>
+          <p class="reason">{{ result.reason }}</p>
         </div>
-        <div>
-          <small>强度</small>
-          <span>{{ result.intensityText }}</span>
-        </div>
-      </div>
 
-      <div v-if="result.next_action" class="next">
-        <small>下一次推荐</small>
-        <strong>{{ result.next_action.name }}</strong>
-        <span class="mono">{{ result.next_action.duration_minutes }} 分钟</span>
-      </div>
-
-      <m3e-button class="block" variant="filled" size="medium" @click="continueAfterFeedback">继续</m3e-button>
-    </article>
-
-    <article v-else-if="state.pending">
-      <header class="head">
-        <div>
-          <span class="eyebrow">待执行动作</span>
-          <h1>{{ state.pending.name }}</h1>
-        </div>
-        <span class="duration mono">{{ state.pending.duration_minutes }} 分钟</span>
-      </header>
-
-      <ol class="steps">
-        <li v-for="(step, index) in state.pending.steps" :key="index">{{ step }}</li>
-      </ol>
-
-      <p class="caution" v-if="state.pending.caution">{{ state.pending.caution }}</p>
-
-      <div class="separator"><span>完成后反馈</span></div>
-
-      <div class="field">
-        <span class="field-label">完成情况</span>
-        <m3e-chip-set class="chips">
-          <m3e-filter-chip
-            v-for="option in completionOptions"
-            :key="option.value"
-            :value="option.value"
-            :selected.prop="completion === option.value"
-            @change="completion = option.value"
-          >
-            {{ option.label }}
-          </m3e-filter-chip>
-        </m3e-chip-set>
-      </div>
-
-      <div class="field">
-        <span class="field-label">做完的感觉</span>
-        <m3e-chip-set class="chips">
-          <m3e-filter-chip
-            v-for="option in feelingOptions"
-            :key="option.value"
-            :value="option.value"
-            :selected.prop="feeling === option.value"
-            @change="feeling = option.value"
-          >
-            {{ option.label }}
-          </m3e-filter-chip>
-        </m3e-chip-set>
-      </div>
-
-      <div class="field" v-if="completion === 'skipped'">
-        <span class="field-label">主要阻碍</span>
-        <m3e-chip-set class="chips">
-          <m3e-filter-chip
-            v-for="option in obstacleOptions"
-            :key="option.value"
-            :value="option.value"
-            :selected.prop="obstacle === option.value"
-            @change="obstacle = option.value"
-          >
-            {{ option.label }}
-          </m3e-filter-chip>
-        </m3e-chip-set>
-      </div>
-
-      <m3e-expansion-panel class="extra">
-        <span slot="header">补充细节（可选）</span>
-        <div class="extra-body">
-          <div class="slider">
-            <span class="field-label">疼痛评分：{{ painScore }} / 10</span>
-            <m3e-slider
-              size="medium"
-              min="0"
-              max="10"
-              step="1"
-              labelled
-              discrete
-              @input="onPainChange"
-              @change="onPainChange"
-            >
-              <m3e-slider-thumb :value.prop="painScore"></m3e-slider-thumb>
-            </m3e-slider>
+        <div class="facts">
+          <div>
+            <small>建议时长</small>
+            <span class="mono">{{ result.duration_range }}</span>
           </div>
-          <m3e-form-field variant="filled" class="note">
-            <label slot="label" for="feedback-note">备注</label>
-            <textarea id="feedback-note" v-model="note" rows="2" placeholder="例如：做完后肩颈更放松"></textarea>
-          </m3e-form-field>
+          <div>
+            <small>强度</small>
+            <span>{{ result.intensityText }}</span>
+          </div>
         </div>
-      </m3e-expansion-panel>
 
-      <ErrorBanner :error="state.error" />
+        <div v-if="result.next_action" class="next">
+          <small>下一次推荐</small>
+          <strong>{{ result.next_action.name }}</strong>
+          <span class="mono">{{ result.next_action.duration_minutes }} 分钟</span>
+        </div>
 
-      <m3e-button class="block" variant="filled" size="medium" :disabled.prop="state.busy" @click="submit">
-        {{ state.busy ? "提交中…" : "提交反馈" }}
-      </m3e-button>
-    </article>
+        <m3e-button class="block" variant="filled" size="medium" @click="continueAfterFeedback">继续</m3e-button>
+      </article>
 
-    <article v-else class="idle">
-      <span class="eyebrow">等待触发</span>
-      <h1>保持当前节奏</h1>
-      <p class="lead">
-        达到阈值后会自动推送动作。窗口最小化或关闭到托盘，计时都不会中断。
-      </p>
-      <div class="actions">
-        <m3e-button variant="outlined" size="small" @click="resetTimer">重新计时</m3e-button>
-        <m3e-button variant="text" size="small" @click="demoFastForward">演示：快进到阈值</m3e-button>
-      </div>
-    </article>
+      <article v-else-if="state.pending">
+        <header class="head">
+          <div>
+            <span class="eyebrow">待执行动作</span>
+            <h1>{{ state.pending.name }}</h1>
+          </div>
+          <span class="duration mono">{{ state.pending.duration_minutes }} 分钟</span>
+        </header>
+
+        <ol class="steps">
+          <li v-for="(step, index) in state.pending.steps" :key="index">{{ step }}</li>
+        </ol>
+
+        <p class="caution" v-if="state.pending.caution">{{ state.pending.caution }}</p>
+
+        <div class="separator"><span>完成后反馈</span></div>
+
+        <div class="field">
+          <span class="field-label">完成情况</span>
+          <m3e-chip-set class="chips">
+            <m3e-filter-chip v-for="option in completionOptions" :key="option.value" :value="option.value"
+              :selected.prop="completion === option.value" @change="completion = option.value">
+              {{ option.label }}
+            </m3e-filter-chip>
+          </m3e-chip-set>
+        </div>
+
+        <div class="field">
+          <span class="field-label">做完的感觉</span>
+          <m3e-chip-set class="chips">
+            <m3e-filter-chip v-for="option in feelingOptions" :key="option.value" :value="option.value"
+              :selected.prop="feeling === option.value" @change="feeling = option.value">
+              {{ option.label }}
+            </m3e-filter-chip>
+          </m3e-chip-set>
+        </div>
+
+        <div class="field" v-if="completion === 'skipped'">
+          <span class="field-label">主要阻碍</span>
+          <m3e-chip-set class="chips">
+            <m3e-filter-chip v-for="option in obstacleOptions" :key="option.value" :value="option.value"
+              :selected.prop="obstacle === option.value" @change="obstacle = option.value">
+              {{ option.label }}
+            </m3e-filter-chip>
+          </m3e-chip-set>
+        </div>
+
+        <m3e-expansion-panel class="extra">
+          <span slot="header">补充细节（可选）</span>
+          <div class="extra-body">
+            <div class="slider">
+              <span class="field-label">疼痛评分：{{ painScore }} / 10</span>
+              <m3e-slider size="medium" min="0" max="10" step="1" labelled discrete @input="onPainChange"
+                @change="onPainChange">
+                <m3e-slider-thumb :value.prop="painScore"></m3e-slider-thumb>
+              </m3e-slider>
+            </div>
+            <m3e-form-field variant="filled" class="note">
+              <label slot="label" for="feedback-note">备注</label>
+              <textarea id="feedback-note" v-model="note" rows="2" placeholder="例如：做完后肩颈更放松"></textarea>
+            </m3e-form-field>
+          </div>
+        </m3e-expansion-panel>
+
+        <ErrorBanner :error="state.error" />
+
+        <m3e-button class="block" variant="filled" size="medium" :disabled.prop="state.busy" @click="submit">
+          {{ state.busy ? "提交中…" : "提交反馈" }}
+        </m3e-button>
+      </article>
+
+      <article v-else class="idle">
+        <span class="eyebrow">等待触发</span>
+        <h1>保持当前节奏</h1>
+        <p class="lead">
+          提醒将在计时结束时发出，你可以根据计时安排你的休息活动。<br>
+          窗口最小化或关闭到托盘，计时都不会中断。
+        </p>
+
+        <div class="timer-slot">
+          <TimeToolbar />
+        </div>
+
+        <div class="actions">
+          <m3e-button variant="outlined" size="small" @click="resetTimer">
+            <span class="material-symbols-rounded" slot="icon">refresh</span>
+            重新计时
+          </m3e-button>
+          <m3e-button variant="text" size="small" @click="demoFastForward">
+            <span class="material-symbols-rounded" slot="icon">keyboard_double_arrow_right</span>
+            立即开始活动
+          </m3e-button>
+        </div>
+      </article>
     </div>
   </m3e-card>
 </template>
@@ -417,8 +407,8 @@ async function demoFastForward() {
   margin: 6px 0 10px;
 }
 
-.idle .lead {
-  max-width: 420px;
+.timer-slot {
+  margin: 20px 0 4px;
 }
 
 .actions {

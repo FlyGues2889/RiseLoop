@@ -1,6 +1,7 @@
 <script setup>
 import { onMounted, onUnmounted, ref } from "vue";
 
+import { isTauri } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import ActivityLog from "./components/ActivityLog.vue";
 import AssessmentForm from "./components/AssessmentForm.vue";
@@ -9,36 +10,48 @@ import InsightPanel from "./components/InsightPanel.vue";
 import InterventionCard from "./components/InterventionCard.vue";
 import SafetyAlert from "./components/SafetyAlert.vue";
 import StatusBar from "./components/StatusBar.vue";
-import TimeToolbar from "./components/TimeToolbar.vue";
-import { refreshTimer, restoreSession, state, tickHeartbeat } from "./state/session.js";
+import { refreshTimer, restoreSession, state, tickHeartbeat, tickPreview } from "./state/session.js";
 
 const unlisteners = ref([]);
 const heartbeatTimer = ref(null);
+const previewTimer = ref(null);
+const tauri = isTauri();
 
 onMounted(async () => {
   await restoreSession();
 
-  unlisteners.value.push(
-    await listen("sitloop://tick", (event) => {
-      state.timer = event.payload;
-    })
-  );
-  unlisteners.value.push(
-    await listen("sitloop://threshold", () => {
-      tickHeartbeat();
-    })
-  );
+  if (tauri) {
+    try {
+      unlisteners.value.push(
+        await listen("sitloop://tick", (event) => {
+          state.timer = event.payload;
+        })
+      );
+      unlisteners.value.push(
+        await listen("sitloop://threshold", () => {
+          tickHeartbeat();
+        })
+      );
+    } catch {
+      /* 事件桥不可用时依赖轮询刷新 */
+    }
+  }
 
   await refreshTimer().catch(() => { });
   heartbeatTimer.value = setInterval(() => {
     refreshTimer().catch(() => { });
     tickHeartbeat();
   }, 60_000);
+
+  if (!tauri) {
+    previewTimer.value = setInterval(tickPreview, 1000);
+  }
 });
 
 onUnmounted(() => {
   unlisteners.value.forEach((unlisten) => unlisten());
   if (heartbeatTimer.value) clearInterval(heartbeatTimer.value);
+  if (previewTimer.value) clearInterval(previewTimer.value);
 });
 </script>
 
@@ -61,11 +74,6 @@ onUnmounted(() => {
 
     </m3e-content-pane>
 
-    <Transition name="toolbar">
-      <div v-if="state.phase === 'main'" class="toolbar-slot">
-        <TimeToolbar />
-      </div>
-    </Transition>
   </div>
 </template>
 
@@ -88,35 +96,7 @@ onUnmounted(() => {
   padding: 32px 24px 40px;
 }
 
-.view-auth,
-.view-assessment {
-  padding-top: 8vh;
-}
-
-.view-main {
-  padding-bottom: 118px;
-}
-
 .insight-slot {
   margin-top: 16px;
-}
-
-.toolbar-slot {
-  position: fixed;
-  bottom: 16px;
-  left: 50%;
-  z-index: 20;
-  transform: translateX(-50%);
-}
-
-.toolbar-enter-from,
-.toolbar-leave-to {
-  opacity: 0;
-  transform: translate(-50%, 12px);
-}
-
-.toolbar-enter-active,
-.toolbar-leave-active {
-  transition: opacity 0.2s ease, transform 0.2s ease;
 }
 </style>

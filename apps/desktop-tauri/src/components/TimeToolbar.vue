@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from "vue";
-import { setThreshold, state, toggleTimer } from "../state/session.js";
+import { resetTimer, setThreshold, state, toggleTimer } from "../state/session.js";
 
 const thresholdOptions = [30, 40, 45, 50, 60];
 
@@ -19,6 +19,30 @@ const progress = computed(() => {
 });
 
 const running = computed(() => state.timer.running);
+const overdue = computed(() => state.timer.overdue);
+
+const actionLabel = computed(() => {
+  if (overdue.value) return "重新计时";
+  return running.value ? "暂停" : "继续";
+});
+
+const actionIcon = computed(() => {
+  if (overdue.value) return "restart_alt";
+  return running.value ? "pause" : "play_arrow";
+});
+
+const leadIcon = computed(() => {
+  if (overdue.value) return "notifications_active";
+  return running.value ? "timer" : "pause_circle";
+});
+
+function onAction() {
+  if (overdue.value) {
+    resetTimer();
+    return;
+  }
+  toggleTimer();
+}
 
 function onThreshold(event) {
   setThreshold(Number(event.target.value));
@@ -26,51 +50,55 @@ function onThreshold(event) {
 </script>
 
 <template>
-  <m3e-toolbar shape="rounded" elevated class="time-bar" :class="{ paused: !running }">
-    <div class="cluster">
-      <span class="material-symbols-rounded lead-icon">{{ running ? "timer" : "pause_circle" }}</span>
-      <span class="time mono">{{ timeText }}</span>
-      <span class="caption">连续久坐</span>
-    </div>
+  <m3e-list variant="segmented">
+    <m3e-list-item>
+      <span slot="overline">连续久坐</span>
+      <span class="time mono">{{ timeText }}</span><br>
+      <span class="material-symbols-rounded" slot="trailing">{{ leadIcon }}</span>
+      <div class="row progress-row">
+        <m3e-linear-progress-indicator variant="wavy" class="track" :value.prop="progress"
+          :max="100"></m3e-linear-progress-indicator>
+      </div><br>
+      <span class="remaining">
+        {{ overdue ? "已达提醒阈值" : "距提醒" }}
+        <b v-if="!overdue" class="mono">{{ remainingText }}</b>
+      </span>
+    </m3e-list-item>
+    <m3e-list-item>
+      提醒间隔
+      <m3e-select class="threshold" :value.prop="String(state.timer.threshold_minutes)" @change="onThreshold">
+        <m3e-option v-for="m in thresholdOptions" :key="m" :value="String(m)">
+          {{ m }} 分钟
+        </m3e-option>
+      </m3e-select>
 
-    <m3e-linear-progress-indicator class="track" :value.prop="progress" :max="100"></m3e-linear-progress-indicator>
+      <m3e-button variant="tonal" size="small" @click="onAction" slot="trailing">
+        <span slot="icon" class="material-symbols-rounded">{{ actionIcon }}</span>
+        {{ actionLabel }}
+      </m3e-button>
+    </m3e-list-item>
+  </m3e-list>
 
-    <span class="remaining">距提醒 <b class="mono">{{ remainingText }}</b></span>
 
-    <m3e-icon-button class="action" variant="tonal" size="small" @click="toggleTimer" toggle>
-      <span class="material-symbols-rounded-fill">{{ running ? "pause" : "play_arrow" }}</span>
-    </m3e-icon-button>
-
-    <m3e-select
-      class="threshold"
-      :value.prop="String(state.timer.threshold_minutes)"
-      @change="onThreshold"
-    >
-      <m3e-option v-for="m in thresholdOptions" :key="m" :value="String(m)">
-        {{ m }} 分钟提醒
-      </m3e-option>
-    </m3e-select>
-  </m3e-toolbar>
 </template>
 
 <style scoped>
-.time-bar {
-  width: min(640px, calc(100vw - 40px));
-  --m3e-toolbar-spacing: 12px;
-
-  padding: 0 1rem
+.timer-bar {
+  display: grid;
+  gap: 10px;
+  padding: 12px 14px;
+  background: var(--md-sys-color-surface-1);
 }
 
-.time-bar > * {
-  position: relative;
-}
-
-.cluster {
+.row {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex: 0 0 auto;
-  padding-left: 4px;
+  min-width: 0;
+}
+
+.spacer {
+  flex: 1 1 auto;
 }
 
 .lead-icon {
@@ -86,12 +114,14 @@ function onThreshold(event) {
   color: var(--md-sys-color-primary);
 }
 
-.paused .time {
+.paused .time,
+.paused .lead-icon {
   color: var(--md-sys-color-on-surface-variant);
 }
 
-.paused .lead-icon {
-  color: var(--md-sys-color-on-surface-variant);
+.overdue .time,
+.overdue .lead-icon {
+  color: var(--md-sys-color-tertiary);
 }
 
 .caption {
@@ -100,11 +130,26 @@ function onThreshold(event) {
   white-space: nowrap;
 }
 
+
+.threshold {
+  flex: 0 0 auto;
+  display: inline-block;
+  width: 108px;
+}
+
+.progress-row {
+  gap: 10px;
+}
+
 .track {
   flex: 1 1 auto;
-  min-width: 80px;
+  min-width: 60px;
   --m3e-progress-indicator-color: var(--md-sys-color-primary);
   --m3e-progress-indicator-track-color: var(--md-sys-color-surface-container-highest);
+}
+
+.overdue .track {
+  --m3e-progress-indicator-color: var(--md-sys-color-tertiary);
 }
 
 .remaining {
@@ -117,22 +162,5 @@ function onThreshold(event) {
 .remaining b {
   color: var(--md-sys-color-on-surface);
   font-weight: 600;
-}
-
-.action {
-  flex: 0 0 auto;
-}
-
-.threshold {
-  flex: 0 0 auto;
-  display: inline-block;
-  width: 132px;
-}
-
-@media (max-width: 720px) {
-  .caption,
-  .remaining {
-    display: none;
-  }
 }
 </style>

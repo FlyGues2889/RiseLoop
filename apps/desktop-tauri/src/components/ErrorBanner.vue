@@ -24,8 +24,8 @@ const view = computed(() => {
   <m3e-callout v-if="view" variant="error" class="error" role="alert">
     <span class="material-symbols-rounded" slot="icon">error</span>
     <strong slot="label">{{ view.title }}</strong>
-    <p v-if="view.message">{{ view.message }}</p>
-    <p class="hint" v-if="view.hint">{{ view.hint }}</p>
+    <p v-if="view.message">{{ view.hint }}</p>
+    <p class="message" v-if="view.hint">{{ view.message }}</p>
     <p class="detail mono" v-if="view.detail">{{ view.detail }}</p>
   </m3e-callout>
 </template>
@@ -36,9 +36,11 @@ const view = computed(() => {
   margin: 12px 0 14px;
 }
 
-.hint {
+.message {
+  font-size: small;
   margin-top: 3px;
   color: var(--md-sys-color-on-surface-variant);
+  line-height: 0.8rem;
 }
 
 .detail {

@@ -23,7 +23,7 @@ body {
   height: 100%;
   overflow: hidden;
   margin: 0;
-  background: rgba(var(--md-sys-color-secondary-container-rgb),0.3);
+  background: rgba(var(--md-sys-color-secondary-container-rgb), 0.3);
   color: var(--md-sys-color-on-surface);
   font-family: "PingFang SC", "Microsoft YaHei", "Segoe UI", system-ui, sans-serif;
   font-size: 14px;
@@ -55,6 +55,10 @@ p {
 
 .page-head h1 {
   margin: 6px 0 8px;
+}
+
+.page-head h2 {
+  margin: 6px 0 3px;
 }
 
 .page-head .lead {
@@ -100,11 +104,15 @@ p {
   gap: 16px;
 }
 
+.center {
+  text-align: center;
+}
+
 /* ---------- 统一内容容器（登录页规范） ---------- */
 
 .surface-card {
   display: block;
-  max-width: 32rem;
+  max-width: 48rem;
   margin: 0 auto;
 }
 
@@ -204,6 +212,9 @@ p {
 }
 
 /* ---------- m3e 表单控件的原生插槽内容 ---------- */
+m3e-content-pane{
+  box-shadow: 1px inset rgba(var(--md-sys-color-shadow-rgb), 0.06);
+}
 
 m3e-form-field input,
 m3e-form-field textarea {
@@ -246,3 +257,10 @@ m3e-slider {
   --m3e-slider-tick-size: 3px;
 }
 
+m3e-menu {
+  --md-sys-density-scale: -2;
+}
+
+m3e-list{
+  margin-bottom: 1rem;
+}
