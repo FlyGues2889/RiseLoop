@@ -1,0 +1,15 @@
+{
+  "name": "sitloop",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@11.8.0",
+  "scripts": {
+    "dev": "pnpm --filter @sitloop/desktop-tauri dev",
+    "tauri": "pnpm --filter @sitloop/desktop-tauri tauri",
+    "build": "pnpm --filter @sitloop/desktop-tauri build",
+    "test": "python -m pytest",
+    "test:engine": "python -m pytest packages/intervention-engine",
+    "test:api": "python -m pytest apps/cloud-api",
+    "demo": "node scripts/demo.mjs"
+  }
+}

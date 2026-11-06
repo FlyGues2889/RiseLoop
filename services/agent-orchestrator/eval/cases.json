@@ -1,0 +1,38 @@
+[
+  {
+    "id": "eval-upgrade",
+    "event": "intervention_feedback",
+    "input": { "state": "S1", "completion": "completed", "feeling": "better", "pain_score": 2, "completed_streak": 4 },
+    "expect": { "to_state": "S2", "transition_type": "upgrade" }
+  },
+  {
+    "id": "eval-rollback",
+    "event": "intervention_feedback",
+    "input": { "state": "S2", "completion": "completed", "feeling": "worse", "pain_score": 6, "worse_streak": 1 },
+    "expect": { "to_state": "S1", "transition_type": "rollback" }
+  },
+  {
+    "id": "eval-degrade",
+    "event": "intervention_feedback",
+    "input": { "state": "S2", "completion": "skipped", "feeling": "same", "pain_score": 2, "skipped_streak": 2, "obstacle": "busy" },
+    "expect": { "to_state": "S2", "transition_type": "degrade", "intensity": "gentle" }
+  },
+  {
+    "id": "eval-short-circuit",
+    "event": "intervention_feedback",
+    "input": { "state": "S3", "completion": "partial", "feeling": "worse", "pain_score": 8, "red_flags": ["leg_weakness"] },
+    "expect": { "http_status": 403, "to_state": "S0", "stop_exercise": true }
+  },
+  {
+    "id": "eval-free-text-red-flag",
+    "event": "intervention_feedback",
+    "input": { "note": "腰疼串电到小腿，腿发软" },
+    "expect": { "http_status": 403, "red_flags": ["radiating_pain", "leg_weakness"] }
+  },
+  {
+    "id": "eval-tool-count",
+    "event": "schema_check",
+    "input": { "servers": ["health-data-mcp", "action-library-mcp"] },
+    "expect": { "tool_count": 3 }
+  }
+]

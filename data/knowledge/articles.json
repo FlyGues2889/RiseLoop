@@ -1,0 +1,66 @@
+[
+  {
+    "id": "neck-shoulder-break",
+    "title": "会议中缓解颈肩紧张",
+    "tags": ["颈", "肩", "脖子", "会议", "工位", "紧张", "僵硬"],
+    "summary": "长时间低头会让颈后肌群持续紧张，短时多次比一次做久更有效。",
+    "actions": ["坐直后缓慢收下巴 5 秒，重复 5 次", "双肩向后绕环 8 次，再耸肩放松 5 秒"],
+    "citation": "knowledge:neck-shoulder-break"
+  },
+  {
+    "id": "low-back-sitting",
+    "title": "久坐腰酸的即时处理",
+    "tags": ["腰", "下背", "酸", "久坐", "坐久"],
+    "summary": "腰酸多与固定姿势下的肌肉疲劳有关，先改变姿势再谈拉伸。",
+    "actions": ["起身走动 2 分钟", "坐姿骨盆前后倾 10 次，幅度小而慢"],
+    "citation": "knowledge:low-back-sitting"
+  },
+  {
+    "id": "stand-up-frequency",
+    "title": "起身频率怎么定",
+    "tags": ["多久", "频率", "起身", "站", "提醒", "间隔"],
+    "summary": "每 30–60 分钟起身一次，比累计走一万步更能打断久坐行为。",
+    "actions": ["把提醒阈值设在 45 分钟", "起身后接一杯水，顺便走 60 秒"],
+    "citation": "knowledge:stand-up-frequency"
+  },
+  {
+    "id": "micro-break-timing",
+    "title": "太忙时怎么做",
+    "tags": ["忙", "没时间", "开会", "加班", "碎片"],
+    "summary": "忙的时候优先保住动作的\"发生\"，而不是单次时长。",
+    "actions": ["只做 30 秒的肩颈或髋部动作", "把动作绑定到固定触发点，例如接水后"],
+    "citation": "knowledge:micro-break-timing"
+  },
+  {
+    "id": "soreness-vs-pain",
+    "title": "酸胀和疼痛的区别",
+    "tags": ["疼", "痛", "酸胀", "区别", "正常吗"],
+    "summary": "酸胀通常弥散、可忍受、活动后减轻；尖锐或持续加重的疼痛需要谨慎。",
+    "actions": ["记录疼痛位置、持续时间和诱发动作", "若评分持续 ≥6 分，停止动作并就医评估"],
+    "citation": "knowledge:soreness-vs-pain"
+  },
+  {
+    "id": "sitting-posture",
+    "title": "坐姿的三个关键点",
+    "tags": ["坐姿", "姿势", "驼背", "椅子", "屏幕"],
+    "summary": "没有完美坐姿，关键是能自由调整，而不是长时间锁死在一个姿势。",
+    "actions": ["双脚踩实，膝盖略低于髋部", "屏幕上缘与视线齐平，前臂有支撑"],
+    "citation": "knowledge:sitting-posture"
+  },
+  {
+    "id": "after-exercise-soreness",
+    "title": "做完动作后酸胀",
+    "tags": ["做完", "之后", "酸胀", "运动后", "第二天"],
+    "summary": "低强度动作后的轻微酸胀通常 24–48 小时缓解，不影响日常活动。",
+    "actions": ["保持动作强度，不额外加量", "次日若明显加重，回退到更温和的动作"],
+    "citation": "knowledge:after-exercise-soreness"
+  },
+  {
+    "id": "see-doctor-signals",
+    "title": "哪些情况需要就医",
+    "tags": ["就医", "医院", "严重", "危险", "麻", "无力"],
+    "summary": "出现神经或马尾受压信号时，居家动作不再适用。",
+    "actions": ["放射痛、麻木加重或下肢无力时停止运动", "大小便异常、会阴麻木或外伤后剧痛时尽快就诊"],
+    "citation": "knowledge:see-doctor-signals"
+  }
+]

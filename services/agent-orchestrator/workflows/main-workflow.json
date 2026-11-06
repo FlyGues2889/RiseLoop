@@ -1,0 +1,66 @@
+{
+  "name": "sitloop-main-workflow",
+  "version": "0.1.0",
+  "entry": "planning-agent",
+  "mcp_tools": [
+    "read_realtime_state",
+    "get_actions_by_state",
+    "write_intervention_result"
+  ],
+  "agents": {
+    "planning-agent": {
+      "config": "agents/planning-agent.md",
+      "skills": ["posture-assessment", "intervention-state-machine", "safety-check"],
+      "mcp_servers": ["health-data-mcp", "action-library-mcp"]
+    },
+    "executing-agent": {
+      "config": "agents/executing-agent.md",
+      "skills": [
+        "posture-assessment",
+        "intervention-state-machine",
+        "safety-check",
+        "qa-responder"
+      ],
+      "mcp_servers": ["health-data-mcp", "action-library-mcp"]
+    }
+  },
+  "events": {
+    "assessment_submitted": {
+      "steps": [
+        "guard:safety-check",
+        "read_realtime_state",
+        "skill:posture-assessment",
+        "internal:persist_assessment"
+      ]
+    },
+    "sitting_timeout": {
+      "steps": ["read_realtime_state", "get_actions_by_state", "internal:enqueue_push"]
+    },
+    "intervention_feedback": {
+      "steps": [
+        "guard:safety-check",
+        "read_realtime_state",
+        "skill:intervention-state-machine",
+        "write_intervention_result",
+        "get_actions_by_state"
+      ]
+    },
+    "weekly_review": {
+      "steps": ["internal:aggregate_weekly_metrics", "internal:render_summary"]
+    },
+    "user_question": {
+      "steps": ["guard:safety-check", "skill:qa-responder", "internal:persist_qa_log"]
+    }
+  },
+  "step_prefixes": {
+    "guard:": "cloud-api 中间件，不产生工具调用",
+    "skill:": "CodeArts Skill，不访问数据库",
+    "internal:": "cloud-api 内部处理，不计入 MCP 工具",
+    "default": "MCP 工具调用"
+  },
+  "guards": {
+    "max_tool_calls_per_turn": 6,
+    "on_safety_hit": "terminate_with_medical_advice",
+    "tool_count_must_equal": 3
+  }
+}
