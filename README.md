@@ -1,3 +1,7 @@
+<center>
+<img src="apps/desktop-tauri/src-tauri/icons/appIcon.svg" width="100">
+</center>
+
 # SitLoop
 
 **状态机驱动的久坐行为干预系统。**
