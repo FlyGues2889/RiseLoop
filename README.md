@@ -1,5 +1,5 @@
 <center>
-<img src="apps/desktop-tauri/src-tauri/icons/appIcon.svg" width="100">
+  <img width="100" height="100" alt="appIcon" src="https://github.com/user-attachments/assets/0e1c0e36-9ebb-4f14-ada9-4752b2f02970" />
 </center>
 
 # SitLoop
