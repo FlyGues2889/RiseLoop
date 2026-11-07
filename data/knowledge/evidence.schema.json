@@ -1,0 +1,222 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://riseloop.local/schemas/evidence.schema.json",
+  "title": "RiseLoop 文献台账（evidence.json）",
+  "description": "文献台账唯一事实源。字段口径见 docs/theory/agent-workflow.md 第 2 节硬约束。任何字段缺失、枚举越界、缺 provenance 的条目，一律退回上游重做。本文件只描述离线资料，不参与产品运行时。",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "id",
+      "source_type",
+      "title",
+      "topics",
+      "url",
+      "retrieved_at",
+      "verified",
+      "provenance",
+      "notes"
+    ],
+    "properties": {
+      "id": {
+        "type": "string",
+        "pattern": "^(pmid|doi|manual|url)-\\S+$",
+        "description": "稳定标识，前缀表明主标识来源：pmid-12345678 / doi-10.xxxx/yyyy / url-<站点>-<slug> / manual-<slug>。全表唯一。"
+      },
+      "source_type": {
+        "enum": [
+          "pubmed",
+          "crossref",
+          "openalex",
+          "who",
+          "cdc",
+          "niosh",
+          "nhc",
+          "manual"
+        ],
+        "description": "采集来源，对应 Phase 1 检索计划登记的来源。"
+      },
+      "title": {
+        "type": "string",
+        "minLength": 1,
+        "description": "题名，按原始题录照抄，不做中文化改写。"
+      },
+      "authors": {
+        "type": "array",
+        "items": { "type": "string", "minLength": 1 },
+        "description": "作者列表，格式 Surname Initials；不可得填空数组。禁止补全未列出的作者。"
+      },
+      "year": {
+        "type": ["integer", "null"],
+        "minimum": 1900,
+        "maximum": 2100,
+        "description": "出版年。不确定填 null 并在 notes 说明。"
+      },
+      "journal": {
+        "type": ["string", "null"],
+        "description": "期刊或发布机构（指南类填机构名）。不可得填 null。"
+      },
+      "volume": { "type": ["string", "null"] },
+      "issue": { "type": ["string", "null"] },
+      "pages": { "type": ["string", "null"] },
+      "doi": {
+        "oneOf": [
+          { "type": "string", "pattern": "^10\\.\\d{4,9}/\\S+$" },
+          { "type": "null" }
+        ],
+        "description": "DOI 原样记录。无法确认填 null，禁止编造。"
+      },
+      "pmid": {
+        "oneOf": [
+          { "type": "string", "pattern": "^[0-9]{7,8}$" },
+          { "type": "null" }
+        ]
+      },
+      "abstract": {
+        "type": ["string", "null"],
+        "minLength": 1,
+        "description": "摘要原文（英文保留英文）。不可得填 null 并在 notes 写“摘要不可得”。"
+      },
+      "key_finding": {
+        "oneOf": [
+          { "type": "string", "minLength": 1, "maxLength": 80 },
+          { "type": "null" }
+        ],
+        "description": "不超过 80 字。只能复述摘要明确支持的结论；禁止把“相关”写成“导致”，禁止补摘要没有的剂量、机制、人群。摘要不可得填 null。"
+      },
+      "topics": {
+        "type": "array",
+        "minItems": 1,
+        "uniqueItems": true,
+        "items": {
+          "enum": [
+            "sedentary-threshold",
+            "micro-break-workplace",
+            "neck-shoulder",
+            "low-back",
+            "safety-redflag",
+            "bct"
+          ]
+        },
+        "description": "六个主题构成的覆盖矩阵，见 docs/theory/evidence-map.md。"
+      },
+      "applies_to": {
+        "type": "array",
+        "uniqueItems": true,
+        "items": {
+          "enum": [
+            "sitting-trigger",
+            "posture-assessment",
+            "intervention-engine",
+            "action-library",
+            "safety-check",
+            "weekly-review",
+            "qa-responder"
+          ]
+        },
+        "description": "该文献支撑的系统模块。用于 evidence-map.md 回填与答辩定位。"
+      },
+      "evidence_level": {
+        "enum": [
+          "guideline",
+          "systematic-review",
+          "rct",
+          "cohort",
+          "case-control",
+          "cross-sectional",
+          "expert-opinion",
+          "other",
+          null
+        ],
+        "description": "证据等级。由 verifier 判定，extractor 不得自行填写。"
+      },
+      "url": {
+        "type": "string",
+        "format": "uri",
+        "description": "可访问的原文/题录页面。每条必须有。"
+      },
+      "retrieved_at": {
+        "type": "string",
+        "format": "date",
+        "description": "采集日期 YYYY-MM-DD。"
+      },
+      "verified": {
+        "type": "boolean",
+        "description": "默认 false，只有 verifier 给出 pass 才可为 true。"
+      },
+      "verification": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["verifier", "method", "checked_at"],
+        "properties": {
+          "verifier": { "type": "string", "minLength": 1 },
+          "method": {
+            "type": "string",
+            "enum": ["doi-resolve", "pmid-efetch", "official-page", "manual"],
+            "description": "核验手段。manual 仅用于官方网页来源。"
+          },
+          "checked_at": {
+            "oneOf": [
+              { "type": "string", "format": "date" },
+              { "type": "null" }
+            ]
+          },
+          "doi_resolves": { "type": ["boolean", "null"] },
+          "title_match": { "type": ["boolean", "null"] },
+          "author_year_match": { "type": ["boolean", "null"] },
+          "evidence_level_fit": { "type": ["boolean", "null"] }
+        },
+        "description": "核验结论。verified=false 时也必须写清原因。"
+      },
+      "provenance": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["source_api", "request_url", "fetched_at", "task_id"],
+        "properties": {
+          "source_api": {
+            "enum": [
+              "pubmed-eutils",
+              "crossref-api",
+              "openalex-api",
+              "web-page",
+              "manual-export"
+            ]
+          },
+          "request_url": { "type": "string", "minLength": 1 },
+          "fetched_at": { "type": "string", "format": "date" },
+          "task_id": {
+            "type": "string",
+            "pattern": "^T[0-9]+-[a-z0-9-]+$",
+            "description": "例如 T2-pubmed-01。"
+          },
+          "raw_snippet": {
+            "type": ["object", "null"],
+            "description": "harvester 保留的原始 JSON 片段，用于回溯。"
+          }
+        },
+        "description": "必须可回溯到具体请求。缺 provenance 即退回 harvester 重做。"
+      },
+      "contact": {
+        "oneOf": [
+          { "type": "string", "format": "email" },
+          { "type": "null" }
+        ],
+        "description": "采集联系人邮箱。可选字段（不进入 required）：匿名模式固定 null；实名模式填真实邮箱。"
+      },
+      "batch": {
+        "type": ["string", "null"],
+        "description": "批次号，例如 B1-2026-11-08。"
+      },
+      "tags": {
+        "type": "array",
+        "items": { "type": "string", "minLength": 1 },
+        "description": "自由标签，用于检索与合并去重。"
+      },
+      "notes": {
+        "type": ["string", "null"],
+        "description": "未核验原因、字段缺项原因、与同名文献的区别。verified=false 时必须非空。"
+      }
+    }
+  }
+}
