@@ -93,7 +93,7 @@ async def handle_heartbeat(
             next_check_minutes=max(1, threshold - request.sitting_minutes),
         )
 
-    if session.is_cooldown_active(settings.push_cooldown_minutes):
+    if not request.force and session.is_cooldown_active(settings.push_cooldown_minutes):
         return HeartbeatResponse(
             triggered=False,
             reason="cooldown",

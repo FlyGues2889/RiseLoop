@@ -372,7 +372,6 @@ onBeforeUnmount(() => {
   position: relative;
   padding: 1.25rem;
   border-radius: 1.25rem;
-  background: var(--md-sys-color-surface-container-high, #1c1b1f);
   color: var(--md-sys-color-on-surface, #e6e1e5);
   box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.35);
 }

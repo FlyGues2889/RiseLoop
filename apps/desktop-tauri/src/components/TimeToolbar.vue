@@ -60,7 +60,7 @@ async function demoFastForward() {
   await fastForward(state.timer.threshold_minutes);
   await refreshTimer();
   // 兜底：确保点击后一定问一次云端，而不是干等下一次心跳
-  if (state.phase === "main" && !state.pending) await tickHeartbeat();
+  if (state.phase === "main" && !state.pending) await tickHeartbeat({ force: true });
 }
 </script>
 

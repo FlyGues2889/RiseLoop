@@ -377,15 +377,16 @@ export async function fastForward(minutes) {
   const next = await timerCommand("timer_seed_elapsed", { minutes });
   if (next) state.timer = next;
   pushLog(`演示：久坐计时快进到 ${minutes} 分钟`);
-  await tickHeartbeat();
+  await tickHeartbeat({ force: true });
 }
 
-export async function tickHeartbeat() {
+export async function tickHeartbeat({ force = false } = {}) {
   if (state.phase !== "main" || state.pending || state.busy) return;
   try {
     state.heartbeat = await activeApi.heartbeat({
       sitting_minutes: sittingMinutes.value,
       threshold_minutes: state.timer.threshold_minutes,
+      force,
     });
     const actions = state.heartbeat.actions?.length
       ? state.heartbeat.actions
@@ -399,6 +400,8 @@ export async function tickHeartbeat() {
       const paused = await timerCommand("timer_pause");
       if (paused) state.timer = paused;
       pushLog(`该起来活动了：匹配 ${actions.length} 个动作，首选「${preferred.name}」`);
+    } else if (state.heartbeat.reason === "cooldown") {
+      pushLog("刚推送过，10 分钟内不会重复提醒（手动“立即开始活动”可跳过）");
     } else if (!state.heartbeat.triggered) {
       // 便于排查“点了没反应”：把云端判定写进会话记录
       pushLog(

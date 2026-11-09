@@ -17,6 +17,8 @@ class ActionPayload(BaseModel):
 class HeartbeatRequest(BaseModel):
     sitting_minutes: int = Field(ge=0, le=1440)
     threshold_minutes: int = Field(default=45, ge=30, le=60)
+    # 演示/手动触发时跳过 10 分钟冷却，正常心跳保持 False
+    force: bool = False
 
 
 class HeartbeatResponse(BaseModel):

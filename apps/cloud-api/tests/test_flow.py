@@ -203,3 +203,30 @@ def test_openapi_schema_available(client):
     assert "/assessment" in schema["paths"]
     assert "/sitting/heartbeat" in schema["paths"]
     assert "/intervention/feedback" in schema["paths"]
+
+def test_manual_force_bypasses_cooldown(client, auth_headers):
+    """演示用的“立即开始活动”必须能跳过 10 分钟冷却，否则点了没有任何反应。"""
+    assert _assessment(client, auth_headers).status_code == 200
+
+    first = client.post(
+        "/sitting/heartbeat",
+        json={"sitting_minutes": 50, "threshold_minutes": 45},
+        headers=auth_headers,
+    ).json()
+    assert first["triggered"] is True
+
+    cooling = client.post(
+        "/sitting/heartbeat",
+        json={"sitting_minutes": 50, "threshold_minutes": 45},
+        headers=auth_headers,
+    ).json()
+    assert cooling["triggered"] is False
+    assert cooling["reason"] == "cooldown"
+
+    forced = client.post(
+        "/sitting/heartbeat",
+        json={"sitting_minutes": 50, "threshold_minutes": 45, "force": True},
+        headers=auth_headers,
+    ).json()
+    assert forced["triggered"] is True
+    assert forced["reason"] == "triggered"
