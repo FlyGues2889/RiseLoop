@@ -8,8 +8,10 @@ class ActionPayload(BaseModel):
     name: str
     duration_minutes: int
     intensity: Literal["normal", "gentle"]
+    body_parts: list[str] = Field(default_factory=list)
     steps: list[str]
     caution: str = ""
+    match_reason: str = ""
 
 
 class HeartbeatRequest(BaseModel):
@@ -25,3 +27,4 @@ class HeartbeatResponse(BaseModel):
     threshold_minutes: int
     next_check_minutes: int
     action: ActionPayload | None = None
+    actions: list[ActionPayload] = Field(default_factory=list)

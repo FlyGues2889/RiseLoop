@@ -58,6 +58,8 @@ SAFETY_PROTECTED_PATHS = (
     "/sitting/heartbeat",
     "/intervention/feedback",
     "/qa/ask",
+    "/posture/risk",
+    "/posture/infer",
 )
 
 

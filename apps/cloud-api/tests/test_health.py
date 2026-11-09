@@ -26,7 +26,7 @@ def test_ready_in_mock_mode_reports_all_dependencies():
         data = response.json()
         assert data["status"] == "ready"
         names = {item["name"] for item in data["dependencies"]}
-        assert names == {"rds", "redis", "codearts", "obs", "kms"}
+        assert names == {"rds", "redis", "codearts", "obs", "kms", "modelarts"}
         assert all(item["provider"] == "mock" for item in data["dependencies"])
 
 

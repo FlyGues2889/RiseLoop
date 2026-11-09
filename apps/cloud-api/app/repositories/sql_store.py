@@ -11,6 +11,7 @@ from ..db.models import (
     Assessment,
     Base,
     InterventionLog,
+    PostureSummary,
     QaLog,
     SafetyEvent,
     SittingEvent,
@@ -292,6 +293,48 @@ class SqlStore:
                     )
                 ).scalar_one()
             )
+
+    async def add_posture_summary(self, user_id: str, payload: dict) -> str:
+        async with self._session() as session:
+            row = PostureSummary(id=str(uuid.uuid4()), user_id=user_id, **payload)
+            session.add(row)
+            await session.commit()
+            return row.id
+
+    async def list_posture_summaries(
+        self, user_id: str, since: datetime, limit: int = 500
+    ) -> list[dict]:
+        async with self._session() as session:
+            rows = (
+                (
+                    await session.execute(
+                        select(PostureSummary)
+                        .where(
+                            PostureSummary.user_id == user_id,
+                            PostureSummary.created_at >= since,
+                        )
+                        .order_by(PostureSummary.created_at.desc())
+                        .limit(limit)
+                    )
+                )
+                .scalars()
+                .all()
+            )
+        return [
+            {
+                "id": row.id,
+                "posture_class": row.posture_class,
+                "confidence": row.confidence,
+                "deviation_deg": row.deviation_deg,
+                "risk_level": row.risk_level,
+                "brli": row.brli,
+                "duration_minutes": row.duration_minutes,
+                "source": row.source,
+                "model": row.model_name,
+                "created_at": row.created_at,
+            }
+            for row in rows
+        ]
 
     async def get_session(self, user_id: str) -> SessionState | None:
         raw = await self._read_raw(user_id)

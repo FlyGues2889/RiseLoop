@@ -63,6 +63,13 @@ class Settings(BaseSettings):
     kms_ak: str | None = None
     kms_sk: str | None = None
 
+    modelarts_endpoint: str | None = None
+    modelarts_api_key: str | None = None
+    modelarts_project_id: str | None = None
+    modelarts_model_name: str = "riseloop-posture-v0"
+    modelarts_auth_header: Literal["x-auth-token", "authorization", "x-api-key"] = "x-auth-token"
+    modelarts_timeout_seconds: float = 2.5
+
     @property
     def store_backend(self) -> Literal["memory", "sql"]:
         if self.cloud_provider == "mock" and not self.rds_dsn:

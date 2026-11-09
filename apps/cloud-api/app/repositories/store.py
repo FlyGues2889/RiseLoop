@@ -76,6 +76,12 @@ class Store(Protocol):
 
     async def list_transitions(self, user_id: str, since: datetime) -> list[dict]: ...
 
+    async def add_posture_summary(self, user_id: str, payload: dict) -> str: ...
+
+    async def list_posture_summaries(
+        self, user_id: str, since: datetime, limit: int = 500
+    ) -> list[dict]: ...
+
     async def count_safety_events(self, user_id: str, since: datetime) -> int: ...
 
     async def count_sitting_events(self, user_id: str, since: datetime) -> int: ...
@@ -97,6 +103,7 @@ class MemoryStore:
         self._sitting_events: list[dict] = []
         self._safety_events: list[dict] = []
         self._qa_logs: list[dict] = []
+        self._posture_summaries: dict[str, list[dict]] = {}
         self._actions = [ActionRecord(**item) for item in load_seed_actions()]
 
     @property
@@ -163,6 +170,26 @@ class MemoryStore:
             for item in self._transitions.get(user_id, [])
             if datetime.fromisoformat(item["timestamp"]) >= since
         ]
+
+    async def add_posture_summary(self, user_id: str, payload: dict) -> str:
+        record = {
+            "id": str(uuid.uuid4()),
+            "user_id": user_id,
+            "created_at": datetime.now(UTC),
+            **payload,
+        }
+        self._posture_summaries.setdefault(user_id, []).append(record)
+        return record["id"]
+
+    async def list_posture_summaries(
+        self, user_id: str, since: datetime, limit: int = 500
+    ) -> list[dict]:
+        items = [
+            item
+            for item in self._posture_summaries.get(user_id, [])
+            if item["created_at"] >= since
+        ]
+        return sorted(items, key=lambda item: item["created_at"], reverse=True)[:limit]
 
     async def count_safety_events(self, user_id: str, since: datetime) -> int:
         return sum(

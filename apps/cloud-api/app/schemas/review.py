@@ -16,6 +16,12 @@ class PainStats(BaseModel):
     trend: Literal["improving", "stable", "worsening", "unknown"] = "unknown"
 
 
+class PostureStats(BaseModel):
+    samples: int = 0
+    dominant: str | None = None
+    high_risk_ratio: float = 0.0
+
+
 class ObstacleCount(BaseModel):
     obstacle: str
     count: int
@@ -31,6 +37,7 @@ class WeeklyReview(BaseModel):
     top_obstacles: list[ObstacleCount] = Field(default_factory=list)
     safety_events: int = 0
     sitting_events: int = 0
+    posture: PostureStats = Field(default_factory=PostureStats)
     highlights: list[str] = Field(default_factory=list)
     suggestions: list[str] = Field(default_factory=list)
     disclaimer: str

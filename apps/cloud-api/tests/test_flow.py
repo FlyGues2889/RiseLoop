@@ -105,6 +105,23 @@ def test_heartbeat_triggers_then_cooldown(client, auth_headers):
     assert second["reason"] == "cooldown"
 
 
+def test_heartbeat_returns_multiple_matched_actions(client, auth_headers):
+    _assessment(client, auth_headers)
+    body = client.post(
+        "/sitting/heartbeat", json={"sitting_minutes": 50, "threshold_minutes": 45}, headers=auth_headers
+    ).json()
+
+    assert body["triggered"] is True
+    ids = [action["id"] for action in body["actions"]]
+    assert len(ids) == 3, ids
+    assert ids[0] == "s1-stand-break"
+    assert "s1-hip-flexor" in ids
+    assert "s0-neck-release" in ids
+    assert body["action"]["id"] == ids[0]
+    assert all(action["match_reason"] for action in body["actions"])
+    assert any("更温和的备选" in action["match_reason"] for action in body["actions"])
+
+
 def test_heartbeat_threshold_validation(client, auth_headers):
     response = client.post(
         "/sitting/heartbeat", json={"sitting_minutes": 50, "threshold_minutes": 90}, headers=auth_headers

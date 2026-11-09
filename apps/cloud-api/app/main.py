@@ -8,6 +8,7 @@ from .api.routes.assessment import router as assessment_router
 from .api.routes.auth import router as auth_router
 from .api.routes.health import router as health_router
 from .api.routes.intervention import router as intervention_router
+from .api.routes.posture import router as posture_router
 from .api.routes.qa import router as qa_router
 from .api.routes.review import router as review_router
 from .api.routes.sitting import router as sitting_router
@@ -61,6 +62,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         auth_router,
         assessment_router,
         sitting_router,
+        posture_router,
         intervention_router,
         qa_router,
         review_router,

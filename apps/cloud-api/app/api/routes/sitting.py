@@ -36,8 +36,10 @@ async def list_actions(
             name=action.name,
             duration_minutes=action.duration_minutes,
             intensity=action.intensity,
+            body_parts=list(action.body_parts),
             steps=list(action.steps),
             caution=action.caution,
+            match_reason="匹配当前状态",
         )
         for action in actions
     ]

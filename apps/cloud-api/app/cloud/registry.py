@@ -3,6 +3,7 @@ from .base import ServiceStatus
 from .codearts import CodeArtsService
 from .dcs import DcsService
 from .kms import KmsService
+from .modelarts import ModelArtsService
 from .obs import ObsService
 from .rds import RdsService
 
@@ -15,10 +16,11 @@ class CloudRegistry:
         self.codearts = CodeArtsService(settings)
         self.obs = ObsService(settings)
         self.kms = KmsService(settings)
+        self.modelarts = ModelArtsService(settings)
 
     @property
     def services(self) -> tuple:
-        return (self.rds, self.redis, self.codearts, self.obs, self.kms)
+        return (self.rds, self.redis, self.codearts, self.obs, self.kms, self.modelarts)
 
     async def check_all(self) -> list[ServiceStatus]:
         return [await service.check() for service in self.services]

@@ -7,8 +7,11 @@ from ..schemas.review import (
     InterventionStats,
     ObstacleCount,
     PainStats,
+    PostureStats,
     WeeklyReview,
 )
+
+HIGH_RISK_LEVELS = ("high", "very_high")
 
 TRANSITION_TYPES = ("upgrade", "rollback", "degrade", "hold", "short_circuit")
 
@@ -39,7 +42,26 @@ def _build_highlights(review: WeeklyReview) -> list[str]:
         highlights.append("疼痛评分在上升，建议缩短单次时长并观察。")
     if review.safety_events:
         highlights.append(f"出现 {review.safety_events} 次安全中断，请优先就医确认。")
+    if review.posture.samples and review.posture.high_risk_ratio >= 0.3:
+        ratio = round(review.posture.high_risk_ratio * 100)
+        highlights.append(
+            f"近 {review.days} 天约 {ratio}% 的姿态采样处于高风险，先缩短单次久坐时长。"
+        )
     return highlights
+
+
+def _posture_stats(summaries: list[dict]) -> PostureStats:
+    if not summaries:
+        return PostureStats()
+    classes = Counter(item.get("posture_class") for item in summaries if item.get("posture_class"))
+    high_risk = sum(
+        1 for item in summaries if item.get("risk_level") in HIGH_RISK_LEVELS
+    )
+    return PostureStats(
+        samples=len(summaries),
+        dominant=classes.most_common(1)[0][0] if classes else None,
+        high_risk_ratio=round(high_risk / len(summaries), 3),
+    )
 
 
 def _build_suggestions(review: WeeklyReview) -> list[str]:
@@ -68,6 +90,7 @@ async def build_weekly_review(store: Store, user_id: str, days: int) -> WeeklyRe
     transitions = await store.list_transitions(user_id, since)
     safety_events = await store.count_safety_events(user_id, since)
     sitting_events = await store.count_sitting_events(user_id, since)
+    posture_summaries = await store.list_posture_summaries(user_id, since)
     session = await store.get_session(user_id)
 
     total = len(logs)
@@ -104,6 +127,7 @@ async def build_weekly_review(store: Store, user_id: str, days: int) -> WeeklyRe
         ],
         safety_events=safety_events,
         sitting_events=sitting_events,
+        posture=_posture_stats(posture_summaries),
         disclaimer=MEDICAL_DISCLAIMER,
     )
     review.highlights = _build_highlights(review)
