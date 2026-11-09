@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://riseloop.local/schemas/evidence.schema.json",
   "title": "RiseLoop 文献台账（evidence.json）",
-  "description": "文献台账唯一事实源。字段口径见 docs/theory/agent-workflow.md 第 2 节硬约束。任何字段缺失、枚举越界、缺 provenance 的条目，一律退回上游重做。本文件只描述离线资料，不参与产品运行时。",
+  "description": "文献台账唯一事实源。字段口径见 docs/architecture/evidence-map.md 与每条记录的 provenance/verification。任何字段缺失、枚举越界、缺 provenance 的条目，一律退回上游重做。本文件只描述离线资料，不参与产品运行时。",
   "type": "array",
   "items": {
     "type": "object",
@@ -99,7 +99,7 @@
             "bct"
           ]
         },
-        "description": "六个主题构成的覆盖矩阵，见 docs/theory/evidence-map.md。"
+        "description": "六个主题构成的覆盖矩阵，见 docs/architecture/evidence-map.md。"
       },
       "applies_to": {
         "type": "array",

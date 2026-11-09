@@ -1,0 +1,2823 @@
+[
+  {
+    "id": "url-cdc-adult-activity",
+    "source_type": "cdc",
+    "title": "Adult Activity: An Overview",
+    "authors": [
+      "Centers for Disease Control and Prevention"
+    ],
+    "year": 2023,
+    "journal": "Centers for Disease Control and Prevention",
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "doi": null,
+    "pmid": null,
+    "abstract": null,
+    "key_finding": "成人每周至少150分钟中等强度有氧活动，每周2天力量训练；少坐多动。",
+    "topics": [
+      "sedentary-threshold"
+    ],
+    "applies_to": [
+      "sitting-trigger"
+    ],
+    "evidence_level": "guideline",
+    "url": "https://www.cdc.gov/physical-activity-basics/guidelines/adults.html",
+    "retrieved_at": "2026-11-08",
+    "verified": true,
+    "verification": {
+      "verifier": "RiseLoop verifier (manual official-page check)",
+      "method": "official-page",
+      "checked_at": "2026-11-08",
+      "doi_resolves": null,
+      "title_match": true,
+      "author_year_match": null,
+      "evidence_level_fit": true
+    },
+    "provenance": {
+      "source_api": "web-page",
+      "request_url": "https://www.cdc.gov/physical-activity-basics/guidelines/adults.html",
+      "fetched_at": "2026-11-08",
+      "task_id": "T1-web-02",
+      "raw_snippet": {
+        "page_title": "Adult Activity: An Overview",
+        "page_date": "Dec. 20, 2023"
+      }
+    },
+    "contact": null,
+    "batch": "B1-2026-11-08",
+    "tags": [
+      "guideline",
+      "cdc",
+      "physical-activity",
+      "sedentary-behaviour"
+    ],
+    "notes": "官方页面无摘要；key_finding 仅复述页面明确表述。"
+  },
+  {
+    "id": "pmid-35292487",
+    "source_type": "pubmed",
+    "title": "Acute effect of breaking up prolonged sitting on cognition: a systematic review.",
+    "authors": [
+      "Chueh TY",
+      "Chen YC",
+      "Hung TM"
+    ],
+    "year": 2022,
+    "journal": "BMJ open",
+    "volume": "12",
+    "issue": "3",
+    "pages": "e050458",
+    "doi": "10.1136/bmjopen-2021-050458",
+    "pmid": "35292487",
+    "abstract": "OBJECTIVES: To review the current evidence on the acute effects of interrupting prolonged periods of sitting with intermittent physical activity (PA) on cognition in healthy populations.\nDESIGN: This systematic review followed the Preferred Reporting Items for Systematic Reviews and Meta-Analysis guidelines.\nMETHODS: Studies were included if they investigated the acute effects of taking regular PA breaks from sitting on cognition in healthy populations without any cardiovascular disease, history of brain injury, or psychiatric or neurological disorder. Four electronic databases-PubMed, Scopus, MEDLINE and ProQuest-were searched for eligible studies on 20 September 2020. Study quality was assessed using the Physiotherapy Evidence Database scale.\nRESULTS: Seven studies, involving 168 participants aged between 18 and 80 years, were eligible for inclusion in this review. Three of the seven studies found positive effects of interrupting sitting with either (a) 3 min of relatively high-intensity (6 km/hour) walking every 30 min on attention and inhibitory control in young adults; (b) hourly breaks with progressively longer duration (10-30 min) of very light-intensity cycling/walking on attention, working memory and cognitive flexibility in adults with obesity; or (c) an initial bout of continuous moderate-intensity exercise, followed by interruption of post-exercise sitting with 3 min breaks of light-intensity walking (3.2 km/hour) every 30 min, on working memory in older adults with overweight.\nCONCLUSION: Given the limited evidence with mixed findings on this topic in the literature and the heterogeneity of PA protocols across the included studies, the results regarding the effectiveness of interrupting prolonged sitting with PA breaks in improving cognition warrant further verification.\nPROSPERO REGISTRATION NUMBER: CRD42020147536.",
+    "key_finding": "7项研究证据有限且结论不一，打断久坐对认知的改善仍需验证。",
+    "topics": [
+      "sedentary-threshold"
+    ],
+    "applies_to": [
+      "sitting-trigger"
+    ],
+    "evidence_level": "systematic-review",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/35292487/",
+    "retrieved_at": "2026-11-08",
+    "verified": true,
+    "verification": {
+      "verifier": "RiseLoop verifier (automated PMID efetch)",
+      "method": "pmid-efetch",
+      "checked_at": "2026-11-08",
+      "doi_resolves": null,
+      "title_match": true,
+      "author_year_match": true,
+      "evidence_level_fit": true
+    },
+    "provenance": {
+      "source_api": "pubmed-eutils",
+      "request_url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&retmode=xml&id=37326297,40111906,35147898,22374636,32555024,39537176,36728338,34822137,20577058,30087262,33054341,39803911,29496356,32596199,41243296,35292487,38201931,37431089,31450538,34169503",
+      "fetched_at": "2026-11-08",
+      "task_id": "T1-pubmed-01",
+      "raw_snippet": {
+        "pmid": "35292487",
+        "pubtypes": [
+          "Journal Article",
+          "Systematic Review",
+          "Research Support, Non-U.S. Gov't"
+        ],
+        "mesh": [
+          "Adolescent",
+          "Adult",
+          "Aged",
+          "Aged, 80 and over",
+          "Blood Glucose",
+          "Cognition",
+          "Cross-Over Studies",
+          "Exercise"
+        ]
+      }
+    },
+    "contact": null,
+    "batch": "B1-2026-11-08",
+    "tags": [
+      "sedentary-threshold",
+      "journal-article",
+      "systematic-review",
+      "research-support-non-u-s-gov-t"
+    ],
+    "notes": "PMID efetch 核验；证据等级按 PubMed 文献类型与摘要设计判定；DOI 未单独解析。"
+  },
+  {
+    "id": "pmid-35147898",
+    "source_type": "pubmed",
+    "title": "The Acute Effects of Interrupting Prolonged Sitting Time in Adults with Standing and Light-Intensity Walking on Biomarkers of Cardiometabolic Health in Adults: A Systematic Review and Meta-analysis.",
+    "authors": [
+      "Buffey AJ",
+      "Herring MP",
+      "Langley CK",
+      "Donnelly AE",
+      "Carson BP"
+    ],
+    "year": 2022,
+    "journal": "Sports medicine (Auckland, N.Z.)",
+    "volume": "52",
+    "issue": "8",
+    "pages": "1765-1787",
+    "doi": "10.1007/s40279-022-01649-4",
+    "pmid": "35147898",
+    "abstract": "BACKGROUND: Increasing evidence highlights that accumulating sitting time in prolonged bouts is detrimental to cardiometabolic health.\nOBJECTIVES: This systematic review aimed to compare the effects of fractionating prolonged sitting with frequent short bouts of standing and light-intensity walking on cardiometabolic health markers and conduct a meta-analysis for differences in systolic blood pressure (SBP), postprandial glucose and insulin.\nMETHODS: Experimental randomised crossover trials with at least three intervention arms that assessed interrupting sitting with frequent short bouts of standing and light-intensity walking over a single day compared to a prolonged sitting condition were retrieved. These studies measured at minimum one marker of cardiometabolic health in adults > 18 years. An electronic search was completed on the 2nd of August 2021, searching PubMed and Web of Science Core Collection, Scopus, Embase, Cochrane Library and APA PsycINFO. Risk of bias was assessed using a modified Downs and Black checklist. A meta-analysis was conducted using calculated Cohen's d quantifying the magnitude of difference between experimental conditions.\nRESULTS: Seven studies met the inclusion criteria for the systematic review. All seven studies were included within the meta-analysis for postprandial glucose, four studies were pooled for postprandial insulin and three for SBP. Biomarkers of cardiometabolic health were discussed qualitatively if fewer than three studies measured and reported the variable. A meta-analysis of seven acute, 1-day randomised crossover trials that sampled mixed-sex adults (aged > 18 years) who were predominately overweight or participants with obesity found that standing as an interruption to prolonged sitting significantly reduced postprandial glucose (∆ = - 0.31, 95% CI - 0.60, - 0.03; z = - 2.15, p < 0.04) but had no significant effect on insulin or SBP. Light-intensity walking was shown to significantly attenuate postprandial glucose (∆ = - 0.72, 95% CI - 1.03, - 0.41; z = - 4.57, p < 0.001) and insulin (∆ = - 0.83, 95% CI - 1.18, - 0.48; z = - 4.66, p < 0.001) compared to continued sitting. When comparing light-intensity walking breaks compared to standing breaks a significant reduction in glucose (∆ = - 0.30, 95% CI - 0.52, - 0.08; z = -2.64, p < 0.009) and insulin (∆ = - 0.54, 95% CI - 0.75, - 0.33; z = -4.98, p < 0.001) was observed. Both standing and light-intensity walking showed no effect on SBP.\nCONCLUSIONS: Frequent short interruptions of standing significantly attenuated postprandial glucose compared to prolonged sitting; however, light-intensity walking was found to represent a superior physical activity break. The feasibility and longitudinal implications of breaking sedentary behaviour with light-intensity walking should be investigated in a free-living setting.\nREGISTRATION: Not available.",
+    "key_finding": "打断久坐的站立可降低餐后血糖；轻强度步行还降低胰岛素，效果优于站立。",
+    "topics": [
+      "sedentary-threshold"
+    ],
+    "applies_to": [
+      "sitting-trigger"
+    ],
+    "evidence_level": "systematic-review",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/35147898/",
+    "retrieved_at": "2026-11-08",
+    "verified": true,
+    "verification": {
+      "verifier": "RiseLoop verifier (automated PMID efetch)",
+      "method": "pmid-efetch",
+      "checked_at": "2026-11-08",
+      "doi_resolves": null,
+      "title_match": true,
+      "author_year_match": true,
+      "evidence_level_fit": true
+    },
+    "provenance": {
+      "source_api": "pubmed-eutils",
+      "request_url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&retmode=xml&id=37326297,40111906,35147898,22374636,32555024,39537176,36728338,34822137,20577058,30087262,33054341,39803911,29496356,32596199,41243296,35292487,38201931,37431089,31450538,34169503",
+      "fetched_at": "2026-11-08",
+      "task_id": "T1-pubmed-01",
+      "raw_snippet": {
+        "pmid": "35147898",
+        "pubtypes": [
+          "Meta-Analysis",
+          "Systematic Review",
+          "Journal Article"
+        ],
+        "mesh": [
+          "Adult",
+          "Biomarkers",
+          "Blood Glucose",
+          "Cardiovascular Diseases",
+          "Humans",
+          "Insulin",
+          "Postprandial Period",
+          "Walking"
+        ]
+      }
+    },
+    "contact": null,
+    "batch": "B1-2026-11-08",
+    "tags": [
+      "sedentary-threshold",
+      "meta-analysis",
+      "systematic-review",
+      "journal-article"
+    ],
+    "notes": "PMID efetch 核验；证据等级按 PubMed 文献类型与摘要设计判定；DOI 未单独解析。"
+  },
+  {
+    "id": "pmid-33054341",
+    "source_type": "pubmed",
+    "title": "Sedentary behaviour and health in adults: an overview of systematic reviews.",
+    "authors": [
+      "Saunders TJ",
+      "McIsaac T",
+      "Douillette K",
+      "Gaulton N",
+      "Hunter S",
+      "Rhodes RE",
+      "Prince SA",
+      "Carson V",
+      "Chaput JP",
+      "Chastin S",
+      "Giangregorio L",
+      "Janssen I",
+      "Katzmarzyk PT",
+      "Kho ME",
+      "Poitras VJ",
+      "Powell KE",
+      "Ross R",
+      "Ross-White A",
+      "Tremblay MS",
+      "Healy GN"
+    ],
+    "year": 2020,
+    "journal": "Applied physiology, nutrition, and metabolism = Physiologie appliquee, nutrition et metabolisme",
+    "volume": "45",
+    "issue": "10 (Suppl. 2)",
+    "pages": "S197-S217",
+    "doi": "10.1139/apnm-2020-0272",
+    "pmid": "33054341",
+    "abstract": "The purpose of this overview of systematic reviews was to determine the relationship between different types and patterns of sedentary behaviour and selected health outcomes in adults and older adults. Five electronic databases were last searched in May, 2019, with a 10-year search limit. Included reviews met the a priori population (community-dwelling adults aged 18 years and older), intervention/exposure/comparator (various types and/or patterns of sedentary behaviour), and outcomes criteria. Eighteen systematic reviews were included in the evidence synthesis. High levels of sedentary behaviour are unfavourably associated with cognitive function, depression, function and disability, physical activity levels, and physical health-related quality of life in adults. Reducing or breaking up sedentary behaviour may benefit body composition and markers of cardiometabolic risk. Total sedentary behaviour and TV viewing were most consistently associated with unfavourable health outcomes, while computer and Internet use may be favourably associated with cognitive function for older adults. The quality of evidence within individual reviews (as assessed by review authors) varied from low to high, while the certainty of evidence was low to very low. These findings have important public health implications, suggesting that adults should avoid high levels of sedentary behaviour and break-up periods of prolonged sitting. (PROSPERO registration nos.: CRD42019123121 and CRD42019127157.) Novelty High levels of sedentary behaviour are unfavourably associated with important health outcomes in adults. Reducing or breaking up sedentary behaviour may benefit body composition and markers of cardiometabolic risk. Computer and Internet use may be favourably associated with cognitive function in older adults.",
+    "key_finding": "高久坐与认知、抑郁、功能等不良结局相关；减少或打断久坐可能改善体成分与心血管风险。",
+    "topics": [
+      "sedentary-threshold"
+    ],
+    "applies_to": [
+      "sitting-trigger"
+    ],
+    "evidence_level": "systematic-review",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/33054341/",
+    "retrieved_at": "2026-11-08",
+    "verified": true,
+    "verification": {
+      "verifier": "RiseLoop verifier (automated PMID efetch)",
+      "method": "pmid-efetch",
+      "checked_at": "2026-11-08",
+      "doi_resolves": null,
+      "title_match": true,
+      "author_year_match": true,
+      "evidence_level_fit": true
+    },
+    "provenance": {
+      "source_api": "pubmed-eutils",
+      "request_url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&retmode=xml&id=37326297,40111906,35147898,22374636,32555024,39537176,36728338,34822137,20577058,30087262,33054341,39803911,29496356,32596199,41243296,35292487,38201931,37431089,31450538,34169503",
+      "fetched_at": "2026-11-08",
+      "task_id": "T1-pubmed-01",
+      "raw_snippet": {
+        "pmid": "33054341",
+        "pubtypes": [
+          "Journal Article"
+        ],
+        "mesh": [
+          "Accidents",
+          "Adult",
+          "Aging",
+          "Body Composition",
+          "Cardiometabolic Risk Factors",
+          "Depression",
+          "Efficiency",
+          "Exercise"
+        ]
+      }
+    },
+    "contact": null,
+    "batch": "B1-2026-11-08",
+    "tags": [
+      "sedentary-threshold",
+      "journal-article"
+    ],
+    "notes": "PMID efetch 核验；证据等级按 PubMed 文献类型与摘要设计判定；DOI 未单独解析。 研究设计：18 篇系统综述的 overview。"
+  },
+  {
+    "id": "url-who-9789240015128",
+    "source_type": "who",
+    "title": "WHO guidelines on physical activity and sedentary behaviour",
+    "authors": [
+      "World Health Organization"
+    ],
+    "year": 2020,
+    "journal": "World Health Organization",
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "doi": null,
+    "pmid": null,
+    "abstract": null,
+    "key_finding": "WHO 2020 指南首次纳入久坐行为建议，并给出各年龄组身体活动量推荐。",
+    "topics": [
+      "sedentary-threshold"
+    ],
+    "applies_to": [
+      "sitting-trigger"
+    ],
+    "evidence_level": "guideline",
+    "url": "https://www.who.int/publications/i/item/9789240015128",
+    "retrieved_at": "2026-11-08",
+    "verified": true,
+    "verification": {
+      "verifier": "RiseLoop verifier (manual official-page check)",
+      "method": "official-page",
+      "checked_at": "2026-11-08",
+      "doi_resolves": null,
+      "title_match": true,
+      "author_year_match": null,
+      "evidence_level_fit": true
+    },
+    "provenance": {
+      "source_api": "web-page",
+      "request_url": "https://www.who.int/publications/i/item/9789240015128",
+      "fetched_at": "2026-11-08",
+      "task_id": "T1-web-01",
+      "raw_snippet": {
+        "page_title": "WHO guidelines on physical activity and sedentary behaviour",
+        "page_date": "25 November 2020"
+      }
+    },
+    "contact": null,
+    "batch": "B1-2026-11-08",
+    "tags": [
+      "guideline",
+      "who",
+      "sedentary-behaviour",
+      "physical-activity"
+    ],
+    "notes": "官方页面无摘要；key_finding 仅复述页面明确表述。"
+  },
+  {
+    "id": "pmid-30087262",
+    "source_type": "pubmed",
+    "title": "The Short Term Musculoskeletal and Cognitive Effects of Prolonged Sitting During Office Computer Work.",
+    "authors": [
+      "Baker R",
+      "Coenen P",
+      "Howie E",
+      "Williamson A",
+      "Straker L"
+    ],
+    "year": 2018,
+    "journal": "International journal of environmental research and public health",
+    "volume": "15",
+    "issue": "8",
+    "pages": null,
+    "doi": "10.3390/ijerph15081678",
+    "pmid": "30087262",
+    "abstract": "Office workers are exposed to high levels of sedentary time. In addition to cardio-vascular and metabolic health risks, this sedentary time may have musculoskeletal and/or cognitive impacts on office workers. Participants (n = 20) undertook two hours of laboratory-based sitting computer work to investigate changes in discomfort and cognitive function (sustained attention and problem solving), along with muscle fatigue, movement and mental state. Over time, discomfort increased in all body areas (total body IRR [95% confidence interval]: 1.43 [1.33⁻1.53]) reaching clinically meaningful levels in the low back and hip/thigh/buttock areas. Creative problem solving errors increased (β = 0.25 [0.03⁻1.47]) while sustained attention did not change. There was no change in erector spinae, trapezius, rectus femoris, biceps femoris and external oblique median frequency or amplitude; low back angle changed towards less lordosis, pelvis movement increased, and mental state deteriorated. There were no substantial correlations between discomfort and cognitive function. The observed changes suggest prolonged sitting may have consequences for musculoskeletal discomfort and cognitive function and breaks to interrupt prolonged sitting are recommended.",
+    "key_finding": "连续2小时办公久坐使多部位不适增加、创造性问题解决错误增多；建议插入休息。",
+    "topics": [
+      "sedentary-threshold"
+    ],
+    "applies_to": [
+      "sitting-trigger"
+    ],
+    "evidence_level": "other",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/30087262/",
+    "retrieved_at": "2026-11-08",
+    "verified": true,
+    "verification": {
+      "verifier": "RiseLoop verifier (automated PMID efetch)",
+      "method": "pmid-efetch",
+      "checked_at": "2026-11-08",
+      "doi_resolves": null,
+      "title_match": true,
+      "author_year_match": true,
+      "evidence_level_fit": true
+    },
+    "provenance": {
+      "source_api": "pubmed-eutils",
+      "request_url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&retmode=xml&id=37326297,40111906,35147898,22374636,32555024,39537176,36728338,34822137,20577058,30087262,33054341,39803911,29496356,32596199,41243296,35292487,38201931,37431089,31450538,34169503",
+      "fetched_at": "2026-11-08",
+      "task_id": "T1-pubmed-01",
+      "raw_snippet": {
+        "pmid": "30087262",
+        "pubtypes": [
+          "Journal Article",
+          "Research Support, Non-U.S. Gov't"
+        ],
+        "mesh": [
+          "Adult",
+          "Australia",
+          "Cognition",
+          "Computers",
+          "Ergonomics",
+          "Female",
+          "Humans",
+          "Male"
+        ]
+      }
+    },
+    "contact": null,
+    "batch": "B1-2026-11-08",
+    "tags": [
+      "sedentary-threshold",
+      "journal-article",
+      "research-support-non-u-s-gov-t"
+    ],
+    "notes": "PMID efetch 核验；证据等级按 PubMed 文献类型与摘要设计判定；DOI 未单独解析。 研究设计：实验室交叉研究（n=20）。"
+  },
+  {
+    "id": "pmid-22374636",
+    "source_type": "pubmed",
+    "title": "Breaking up prolonged sitting reduces postprandial glucose and insulin responses.",
+    "authors": [
+      "Dunstan DW",
+      "Kingwell BA",
+      "Larsen R",
+      "Healy GN",
+      "Cerin E",
+      "Hamilton MT",
+      "Shaw JE",
+      "Bertovic DA",
+      "Zimmet PZ",
+      "Salmon J",
+      "Owen N"
+    ],
+    "year": 2012,
+    "journal": "Diabetes care",
+    "volume": "35",
+    "issue": "5",
+    "pages": "976-83",
+    "doi": "10.2337/dc11-1931",
+    "pmid": "22374636",
+    "abstract": "OBJECTIVE: Observational studies show breaking up prolonged sitting has beneficial associations with cardiometabolic risk markers, but intervention studies are required to investigate causality. We examined the acute effects on postprandial glucose and insulin levels of uninterrupted sitting compared with sitting interrupted by brief bouts of light- or moderate-intensity walking.\nRESEARCH DESIGN AND METHODS: Overweight/obese adults (n = 19), aged 45-65 years, were recruited for a randomized three-period, three-treatment acute crossover trial: 1) uninterrupted sitting; 2) seated with 2-min bouts of light-intensity walking every 20 min; and 3) seated with 2-min bouts of moderate-intensity walking every 20 min. A standardized test drink was provided after an initial 2-h period of uninterrupted sitting. The positive incremental area under curves (iAUC) for glucose and insulin (mean [95% CI]) for the 5 h after the test drink (75 g glucose, 50 g fat) were calculated for the respective treatments.\nRESULTS: The glucose iAUC (mmol/L) · h after both activity-break conditions was reduced (light: 5.2 [4.1-6.6]; moderate: 4.9 [3.8-6.1]; both P < 0.01) compared with uninterrupted sitting (6.9 [5.5-8.7]). Insulin iAUC (pmol/L) · h was also reduced with both activity-break conditions (light: 633.6 [552.4-727.1]; moderate: 637.6 [555.5-731.9], P < 0.0001) compared with uninterrupted sitting (828.6 [722.0-950.9]).\nCONCLUSIONS: Interrupting sitting time with short bouts of light- or moderate-intensity walking lowers postprandial glucose and insulin levels in overweight/obese adults. This may improve glucose metabolism and potentially be an important public health and clinical intervention strategy for reducing cardiovascular risk.",
+    "key_finding": "每20分钟插入2分钟轻或中强度步行，降低超重成人餐后血糖与胰岛素。",
+    "topics": [
+      "sedentary-threshold"
+    ],
+    "applies_to": [
+      "sitting-trigger"
+    ],
+    "evidence_level": "rct",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/22374636/",
+    "retrieved_at": "2026-11-08",
+    "verified": true,
+    "verification": {
+      "verifier": "RiseLoop verifier (automated PMID efetch)",
+      "method": "pmid-efetch",
+      "checked_at": "2026-11-08",
+      "doi_resolves": null,
+      "title_match": true,
+      "author_year_match": true,
+      "evidence_level_fit": true
+    },
+    "provenance": {
+      "source_api": "pubmed-eutils",
+      "request_url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&retmode=xml&id=37326297,40111906,35147898,22374636,32555024,39537176,36728338,34822137,20577058,30087262,33054341,39803911,29496356,32596199,41243296,35292487,38201931,37431089,31450538,34169503",
+      "fetched_at": "2026-11-08",
+      "task_id": "T1-pubmed-01",
+      "raw_snippet": {
+        "pmid": "22374636",
+        "pubtypes": [
+          "Journal Article",
+          "Randomized Controlled Trial",
+          "Research Support, Non-U.S. Gov't"
+        ],
+        "mesh": [
+          "Aged",
+          "Blood Glucose",
+          "Female",
+          "Humans",
+          "Insulin",
+          "Male",
+          "Middle Aged",
+          "Obesity"
+        ]
+      }
+    },
+    "contact": null,
+    "batch": "B1-2026-11-08",
+    "tags": [
+      "sedentary-threshold",
+      "journal-article",
+      "randomized-controlled-trial",
+      "research-support-non-u-s-gov-t"
+    ],
+    "notes": "PMID efetch 核验；证据等级按 PubMed 文献类型与摘要设计判定；DOI 未单独解析。"
+  },
+  {
+    "id": "url-niosh-office-environment",
+    "source_type": "niosh",
+    "title": "Office Environments and Your Safety",
+    "authors": [
+      "National Institute for Occupational Safety and Health"
+    ],
+    "year": 2026,
+    "journal": "National Institute for Occupational Safety and Health",
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "doi": null,
+    "pmid": null,
+    "abstract": null,
+    "key_finding": "NIOSH 建议避免久坐或久站，电脑工作者每小时短暂休息以减轻不适。",
+    "topics": [
+      "micro-break-workplace"
+    ],
+    "applies_to": [
+      "intervention-engine",
+      "action-library"
+    ],
+    "evidence_level": "guideline",
+    "url": "https://www.cdc.gov/niosh/office-environment/about/index.html",
+    "retrieved_at": "2026-11-08",
+    "verified": true,
+    "verification": {
+      "verifier": "RiseLoop verifier (manual official-page check)",
+      "method": "official-page",
+      "checked_at": "2026-11-08",
+      "doi_resolves": null,
+      "title_match": true,
+      "author_year_match": null,
+      "evidence_level_fit": true
+    },
+    "provenance": {
+      "source_api": "web-page",
+      "request_url": "https://www.cdc.gov/niosh/office-environment/about/index.html",
+      "fetched_at": "2026-11-08",
+      "task_id": "T2-web-01",
+      "raw_snippet": {
+        "page_title": "Office Environments and Your Safety",
+        "page_date": "July 16, 2026"
+      }
+    },
+    "contact": null,
+    "batch": "B2-2026-11-08",
+    "tags": [
+      "guideline",
+      "niosh",
+      "workplace",
+      "micro-break"
+    ],
+    "notes": "官方页面无摘要；key_finding 仅复述页面明确表述。"
+  },
+  {
+    "id": "pmid-39166323",
+    "source_type": "pubmed",
+    "title": "Effects of Sedentary Behavior Reduction on Blood Pressure in Desk Workers: Results From the RESET-BP Randomized Clinical Trial.",
+    "authors": [
+      "Barone Gibbs B",
+      "Perera S",
+      "Huber KA",
+      "Paley JL",
+      "Conroy MB",
+      "Jakicic JM",
+      "Muldoon MF"
+    ],
+    "year": 2024,
+    "journal": "Circulation",
+    "volume": "150",
+    "issue": "18",
+    "pages": "1416-1427",
+    "doi": "10.1161/CIRCULATIONAHA.123.068564",
+    "pmid": "39166323",
+    "abstract": "BACKGROUND: Sedentary behavior (SB) is observationally associated with cardiovascular disease risk. However, randomized clinical trials testing causation are limited. We hypothesized that reducing SB would decrease blood pressure (BP) and pulse wave velocity (PWV) in sedentary adults.\nMETHODS: This parallel-arm, 3-month randomized clinical trial recruited desk workers, age 18 to 65 years, with systolic BP 120 to 159 or diastolic BP (DBP) 80 to 99 mm Hg, off antihypertensive medications, and reporting <150 min/wk of moderate to vigorous intensity physical activity. Participants were randomized to a SB reduction intervention or a no-contact control group. The intervention sought to replace 2 to 4 h/d of SB with standing and stepping through coaching, a wrist-worn activity prompter, and a sit-stand desk. SB and physical activity were measured with a thigh-worn accelerometer and quantified during all waking hours and separately during work and nonwork times. Clinic-based resting systolic BP (primary outcome) and DBP, 24-hour ambulatory BP, and PWV were assessed by blinded technicians at baseline and 3 months.\nRESULTS: Participants (n=271) had a mean age of 45 years and systolic BP/DBP 129/83 mm Hg. Compared with controls, intervention participants reduced SB (-1.15±0.17 h/d), increased standing (0.94±0.14 h/d), and increased stepping (5.4±2.4 min/d; all P<0.05). SB and activity changes mainly occurred during work time and were below the goal. The intervention did not reduce BP or PWV in the intervention group compared with controls. Between-group differences in resting systolic BP and DBP changes were -0.22±0.90 (P=0.808) and 0.13±0.61 mm Hg (P=0.827), respectively. The findings were similarly null for ambulatory BP and PWV. Decreases in work-time SB were associated with favorable reductions in resting DBP (r=0.15, P=0.017). Contrary to our hypotheses, reductions in work-time SB (r=-0.19, P=0.006) and increases in work-time standing (r=0.17, P=0.011) were associated with unfavorable increases in carotid-femoral PWV. As expected, increases in nonwork-time standing were favorably associated with carotid-femoral PWV (r=-0.14, P=0.038).\nCONCLUSIONS: A 3-month intervention that decreased SB and increased standing by ≈1 hour during the work day was not effective for reducing BP. Future directions include examining effects of interventions reducing SB through activity other than work-time standing and clarifying association between standing and PWV in opposite directions for work and nonwork time.\nREGISTRATION: URL: https://www.clinicaltrials.gov; Unique identifier: NCT03307343.",
+    "key_finding": "3个月减少久坐约1小时/天未降低血压，但工作时段久坐减少与舒张压改善相关。",
+    "topics": [
+      "micro-break-workplace"
+    ],
+    "applies_to": [
+      "action-library",
+      "intervention-engine"
+    ],
+    "evidence_level": "rct",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/39166323/",
+    "retrieved_at": "2026-11-08",
+    "verified": true,
+    "verification": {
+      "verifier": "RiseLoop verifier (automated PMID efetch)",
+      "method": "pmid-efetch",
+      "checked_at": "2026-11-08",
+      "doi_resolves": null,
+      "title_match": true,
+      "author_year_match": true,
+      "evidence_level_fit": true
+    },
+    "provenance": {
+      "source_api": "pubmed-eutils",
+      "request_url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&retmode=xml&id=34511476,33985391,31742666,25226797,35106947,37940902,38943231,26801914,33710270,31732003,31203701,39803911,39166323,35565079,40677214,35805342,29115188,35095033,37490792,34411850",
+      "fetched_at": "2026-11-08",
+      "task_id": "T2-pubmed-01",
+      "raw_snippet": {
+        "pmid": "39166323",
+        "pubtypes": [
+          "Journal Article",
+          "Randomized Controlled Trial"
+        ],
+        "mesh": [
+          "Humans",
+          "Sedentary Behavior",
+          "Middle Aged",
+          "Male",
+          "Female",
+          "Adult",
+          "Blood Pressure",
+          "Exercise"
+        ]
+      }
+    },
+    "contact": null,
+    "batch": "B2-2026-11-08",
+    "tags": [
+      "micro-break-workplace",
+      "journal-article",
+      "randomized-controlled-trial"
+    ],
+    "notes": "PMID efetch 核验；证据等级按 PubMed 文献类型与摘要设计判定；DOI 未单独解析。"
+  },
+  {
+    "id": "pmid-35095033",
+    "source_type": "pubmed",
+    "title": "Does breaking up sitting in office-based settings result in cognitive performance improvements which last throughout the day? A review of the evidence.",
+    "authors": [
+      "Tuckwell GA",
+      "Vincent GE",
+      "Gupta CC",
+      "Ferguson SA"
+    ],
+    "year": 2022,
+    "journal": "Industrial health",
+    "volume": "60",
+    "issue": "6",
+    "pages": "501-513",
+    "doi": "10.2486/indhealth.2021-0174",
+    "pmid": "35095033",
+    "abstract": "Sedentary behavior at work contributes to detrimental cognitive outcomes (e.g., decreases in attention). The length of time that cognitive performance benefits are sustained following bouts of breaking up sitting (e.g., using sit-stand desks or walking) is not known. A narrative review of the literature was conducted using a systematic search strategy, with keywords related to breaking up sitting interventions in office-based environments and cognitive performance outcomes in the period immediately post the cessation of the breaking up sitting intervention. Three types of office-based breaking up sitting interventions were identified; 1) sit-stand desks, 2) walking desks and 3) cycling desks. From the eight studies which met the criteria, the impacts of these interventions on cognitive performance outcomes were mixed, with significant benefits in some studies and others reporting no benefit. Of the cognitive domains assessed, working memory, attention, and psychomotor function showed significant sustained improvement for up to 30 minutes post intervention. While there are benefits to a key set of cognitive performance domains following breaking up sitting interventions in office-based settings, no studies have evaluated whether benefits to cognitive performance persist for longer than 30 minutes after the breaking up sitting intervention. Furthermore, specific applications of these cognitive benefits to tasks outside of work (e.g., driving home from work) are unknown.",
+    "key_finding": "办公场景打断久坐对工作记忆、注意与精神运动功能有短期益处，但仅维持约30分钟。",
+    "topics": [
+      "micro-break-workplace"
+    ],
+    "applies_to": [
+      "action-library",
+      "intervention-engine"
+    ],
+    "evidence_level": "other",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/35095033/",
+    "retrieved_at": "2026-11-08",
+    "verified": true,
+    "verification": {
+      "verifier": "RiseLoop verifier (automated PMID efetch)",
+      "method": "pmid-efetch",
+      "checked_at": "2026-11-08",
+      "doi_resolves": null,
+      "title_match": true,
+      "author_year_match": true,
+      "evidence_level_fit": true
+    },
+    "provenance": {
+      "source_api": "pubmed-eutils",
+      "request_url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&retmode=xml&id=34511476,33985391,31742666,25226797,35106947,37940902,38943231,26801914,33710270,31732003,31203701,39803911,39166323,35565079,40677214,35805342,29115188,35095033,37490792,34411850",
+      "fetched_at": "2026-11-08",
+      "task_id": "T2-pubmed-01",
+      "raw_snippet": {
+        "pmid": "35095033",
+        "pubtypes": [
+          "Review",
+          "Journal Article"
+        ],
+        "mesh": [
+          "Humans",
+          "Sitting Position",
+          "Posture",
+          "Sedentary Behavior",
+          "Walking",
+          "Cognition",
+          "Workplace"
+        ]
+      }
+    },
+    "contact": null,
+    "batch": "B2-2026-11-08",
+    "tags": [
+      "micro-break-workplace",
+      "review",
+      "journal-article"
+    ],
+    "notes": "PMID efetch 核验；证据等级按 PubMed 文献类型与摘要设计判定；DOI 未单独解析。 研究设计：叙述性综述。"
+  },
+  {
+    "id": "pmid-34770116",
+    "source_type": "pubmed",
+    "title": "Effects of a Workplace Sit-Stand Desk Intervention on Health and Productivity.",
+    "authors": [
+      "Ma J",
+      "Ma D",
+      "Li Z",
+      "Kim H"
+    ],
+    "year": 2021,
+    "journal": "International journal of environmental research and public health",
+    "volume": "18",
+    "issue": "21",
+    "pages": null,
+    "doi": "10.3390/ijerph182111604",
+    "pmid": "34770116",
+    "abstract": "In Japan, standing while working has not yet become commonplace, and there is little evidence to support the benefits of standing during the workday. Therefore, this study assessed the relationship between the introduction of a sit-stand desk and its ability to reduce the negative effects of sitting too long and increase employees' general health and productivity. Seventy-four Japanese desk workers participated in this three-month intervention study. Using a randomized controlled trial, the participants were divided into intervention (n = 36) and control (n = 38) groups. The participant characteristics were ascertained using a questionnaire. The intervention effectiveness was assessed by measuring health-, physical activity-, and work-related outcomes. The results indicate that the intervention group significantly decreased their sitting time at work (p = 0.002) and had reduced neck and shoulder pain (p = 0.001). There was a significant increase in subjective health (p = 0.002), vitality in work-related engagement (p < 0.001), and self-rated work performance over a four-week period (p = 0.017). These findings indicate a significant difference between the two groups, demonstrating the effectiveness of a sit-stand desk in reducing sedentary behavior and improving workers' health and productivity. Future research can accumulate further evidence of best practice use of sit-stand desks.",
+    "key_finding": "升降桌干预3个月减少工作久坐，并改善颈肩痛、主观健康与自评工作表现。",
+    "topics": [
+      "micro-break-workplace"
+    ],
+    "applies_to": [
+      "action-library",
+      "intervention-engine"
+    ],
+    "evidence_level": "rct",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/34770116/",
+    "retrieved_at": "2026-11-08",
+    "verified": true,
+    "verification": {
+      "verifier": "RiseLoop verifier (automated PMID efetch)",
+      "method": "pmid-efetch",
+      "checked_at": "2026-11-08",
+      "doi_resolves": null,
+      "title_match": true,
+      "author_year_match": true,
+      "evidence_level_fit": true
+    },
+    "provenance": {
+      "source_api": "pubmed-eutils",
+      "request_url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&retmode=xml&id=34689018,34770116,32552557,25448843,40644035",
+      "fetched_at": "2026-11-08",
+      "task_id": "T2-pubmed-01",
+      "raw_snippet": {
+        "pmid": "34770116",
+        "pubtypes": [
+          "Journal Article",
+          "Randomized Controlled Trial",
+          "Research Support, Non-U.S. Gov't"
+        ],
+        "mesh": [
+          "Efficiency",
+          "Humans",
+          "Occupational Health",
+          "Sedentary Behavior",
+          "Standing Position",
+          "Workplace"
+        ]
+      }
+    },
+    "contact": null,
+    "batch": "B2-2026-11-08",
+    "tags": [
+      "micro-break-workplace",
+      "journal-article",
+      "randomized-controlled-trial",
+      "research-support-non-u-s-gov-t"
+    ],
+    "notes": "PMID efetch 核验；证据等级按 PubMed 文献类型与摘要设计判定；DOI 未单独解析。"
+  },
+  {
+    "id": "pmid-33710270",
+    "source_type": "pubmed",
+    "title": "Sedentary behaviour in the workplace: prevalence, health implications and interventions.",
+    "authors": [
+      "Bailey DP"
+    ],
+    "year": 2021,
+    "journal": "British medical bulletin",
+    "volume": "137",
+    "issue": "1",
+    "pages": "42-50",
+    "doi": "10.1093/bmb/ldaa039",
+    "pmid": "33710270",
+    "abstract": "INTRODUCTION: This paper reviews the prevalence and health risks of excess sedentary behaviour in office workers, and the effectiveness of sedentary workplace interventions in a manner accessible to practitioners.\nSOURCES OF DATA: A narrative review of empirical studies obtained from PubMed and Web of Science.\nAREAS OF AGREEMENT: Office workers are highly sedentary, increasing their risk of health problems. Interventions using individual, organisational and environmental level strategies can be effective for reducing workplace sitting.\nAREAS OF CONTROVERSY: The effects of sedentary workplace interventions on health are inconsistent. This may be due to a lack of randomized controlled trials powered to detect changes in health outcomes.\nGROWING POINTS: Multicomponent interventions that use a combination of the strategies above may be the most effective for reducing sitting.\nAREAS TIMELY FOR DEVELOPING RESEARCH: Determining the long-term health and cost-effectiveness of sedentary workplace interventions is a priority to encourage employer buy-in for their implementation.",
+    "key_finding": "办公人群久坐程度高；个体、组织、环境多层次干预可减少久坐，多组分最可能有效。",
+    "topics": [
+      "micro-break-workplace"
+    ],
+    "applies_to": [
+      "action-library",
+      "intervention-engine"
+    ],
+    "evidence_level": "other",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/33710270/",
+    "retrieved_at": "2026-11-08",
+    "verified": true,
+    "verification": {
+      "verifier": "RiseLoop verifier (automated PMID efetch)",
+      "method": "pmid-efetch",
+      "checked_at": "2026-11-08",
+      "doi_resolves": null,
+      "title_match": true,
+      "author_year_match": true,
+      "evidence_level_fit": true
+    },
+    "provenance": {
+      "source_api": "pubmed-eutils",
+      "request_url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&retmode=xml&id=34511476,33985391,31742666,25226797,35106947,37940902,38943231,26801914,33710270,31732003,31203701,39803911,39166323,35565079,40677214,35805342,29115188,35095033,37490792,34411850",
+      "fetched_at": "2026-11-08",
+      "task_id": "T2-pubmed-01",
+      "raw_snippet": {
+        "pmid": "33710270",
+        "pubtypes": [
+          "Journal Article",
+          "Review"
+        ],
+        "mesh": [
+          "Cost-Benefit Analysis",
+          "Humans",
+          "Prevalence",
+          "Sedentary Behavior",
+          "Time Factors",
+          "Workplace"
+        ]
+      }
+    },
+    "contact": null,
+    "batch": "B2-2026-11-08",
+    "tags": [
+      "micro-break-workplace",
+      "journal-article",
+      "review"
+    ],
+    "notes": "PMID efetch 核验；证据等级按 PubMed 文献类型与摘要设计判定；DOI 未单独解析。 研究设计：叙述性综述。"
+  },
+  {
+    "id": "pmid-31742666",
+    "source_type": "pubmed",
+    "title": "Workplace interventions for increasing standing or walking for decreasing musculoskeletal symptoms in sedentary workers.",
+    "authors": [
+      "Parry SP",
+      "Coenen P",
+      "Shrestha N",
+      "O'Sullivan PB",
+      "Maher CG",
+      "Straker LM"
+    ],
+    "year": 2019,
+    "journal": "The Cochrane database of systematic reviews",
+    "volume": "2019",
+    "issue": "11",
+    "pages": null,
+    "doi": "10.1002/14651858.CD012487.pub2",
+    "pmid": "31742666",
+    "abstract": "BACKGROUND: The prevalence of musculoskeletal symptoms among sedentary workers is high. Interventions that promote occupational standing or walking have been found to reduce occupational sedentary time, but it is unclear whether these interventions ameliorate musculoskeletal symptoms in sedentary workers.\nOBJECTIVES: To investigate the effectiveness of workplace interventions to increase standing or walking for decreasing musculoskeletal symptoms in sedentary workers.\nSEARCH METHODS: We searched the Cochrane Central Register of Controlled Trials (CENTRAL), MEDLINE, Embase, OSH UPDATE, PEDro, ClinicalTrials.gov, and the World Health Organization (WHO) International Clinical Trials Registry Platform (ICTRP) search portal up to January 2019. We also screened reference lists of primary studies and contacted experts to identify additional studies.\nSELECTION CRITERIA: We included randomised controlled trials (RCTs), cluster-randomised controlled trials (cluster-RCTs), quasi RCTs, and controlled before-and-after (CBA) studies of interventions to reduce or break up workplace sitting by encouraging standing or walking in the workplace among workers with musculoskeletal symptoms. The primary outcome was self-reported intensity or presence of musculoskeletal symptoms by body region and the impact of musculoskeletal symptoms such as pain-related disability. We considered work performance and productivity, sickness absenteeism, and adverse events such as venous disorders or perinatal complications as secondary outcomes.\nDATA COLLECTION AND ANALYSIS: Two review authors independently screened titles, abstracts, and full-text articles for study eligibility. These review authors independently extracted data and assessed risk of bias. We contacted study authors to request additional data when required. We used GRADE considerations to assess the quality of evidence provided by studies that contributed to the meta-analyses.\nMAIN RESULTS: We found ten studies including three RCTs, five cluster RCTs, and two CBA studies with a total of 955 participants, all from high-income countries. Interventions targeted changes to the physical work environment such as provision of sit-stand or treadmill workstations (four studies), an activity tracker (two studies) for use in individual approaches, and multi-component interventions (five studies). We did not find any studies that specifically targeted only the organisational level components. Two studies assessed pain-related disability. Physical work environment There was no significant difference in the intensity of low back symptoms (standardised mean difference (SMD) -0.35, 95% confidence interval (CI) -0.80 to 0.10; 2 RCTs; low-quality evidence) nor in the intensity of upper back symptoms (SMD -0.48, 95% CI -.096 to 0.00; 2 RCTs; low-quality evidence) in the short term (less than six months) for interventions using sit-stand workstations compared to no intervention. No studies examined discomfort outcomes at medium (six to less than 12 months) or long term (12 months and more). No significant reduction in pain-related disability was noted when a sit-stand workstation was used compared to when no intervention was provided in the medium term (mean difference (MD) -0.4, 95% CI -2.70 to 1.90; 1 RCT; low-quality evidence). Individual approach There was no significant difference in the intensity or presence of low back symptoms (SMD -0.05, 95% CI -0.87 to 0.77; 2 RCTs; low-quality evidence), upper back symptoms (SMD -0.04, 95% CI -0.92 to 0.84; 2 RCTs; low-quality evidence), neck symptoms (SMD -0.05, 95% CI -0.68 to 0.78; 2 RCTs; low-quality evidence), shoulder symptoms (SMD -0.14, 95% CI -0.63 to 0.90; 2 RCTs; low-quality evidence), or elbow/wrist and hand symptoms (SMD -0.30, 95% CI -0.63 to 0.90; 2 RCTs; low-quality evidence) for interventions involving an activity tracker compared to an alternative intervention or no intervention in the short term. No studies provided outcomes at medium term, and only one study examined outcomes at long term. Organisational level No studies evaluated the effects of interventions solely targeted at the organisational level. Multi-component approach There was no significant difference in the proportion of participants reporting low back symptoms (risk ratio (RR) 0.93, 95% CI 0.69 to 1.27; 3 RCTs; low-quality evidence), neck symptoms (RR 1.00, 95% CI 0.76 to 1.32; 3 RCTs; low-quality evidence), shoulder symptoms (RR 0.83, 95% CI 0.12 to 5.80; 2 RCTs; very low-quality evidence), and upper back symptoms (RR 0.88, 95% CI 0.76 to 1.32; 3 RCTs; low-quality evidence) for interventions using a multi-component approach compared to no intervention in the short term. Only one RCT examined outcomes at medium term and found no significant difference in low back symptoms (MD -0.40, 95% CI -1.95 to 1.15; 1 RCT; low-quality evidence), upper back symptoms (MD -0.70, 95% CI -2.12 to 0.72; low-quality evidence), and leg symptoms (MD -0.80, 95% CI -2.49 to 0.89; low-quality evidence). There was no significant difference in the proportion of participants reporting low back symptoms (RR 0.89, 95% CI 0.57 to 1.40; 2 RCTs; low-quality evidence), neck symptoms (RR 0.67, 95% CI 0.41 to 1.08; two RCTs; low-quality evidence), and upper back symptoms (RR 0.52, 95% CI 0.08 to 3.29; 2 RCTs; low-quality evidence) for interventions using a multi-component approach compared to no intervention in the long term. There was a statistically significant reduction in pain-related disability following a multi-component intervention compared to no intervention in the medium term (MD -8.80, 95% CI -17.46 to -0.14; 1 RCT; low-quality evidence).\nAUTHORS' CONCLUSIONS: Currently available limited evidence does not show that interventions to increase standing or walking in the workplace reduced musculoskeletal symptoms among sedentary workers at short-, medium-, or long-term follow up. The quality of evidence is low or very low, largely due to study design and small sample sizes. Although the results of this review are not statistically significant, some interventions targeting the physical work environment are suggestive of an intervention effect. Therefore, in the future, larger cluster-RCTs recruiting participants with baseline musculoskeletal symptoms and long-term outcomes are needed to determine whether interventions to increase standing or walking can reduce musculoskeletal symptoms among sedentary workers and can be sustained over time.",
+    "key_finding": "现有低质量证据未显示增加站立或步行的工作场所干预能减少久坐工人的肌肉骨骼症状。",
+    "topics": [
+      "micro-break-workplace"
+    ],
+    "applies_to": [
+      "action-library",
+      "intervention-engine"
+    ],
+    "evidence_level": "systematic-review",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/31742666/",
+    "retrieved_at": "2026-11-08",
+    "verified": true,
+    "verification": {
+      "verifier": "RiseLoop verifier (automated PMID efetch)",
+      "method": "pmid-efetch",
+      "checked_at": "2026-11-08",
+      "doi_resolves": null,
+      "title_match": true,
+      "author_year_match": true,
+      "evidence_level_fit": true
+    },
+    "provenance": {
+      "source_api": "pubmed-eutils",
+      "request_url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&retmode=xml&id=34511476,33985391,31742666,25226797,35106947,37940902,38943231,26801914,33710270,31732003,31203701,39803911,39166323,35565079,40677214,35805342,29115188,35095033,37490792,34411850",
+      "fetched_at": "2026-11-08",
+      "task_id": "T2-pubmed-01",
+      "raw_snippet": {
+        "pmid": "31742666",
+        "pubtypes": [
+          "Journal Article",
+          "Meta-Analysis",
+          "Systematic Review"
+        ],
+        "mesh": [
+          "Adult",
+          "Ergonomics",
+          "Humans",
+          "Musculoskeletal Diseases",
+          "Occupational Diseases",
+          "Randomized Controlled Trials as Topic",
+          "Sedentary Behavior",
+          "Standing Position"
+        ]
+      }
+    },
+    "contact": null,
+    "batch": "B2-2026-11-08",
+    "tags": [
+      "micro-break-workplace",
+      "journal-article",
+      "meta-analysis",
+      "systematic-review"
+    ],
+    "notes": "PMID efetch 核验；证据等级按 PubMed 文献类型与摘要设计判定；DOI 未单独解析。"
+  },
+  {
+    "id": "pmid-29115188",
+    "source_type": "pubmed",
+    "title": "Sit-stand workstations and impact on low back discomfort: a systematic review and meta-analysis.",
+    "authors": [
+      "Agarwal S",
+      "Steinmaus C",
+      "Harris-Adamson C"
+    ],
+    "year": 2018,
+    "journal": "Ergonomics",
+    "volume": "61",
+    "issue": "4",
+    "pages": "538-552",
+    "doi": "10.1080/00140139.2017.1402960",
+    "pmid": "29115188",
+    "abstract": "BACKGROUND: Sit-stand workstations are proposed solutions to reduce sedentary time at work. Numerous companies are using them to mitigate health concerns such as musculoskeletal discomfort.\nOBJECTIVE: To review the literature on sit-stand workstations and low back discomfort.\nMETHOD: We conducted a meta-analysis on literature published before 17 November 2016 that addressed the relationship between sit-stand workstations and musculoskeletal discomfort, focusing on the low back.\nRESULTS: Twelve articles were identified and eight that presented results in means (SD) were included. Among a pain-free population, the standardised mean difference was -0.230 for low back discomfort with use of sit-stand workstations. When applying the SMD to studies using the 10-point pain scale, the effect estimates ranged between -0.30 and -0.51.\nCONCLUSION: sit-stand workstations may reduce low back pain among workers. Further research is needed to help quantify dosage parameters and other health outcomes. Practitioner Summary: In a sedentary population, changing posture may reduce the chance of developing low back pain. The literature lacks studies on specific populations such as those who have pre-existing low back pain and also does not adequately address the dosage of sit-stand time required to help reduce pain.",
+    "key_finding": "久坐人群使用升降桌可能减轻下背不适，但剂量与特定人群证据不足。",
+    "topics": [
+      "micro-break-workplace"
+    ],
+    "applies_to": [
+      "action-library",
+      "intervention-engine"
+    ],
+    "evidence_level": "systematic-review",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/29115188/",
+    "retrieved_at": "2026-11-08",
+    "verified": true,
+    "verification": {
+      "verifier": "RiseLoop verifier (automated PMID efetch)",
+      "method": "pmid-efetch",
+      "checked_at": "2026-11-08",
+      "doi_resolves": null,
+      "title_match": true,
+      "author_year_match": true,
+      "evidence_level_fit": true
+    },
+    "provenance": {
+      "source_api": "pubmed-eutils",
+      "request_url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&retmode=xml&id=34511476,33985391,31742666,25226797,35106947,37940902,38943231,26801914,33710270,31732003,31203701,39803911,39166323,35565079,40677214,35805342,29115188,35095033,37490792,34411850",
+      "fetched_at": "2026-11-08",
+      "task_id": "T2-pubmed-01",
+      "raw_snippet": {
+        "pmid": "29115188",
+        "pubtypes": [
+          "Journal Article",
+          "Meta-Analysis",
+          "Systematic Review"
+        ],
+        "mesh": [
+          "Humans",
+          "Interior Design and Furnishings",
+          "Low Back Pain",
+          "Posture",
+          "Workplace"
+        ]
+      }
+    },
+    "contact": null,
+    "batch": "B2-2026-11-08",
+    "tags": [
+      "micro-break-workplace",
+      "journal-article",
+      "meta-analysis",
+      "systematic-review"
+    ],
+    "notes": "PMID efetch 核验；证据等级按 PubMed 文献类型与摘要设计判定；DOI 未单独解析。"
+  },
+  {
+    "id": "pmid-38219373",
+    "source_type": "pubmed",
+    "title": "The influence of exercise on pain, disability and quality of life in office workers with chronic neck pain: A systematic review and meta-analysis.",
+    "authors": [
+      "Jones LB",
+      "Jadhakhan F",
+      "Falla D"
+    ],
+    "year": 2024,
+    "journal": "Applied ergonomics",
+    "volume": "117",
+    "issue": null,
+    "pages": "104216",
+    "doi": "10.1016/j.apergo.2023.104216",
+    "pmid": "38219373",
+    "abstract": "BACKGROUND: Exercise is recommended for office workers with neck pain. However, recent reviews evaluated the effectiveness of workplace interventions only.\nOBJECTIVES: To evaluate the effect of exercise on pain, disability, and quality of life (QoL) in office workers with chronic neck pain.\nDESIGN: Systematic review with meta-analysis.\nMETHODS: Electronic databases were searched from inception to April 30, 2022, to identify studies in which participants were adults aged ≥18 years undergoing any form of neck exercises (e.g., strengthening, motor control) or physical activity (e.g., aerobic exercise) performed for a minimum of two-weeks without any other additional treatment besides advice or education. Two reviewers independently screened papers and determined the certainty of the evidence.\nRESULTS: Eight randomised controlled trials met the eligibility criteria. Seven studies reported a significant decrease in Visual Analogue Scale (VAS) scores for neck pain intensity and five studies reported a significant decrease in Neck Disability Index (NDI) scores following strengthening exercises. Only one study assessed the effect of strengthening exercises on QoL and reported no significant effect. All eight included studies had a high risk of bias and the overall certainty of evidence was low. Meta-analyses demonstrated a significant decrease of neck pain intensity and disability for strengthening exercises compared to a control (p < 0.01).\nCONCLUSION: There is low certainty of evidence that strengthening of the neck, shoulder and scapular musculature is effective at reducing neck pain and disability in office workers. Further research evaluating the effect of exercise on QoL is required.",
+    "key_finding": "低确定性证据：颈肩胛肌力训练可减轻办公人群慢性颈痛与失能。",
+    "topics": [
+      "neck-shoulder"
+    ],
+    "applies_to": [
+      "action-library",
+      "posture-assessment"
+    ],
+    "evidence_level": "systematic-review",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/38219373/",
+    "retrieved_at": "2026-11-08",
+    "verified": true,
+    "verification": {
+      "verifier": "RiseLoop verifier (automated PMID efetch)",
+      "method": "pmid-efetch",
+      "checked_at": "2026-11-08",
+      "doi_resolves": null,
+      "title_match": true,
+      "author_year_match": true,
+      "evidence_level_fit": true
+    },
+    "provenance": {
+      "source_api": "pubmed-eutils",
+      "request_url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&retmode=xml&id=21665126,37775083,33250456,34895248,38219373,38138262,39905389,27185457,25780258,37698343,29796982,39133855,40845624,33712465,34028164,31679800,34215798,33504206,29088401,39527445",
+      "fetched_at": "2026-11-08",
+      "task_id": "T3-pubmed-01",
+      "raw_snippet": {
+        "pmid": "38219373",
+        "pubtypes": [
+          "Meta-Analysis",
+          "Systematic Review",
+          "Journal Article"
+        ],
+        "mesh": [
+          "Adult",
+          "Humans",
+          "Chronic Pain",
+          "Exercise",
+          "Neck",
+          "Neck Pain",
+          "Quality of Life",
+          "Occupational Health"
+        ]
+      }
+    },
+    "contact": null,
+    "batch": "B2-2026-11-08",
+    "tags": [
+      "neck-shoulder",
+      "meta-analysis",
+      "systematic-review",
+      "journal-article"
+    ],
+    "notes": "PMID efetch 核验；证据等级按 PubMed 文献类型与摘要设计判定；DOI 未单独解析。"
+  },
+  {
+    "id": "pmid-37775083",
+    "source_type": "pubmed",
+    "title": "Sedentary behavior and neck pain in adults: A systematic review and meta-analysis.",
+    "authors": [
+      "Mazaheri-Tehrani S",
+      "Arefian M",
+      "Abhari AP",
+      "Riahi R",
+      "Vahdatpour B",
+      "Baradaran Mahdavi S",
+      "Kelishadi R"
+    ],
+    "year": 2023,
+    "journal": "Preventive medicine",
+    "volume": "175",
+    "issue": null,
+    "pages": "107711",
+    "doi": "10.1016/j.ypmed.2023.107711",
+    "pmid": "37775083",
+    "abstract": "Sedentary lifestyle is an imperative risk for musculoskeletal pain. We sought to investigate the association between different types of sedentary behaviors (SBs) and neck pain (NP) among adults. A systematic search was conducted in PubMed, Web of Science, Embase, Scopus, and Google Scholar up to the end of April 2023. The odds ratio (95% CI) was considered as the desired effect size for the association between SBs and the NP. Among 1881 records found by primary search, 46, and 27 reports were included in the qualitative and quantitative analysis respectively. All included studies qualified as good or fair. Our results indicated that SB is a risk factor for NP among adults (OR = 1.5, [1.29, 1.76]). Computer and mobile phone use were also found to be considerable risk factors for NP (OR = 1.3, [1.12, 1.53], and OR = 2.11, [1.32, 3.42] respectively). However, sitting time showed an insignificant association with NP (OR = 1.33, [0.86, 2.07]). Subgroup analysis revealed that SBs are a significant risk factor for NP among university students (OR = 1.58, [1.27, 1.97]), but the association among office workers was marginally insignificant (OR = 1.36, [0.98, 1.89]). According to the meta-regression results, the male gender was found to increase the risk of NP. Meanwhile, Egger's test revealed the presence of publication bias (p-value <0.0001). A sedentary lifestyle as well as computer and mobile phone use is associated with a considerable risk of NP among adults, especially university students. Further, longitudinal studies are needed to better clarify the causality relationships.",
+    "key_finding": "久坐行为与成人颈痛风险升高相关（OR 1.5），电脑和手机使用亦是风险因素。",
+    "topics": [
+      "neck-shoulder"
+    ],
+    "applies_to": [
+      "action-library",
+      "posture-assessment"
+    ],
+    "evidence_level": "systematic-review",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/37775083/",
+    "retrieved_at": "2026-11-08",
+    "verified": true,
+    "verification": {
+      "verifier": "RiseLoop verifier (automated PMID efetch)",
+      "method": "pmid-efetch",
+      "checked_at": "2026-11-08",
+      "doi_resolves": null,
+      "title_match": true,
+      "author_year_match": true,
+      "evidence_level_fit": true
+    },
+    "provenance": {
+      "source_api": "pubmed-eutils",
+      "request_url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&retmode=xml&id=21665126,37775083,33250456,34895248,38219373,38138262,39905389,27185457,25780258,37698343,29796982,39133855,40845624,33712465,34028164,31679800,34215798,33504206,29088401,39527445",
+      "fetched_at": "2026-11-08",
+      "task_id": "T3-pubmed-01",
+      "raw_snippet": {
+        "pmid": "37775083",
+        "pubtypes": [
+          "Journal Article",
+          "Systematic Review",
+          "Meta-Analysis"
+        ],
+        "mesh": [
+          "Humans",
+          "Sedentary Behavior",
+          "Neck Pain",
+          "Risk Factors",
+          "Adult",
+          "Male",
+          "Female"
+        ]
+      }
+    },
+    "contact": null,
+    "batch": "B2-2026-11-08",
+    "tags": [
+      "neck-shoulder",
+      "journal-article",
+      "systematic-review",
+      "meta-analysis"
+    ],
+    "notes": "PMID efetch 核验；证据等级按 PubMed 文献类型与摘要设计判定；DOI 未单独解析。"
+  },
+  {
+    "id": "pmid-33250456",
+    "source_type": "pubmed",
+    "title": "Effect of an ergonomic intervention involving workstation adjustments on musculoskeletal pain in office workers-a randomized controlled clinical trial.",
+    "authors": [
+      "Lee S",
+      "DE Barros FC",
+      "DE Castro CSM",
+      "DE Oliveira Sato T"
+    ],
+    "year": 2021,
+    "journal": "Industrial health",
+    "volume": "59",
+    "issue": "2",
+    "pages": "78-85",
+    "doi": "10.2486/indhealth.2020-0188",
+    "pmid": "33250456",
+    "abstract": "Office workers remain in a awkward position for long periods, which can lead to musculoskeletal symptoms. Ergonomic guidelines are recommended to avoid such problems. Evidence of the long-term effectiveness of ergonomic interventions is scarce. The aim of this randomised controlled trial was to compare pain intensity among office workers who received an ergonomic intervention and a control group before as well as 12, 24, and 36 wk after the intervention. Workers were randomly allocated to a control group (CG) and experimental group (EG). The EG received an ergonomic workstation intervention. Furniture measurements were related to individual anthropometric measurements to identify mismatches. The outcome was pain intensity, which was determined using a numerical pain scale and the Nordic Musculoskeletal Questionnaire. A linear mixed model was created with pain intensity as the dependent variable. Group and time were the independent variables. No significant interactions were found between group and time. Significant differences between groups were found for the pain intensity in the neck, shoulder, upper back, and wrist/hand (p<0.05), with lower intensity in the EG. The intervention reduced pain intensity in the neck, shoulder, upper back, and wrist/hand. However, no reduction in pain intensity was found for the lower back or elbow.",
+    "key_finding": "工位人体工学调整降低办公人群颈、肩、上背与手腕疼痛强度。",
+    "topics": [
+      "neck-shoulder"
+    ],
+    "applies_to": [
+      "action-library",
+      "posture-assessment"
+    ],
+    "evidence_level": "rct",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/33250456/",
+    "retrieved_at": "2026-11-08",
+    "verified": true,
+    "verification": {
+      "verifier": "RiseLoop verifier (automated PMID efetch)",
+      "method": "pmid-efetch",
+      "checked_at": "2026-11-08",
+      "doi_resolves": null,
+      "title_match": true,
+      "author_year_match": true,
+      "evidence_level_fit": true
+    },
+    "provenance": {
+      "source_api": "pubmed-eutils",
+      "request_url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&retmode=xml&id=21665126,37775083,33250456,34895248,38219373,38138262,39905389,27185457,25780258,37698343,29796982,39133855,40845624,33712465,34028164,31679800,34215798,33504206,29088401,39527445",
+      "fetched_at": "2026-11-08",
+      "task_id": "T3-pubmed-01",
+      "raw_snippet": {
+        "pmid": "33250456",
+        "pubtypes": [
+          "Journal Article",
+          "Randomized Controlled Trial"
+        ],
+        "mesh": [
+          "Adult",
+          "Anthropometry",
+          "Brazil",
+          "Computers",
+          "Ergonomics",
+          "Female",
+          "Humans",
+          "Interior Design and Furnishings"
+        ]
+      }
+    },
+    "contact": null,
+    "batch": "B2-2026-11-08",
+    "tags": [
+      "neck-shoulder",
+      "journal-article",
+      "randomized-controlled-trial"
+    ],
+    "notes": "PMID efetch 核验；证据等级按 PubMed 文献类型与摘要设计判定；DOI 未单独解析。"
+  },
+  {
+    "id": "pmid-33906239",
+    "source_type": "pubmed",
+    "title": "Effects of an active break and postural shift intervention on preventing neck and low-back pain among high-risk office workers: a 3-arm cluster-randomized controlled trial.",
+    "authors": [
+      "Waongenngarm P",
+      "van der Beek AJ",
+      "Akkarakittichoke N",
+      "Janwantanakul P"
+    ],
+    "year": 2021,
+    "journal": "Scandinavian journal of work, environment & health",
+    "volume": "47",
+    "issue": "4",
+    "pages": "306-317",
+    "doi": "10.5271/sjweh.3949",
+    "pmid": "33906239",
+    "abstract": "OBJECTIVE: This study evaluated the effects of the promotion of active breaks and postural shifts on new onset of neck and low-back pain during a 6-month follow-up among high-risk office workers.\nMETHODS: A 3-arm cluster-randomized controlled trial with 6-month follow-up was conducted among healthy but high-risk office workers. Participants were recruited from six organizations in Bangkok, Thailand (N=193) and randomly assigned at cluster level into active break intervention (N=47), postural shift intervention (N=46), and control (N=100) groups. Participants in the intervention groups received a custom-designed apparatus to facilitate designated active breaks and postural shifts during work. Participants in the control group received a placebo seat pad. The primary outcome measure was new onset of neck and low-back pain during 6-month follow-up. Analyses were performed using Cox proportional hazard models.\nRESULTS: One-hundred and eighty-six (96%) predominantly female participants were successfully followed up over six months. New onset of neck pain during the 6-month follow-up occurred in 17%, 17%, and 44% of the participants in the active break, postural shift, and control groups, respectively. For new onset of low-back pain, these percentages were 9%, 7%, and 33%, respectively. Hazard rate (HR) ratios after adjusting for biopsychosocial factors indicated a protective effect of the active break and postural shift interventions for neck pain [HRadj 0.45, 95% confidence interval (CI) 0.20-0.98 for active break and HRadj 0.41, 95% CI 0.18-0.94 for postural shift] and low-back pain (HRadj 0.34, 95% CI 0.12-0.98 for active break and HRadj 0.19, 95% CI 0.06-0.66 for postural shift).\nCONCLUSION: Interventions to increase either active breaks or postural shifts reduced new onset of neck and low-back pain among high-risk office workers.",
+    "key_finding": "主动休息或姿势变换均可降低高风险办公人群6个月内颈痛与腰痛新发。",
+    "topics": [
+      "neck-shoulder"
+    ],
+    "applies_to": [
+      "action-library",
+      "posture-assessment"
+    ],
+    "evidence_level": "rct",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/33906239/",
+    "retrieved_at": "2026-11-08",
+    "verified": true,
+    "verification": {
+      "verifier": "RiseLoop verifier (automated PMID efetch)",
+      "method": "pmid-efetch",
+      "checked_at": "2026-11-08",
+      "doi_resolves": null,
+      "title_match": true,
+      "author_year_match": true,
+      "evidence_level_fit": true
+    },
+    "provenance": {
+      "source_api": "pubmed-eutils",
+      "request_url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&retmode=xml&id=36674377,36078314,33906239,40580565,26563801",
+      "fetched_at": "2026-11-08",
+      "task_id": "T3-pubmed-01",
+      "raw_snippet": {
+        "pmid": "33906239",
+        "pubtypes": [
+          "Journal Article",
+          "Randomized Controlled Trial",
+          "Research Support, Non-U.S. Gov't"
+        ],
+        "mesh": [
+          "Female",
+          "Health Status",
+          "Humans",
+          "Low Back Pain",
+          "Neck Pain",
+          "Occupational Diseases",
+          "Thailand"
+        ]
+      }
+    },
+    "contact": null,
+    "batch": "B2-2026-11-08",
+    "tags": [
+      "neck-shoulder",
+      "journal-article",
+      "randomized-controlled-trial",
+      "research-support-non-u-s-gov-t"
+    ],
+    "notes": "PMID efetch 核验；证据等级按 PubMed 文献类型与摘要设计判定；DOI 未单独解析。"
+  },
+  {
+    "id": "pmid-34895248",
+    "source_type": "pubmed",
+    "title": "Musculoskeletal pain and sedentary behaviour in occupational and non-occupational settings: a systematic review with meta-analysis.",
+    "authors": [
+      "Dzakpasu FQS",
+      "Carver A",
+      "Brakenridge CJ",
+      "Cicuttini F",
+      "Urquhart DM",
+      "Owen N",
+      "Dunstan DW"
+    ],
+    "year": 2021,
+    "journal": "The international journal of behavioral nutrition and physical activity",
+    "volume": "18",
+    "issue": "1",
+    "pages": "159",
+    "doi": "10.1186/s12966-021-01191-y",
+    "pmid": "34895248",
+    "abstract": "BACKGROUND: Sedentary behaviour (SB; time spent sitting) is associated with musculoskeletal pain (MSP) conditions; however, no prior systematic review has examined these associations according to SB domains. We synthesised evidence on occupational and non-occupational SB and MSP conditions.\nMETHODS: Guided by a PRISMA protocol, eight databases (MEDLINE, CINAHL, PsycINFO, Web of Science, Scopus, Cochrane Library, SPORTDiscus, and AMED) and three grey literature sources (Google Scholar, WorldChat, and Trove) were searched (January 1, 2000, to March 17, 2021) for original quantitative studies of adults ≥ 18 years. Clinical-condition studies were excluded. Studies' risk of bias was assessed using the QualSyst checklist. For meta-analyses, random effect inverse-variance pooled effect size was estimated; otherwise, best-evidence synthesis was used for narrative review.\nRESULTS: Of 178 potentially-eligible studies, 79 were included [24 general population; 55 occupational (incuding15 experimental/intervention)]; 56 studies were of high quality, with scores > 0.75. Data for 26 were meta-synthesised. For cross-sectional studies of non-occupational SB, meta-analysis showed full-day SB to be associated with low back pain [LBP - OR = 1.19(1.03 - 1.38)]. Narrative synthesis found full-day SB associations with knee pain, arthritis, and general MSP, but the evidence was insufficient on associations with neck/shoulder pain, hip pain, and upper extremities pain. Evidence of prospective associations of full-day SB with MSP conditions was insufficient. Also, there was insufficient evidence on both cross-sectional and prospective associations between leisure-time SB and MSP conditions. For occupational SB, cross-sectional studies meta-analysed indicated associations of self-reported workplace sitting with LBP [OR = 1.47(1.12 - 1.92)] and neck/shoulder pain [OR = 1.73(1.46 - 2.03)], but not with extremities pain [OR = 1.17(0.65 - 2.11)]. Best-evidence synthesis identified inconsistent findings on cross-sectional association and a probable negative prospective association of device-measured workplace sitting with LBP-intensity in tradespeople. There was cross-sectional evidence on the association of computer time with neck/shoulder pain, but insufficient evidence for LBP and general MSP. Experimental/intervention evidence indicated reduced LBP, neck/shoulder pain, and general MSP with reducing workplace sitting.\nCONCLUSIONS: We found cross-sectional associations of occupational and non-occupational SB with MSP conditions, with occupational SB associations being occupation dependent, however, reverse causality bias cannot be ruled out. While prospective evidence was inconclusive, reducing workplace sitting was associated with reduced MSP conditions. Future studies should emphasise prospective analyses and examining potential interactions with chronic diseases.\nPROTOCOL REGISTRATION: PROSPERO ID # CRD42020166412 (Amended to limit the scope).",
+    "key_finding": "职业性与非职业性久坐均与肌肉骨骼疼痛横断面相关；减少工作久坐与疼痛下降相关。",
+    "topics": [
+      "neck-shoulder"
+    ],
+    "applies_to": [
+      "action-library",
+      "posture-assessment"
+    ],
+    "evidence_level": "systematic-review",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/34895248/",
+    "retrieved_at": "2026-11-08",
+    "verified": true,
+    "verification": {
+      "verifier": "RiseLoop verifier (automated PMID efetch)",
+      "method": "pmid-efetch",
+      "checked_at": "2026-11-08",
+      "doi_resolves": null,
+      "title_match": true,
+      "author_year_match": true,
+      "evidence_level_fit": true
+    },
+    "provenance": {
+      "source_api": "pubmed-eutils",
+      "request_url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&retmode=xml&id=21665126,37775083,33250456,34895248,38219373,38138262,39905389,27185457,25780258,37698343,29796982,39133855,40845624,33712465,34028164,31679800,34215798,33504206,29088401,39527445",
+      "fetched_at": "2026-11-08",
+      "task_id": "T3-pubmed-01",
+      "raw_snippet": {
+        "pmid": "34895248",
+        "pubtypes": [
+          "Journal Article",
+          "Meta-Analysis",
+          "Research Support, Non-U.S. Gov't",
+          "Systematic Review"
+        ],
+        "mesh": [
+          "Adult",
+          "Cross-Sectional Studies",
+          "Humans",
+          "Leisure Activities",
+          "Musculoskeletal Pain",
+          "Sedentary Behavior",
+          "Workplace"
+        ]
+      }
+    },
+    "contact": null,
+    "batch": "B2-2026-11-08",
+    "tags": [
+      "neck-shoulder",
+      "journal-article",
+      "meta-analysis",
+      "research-support-non-u-s-gov-t",
+      "systematic-review"
+    ],
+    "notes": "PMID efetch 核验；证据等级按 PubMed 文献类型与摘要设计判定；DOI 未单独解析。"
+  },
+  {
+    "id": "pmid-25780258",
+    "source_type": "pubmed",
+    "title": "The effectiveness of a neck and shoulder stretching exercise program among office workers with neck pain: a randomized controlled trial.",
+    "authors": [
+      "Tunwattanapong P",
+      "Kongkasuwan R",
+      "Kuptniratsaikul V"
+    ],
+    "year": 2016,
+    "journal": "Clinical rehabilitation",
+    "volume": "30",
+    "issue": "1",
+    "pages": "64-72",
+    "doi": "10.1177/0269215515575747",
+    "pmid": "25780258",
+    "abstract": "OBJECTIVE: To determine the effectiveness of neck and shoulder stretching exercises for relief neck pain among office workers.\nDESIGN: Randomized controlled trial.\nSETTING: An outpatient setting.\nPARTICIPANTS: A total of 96 subjects with moderate-to-severe neck pain (visual analogue score ⩾5/10) for ⩾3 months.\nINTERVENTIONS: All participants received an informative brochure indicating the proper position and ergonomics to be applied during daily work. The treatment group received the additional instruction to perform neck and around shoulder stretching exercises two times/day, five days/week during four weeks.\nMAIN OUTCOMES: Pain, neck functions, and quality of life were evaluated at baseline and week 4 using pain visual analogue scale, Northwick Park Neck Pain Questionnaire, and Short Form-36, respectively.\nRESULTS: Both groups had comparable baseline data. All outcomes were improved significantly from baseline. When compared between groups, the magnitude of improvement was significantly greater in the treatment group than in the control group (-1.4; 95% CI: -2.2, -0.7 for visual analogue scale; -4.8; 95% CI: -9.3, -0.4 for Northwick Park Neck Pain Questionnaire; and 14.0; 95% CI: 7.1, 20.9 for physical dimension of the Short Form-36). Compared with the patients who performed exercises <3 times/week, those who exercised ⩾3 times/week yielded significantly greater improvement in neck function and physical dimension of quality of life scores (p = 0.005 and p = 0.018, respectively).\nCONCLUSION: A regular stretching exercise program performed for four weeks can decrease neck and shoulder pain and improve neck function and quality of life for office workers who have chronic moderate-to-severe neck or shoulder pain.",
+    "key_finding": "4周颈肩拉伸（每周≥3次）改善办公人群慢性颈肩痛、功能与生活质量。",
+    "topics": [
+      "neck-shoulder"
+    ],
+    "applies_to": [
+      "action-library",
+      "posture-assessment"
+    ],
+    "evidence_level": "rct",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/25780258/",
+    "retrieved_at": "2026-11-08",
+    "verified": true,
+    "verification": {
+      "verifier": "RiseLoop verifier (automated PMID efetch)",
+      "method": "pmid-efetch",
+      "checked_at": "2026-11-08",
+      "doi_resolves": null,
+      "title_match": true,
+      "author_year_match": true,
+      "evidence_level_fit": true
+    },
+    "provenance": {
+      "source_api": "pubmed-eutils",
+      "request_url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&retmode=xml&id=21665126,37775083,33250456,34895248,38219373,38138262,39905389,27185457,25780258,37698343,29796982,39133855,40845624,33712465,34028164,31679800,34215798,33504206,29088401,39527445",
+      "fetched_at": "2026-11-08",
+      "task_id": "T3-pubmed-01",
+      "raw_snippet": {
+        "pmid": "25780258",
+        "pubtypes": [
+          "Journal Article",
+          "Randomized Controlled Trial",
+          "Research Support, Non-U.S. Gov't"
+        ],
+        "mesh": [
+          "Adult",
+          "Confidence Intervals",
+          "Exercise Therapy",
+          "Female",
+          "Follow-Up Studies",
+          "Humans",
+          "Male",
+          "Middle Aged"
+        ]
+      }
+    },
+    "contact": null,
+    "batch": "B2-2026-11-08",
+    "tags": [
+      "neck-shoulder",
+      "journal-article",
+      "randomized-controlled-trial",
+      "research-support-non-u-s-gov-t"
+    ],
+    "notes": "PMID efetch 核验；证据等级按 PubMed 文献类型与摘要设计判定；DOI 未单独解析。"
+  },
+  {
+    "id": "pmid-21665126",
+    "source_type": "pubmed",
+    "title": "The epidemiology of neck pain.",
+    "authors": [
+      "Hoy DG",
+      "Protani M",
+      "De R",
+      "Buchbinder R"
+    ],
+    "year": 2010,
+    "journal": "Best practice & research. Clinical rheumatology",
+    "volume": "24",
+    "issue": "6",
+    "pages": "783-92",
+    "doi": "10.1016/j.berh.2011.01.019",
+    "pmid": "21665126",
+    "abstract": "Neck pain is becoming increasingly common throughout the world. It has a considerable impact on individuals and their families, communities, health-care systems, and businesses. There is substantial heterogeneity between neck pain epidemiological studies, which makes it difficult to compare or pool data from different studies. The estimated 1 year incidence of neck pain from available studies ranges between 10.4% and 21.3% with a higher incidence noted in office and computer workers. While some studies report that between 33% and 65% of people have recovered from an episode of neck pain at 1 year, most cases run an episodic course over a person's lifetime and, thus, relapses are common. The overall prevalence of neck pain in the general population ranges between 0.4% and 86.8% (mean: 23.1%); point prevalence ranges from 0.4% to 41.5% (mean: 14.4%); and 1 year prevalence ranges from 4.8% to 79.5% (mean: 25.8%). Prevalence is generally higher in women, higher in high-income countries compared with low- and middle-income countries and higher in urban areas compared with rural areas. Many environmental and personal factors influence the onset and course of neck pain. Most studies indicate a higher incidence of neck pain among women and an increased risk of developing neck pain until the 35-49-year age group, after which the risk begins to decline. The Global Burden of Disease 2005 Study is currently making estimates of the global burden of neck pain in relation to impairment and activity limitation, and results will be available in 2011.",
+    "key_finding": "办公与电脑工作者颈痛年发病率更高；多数颈痛呈反复发作，1年恢复率33%–65%。",
+    "topics": [
+      "neck-shoulder"
+    ],
+    "applies_to": [
+      "action-library",
+      "posture-assessment"
+    ],
+    "evidence_level": "other",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/21665126/",
+    "retrieved_at": "2026-11-08",
+    "verified": true,
+    "verification": {
+      "verifier": "RiseLoop verifier (automated PMID efetch)",
+      "method": "pmid-efetch",
+      "checked_at": "2026-11-08",
+      "doi_resolves": null,
+      "title_match": true,
+      "author_year_match": true,
+      "evidence_level_fit": true
+    },
+    "provenance": {
+      "source_api": "pubmed-eutils",
+      "request_url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&retmode=xml&id=21665126,37775083,33250456,34895248,38219373,38138262,39905389,27185457,25780258,37698343,29796982,39133855,40845624,33712465,34028164,31679800,34215798,33504206,29088401,39527445",
+      "fetched_at": "2026-11-08",
+      "task_id": "T3-pubmed-01",
+      "raw_snippet": {
+        "pmid": "21665126",
+        "pubtypes": [
+          "Journal Article",
+          "Research Support, Non-U.S. Gov't",
+          "Review"
+        ],
+        "mesh": [
+          "Female",
+          "Global Health",
+          "Health Care Costs",
+          "Humans",
+          "Incidence",
+          "Male",
+          "Neck Pain",
+          "Occupational Diseases"
+        ]
+      }
+    },
+    "contact": null,
+    "batch": "B2-2026-11-08",
+    "tags": [
+      "neck-shoulder",
+      "journal-article",
+      "research-support-non-u-s-gov-t",
+      "review"
+    ],
+    "notes": "PMID efetch 核验；证据等级按 PubMed 文献类型与摘要设计判定；DOI 未单独解析。 研究设计：流行病学综述。"
+  },
+  {
+    "id": "pmid-40111906",
+    "source_type": "pubmed",
+    "title": "Low back pain and sitting time, posture and behavior in office workers: A scoping review.",
+    "authors": [
+      "Alaca N",
+      "Acar AÖ",
+      "Öztürk S"
+    ],
+    "year": 2025,
+    "journal": "Journal of back and musculoskeletal rehabilitation",
+    "volume": "38",
+    "issue": "5",
+    "pages": "919-943",
+    "doi": "10.1177/10538127251320320",
+    "pmid": "40111906",
+    "abstract": "BackgroundOffice workers spend approximately two-thirds of their daily work time in a sitting position.ObjectiveThis scoping review aimed to identify and categorize key themes and knowledge gaps in research on how sitting time, posture, and behavior affect the risk of low back pain among office workers.MethodsThe authors conducted a comprehensive literature search in electronic databases [MEDLINE [via PubMed], SCOPUS, CINAHL, PEDro, and CENTRAL] from inception to March 2024, resulting in 22 studies involving 7814 participants. The methodological quality of these studies was assessed using the Mixed Methods Appraisal Tool (MMAT).ResultsSeventeen studies [77%] were rated as high quality, four studies [18%] as moderate quality, and one study [5%] as low quality. Thirteen studies assessed sitting time, ten assessed sitting posture, and thirteen assessed sitting behavior. Among the studies investigating sitting time, five showed no relationship with low back pain (LBP) prevalence, while eight demonstrated a relationship with LBP prevalence. For studies exploring sitting posture, seven found a relationship with LBP. Regarding studies on sitting behavior, only one showed no relationship between LBP prevalence, while twelve indicated a relationship.ConclusionsLonger sitting time, poor sitting posture, fewer breaks and more static sitting in sitting behavior, were found to be associated with LBP. The strongest evidence for an association with LBP was found for sitting behavior. When considering workplace ergonomics and interventions for LBP, it is advisable to consider all factors, including sitting, posture and behavior.",
+    "key_finding": "办公人群久坐时间、姿势与行为均与下背痛相关，其中久坐行为证据最强。",
+    "topics": [
+      "low-back"
+    ],
+    "applies_to": [
+      "action-library",
+      "intervention-engine",
+      "posture-assessment"
+    ],
+    "evidence_level": "other",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/40111906/",
+    "retrieved_at": "2026-11-08",
+    "verified": true,
+    "verification": {
+      "verifier": "RiseLoop verifier (automated PMID efetch)",
+      "method": "pmid-efetch",
+      "checked_at": "2026-11-08",
+      "doi_resolves": null,
+      "title_match": true,
+      "author_year_match": true,
+      "evidence_level_fit": true
+    },
+    "provenance": {
+      "source_api": "pubmed-eutils",
+      "request_url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&retmode=xml&id=37326297,40111906,35147898,22374636,32555024,39537176,36728338,34822137,20577058,30087262,33054341,39803911,29496356,32596199,41243296,35292487,38201931,37431089,31450538,34169503",
+      "fetched_at": "2026-11-08",
+      "task_id": "T4-pubmed-01",
+      "raw_snippet": {
+        "pmid": "40111906",
+        "pubtypes": [
+          "Journal Article",
+          "Scoping Review"
+        ],
+        "mesh": [
+          "Humans",
+          "Low Back Pain",
+          "Sitting Position",
+          "Occupational Diseases",
+          "Workplace",
+          "Time Factors",
+          "Posture"
+        ]
+      }
+    },
+    "contact": null,
+    "batch": "B3-2026-11-08",
+    "tags": [
+      "low-back",
+      "journal-article",
+      "scoping-review"
+    ],
+    "notes": "PMID efetch 核验；证据等级按 PubMed 文献类型与摘要设计判定；DOI 未单独解析。 研究设计：范围综述（scoping review）。"
+  },
+  {
+    "id": "pmid-39707287",
+    "source_type": "pubmed",
+    "title": "Effects of the active break intervention on nonspecific low back pain among young people: a randomized controlled trial.",
+    "authors": [
+      "Labecka MK",
+      "Plandowska M",
+      "Truszczyńska-Baszak A",
+      "Rajabi R",
+      "Różańska D",
+      "Płaszewski M"
+    ],
+    "year": 2024,
+    "journal": "BMC musculoskeletal disorders",
+    "volume": "25",
+    "issue": "1",
+    "pages": "1055",
+    "doi": "10.1186/s12891-024-08186-3",
+    "pmid": "39707287",
+    "abstract": "INTRODUCTION: Every end-range position maintained for a prolonged time causes a static load on the spine and may lead to musculoskeletal discomfort. Prolonged flexed sitting is a strong predictor of low back pain (LBP). The study aimed to evaluate the effectiveness of the Active Break program, implemented among young people, in reducing perceived low back pain and discomfort, as well as associated disability level resulting from prolonged sitting.\nMETHODS: A randomized controlled trial was conducted among young people with non-specific LBP. Participants were randomized into groups: an experimental group participating in the tested Active Break intervention (AB-group, n = 25), and a control group (C-group, n = 25) with self-administered care recommendations. The program took 12 weeks. The outcomes were average pain intensity (Visual Analogue Scale, VAS), disability (Oswestry Disability Index, ODI), perceived low back discomfort (LBD) during prolonged sitting (Borg scale), and global perceived improvement (Global Perceived Effect, GPE).\nRESULTS: VAS, ODI, and LBD scores after the 12-week intervention were significantly lower than those at baseline in the AB-group. In the C-group, differences were not statistically significant. Post-intervention inter-group VAS, LBD, and GPE differences were significant.\nCONCLUSIONS: The 12-week study of the Active Break intervention for young people with non-specific low back pain demonstrated significant improvement. Our research offers valuable evidence-based practices for managing and preventing low back pain, benefiting individuals, educators, healthcare professionals, personal trainers, and family physicians.\nTRIAL REGISTRATION: The study was registered at ClinicalTrials.gov [NCT05810519], registration date: 31/03/2023.",
+    "key_finding": "12周主动休息干预改善年轻人非特异性下背痛与功能障碍。",
+    "topics": [
+      "low-back"
+    ],
+    "applies_to": [
+      "action-library",
+      "intervention-engine",
+      "posture-assessment"
+    ],
+    "evidence_level": "rct",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/39707287/",
+    "retrieved_at": "2026-11-08",
+    "verified": true,
+    "verification": {
+      "verifier": "RiseLoop verifier (automated PMID efetch)",
+      "method": "pmid-efetch",
+      "checked_at": "2026-11-08",
+      "doi_resolves": null,
+      "title_match": true,
+      "author_year_match": true,
+      "evidence_level_fit": true
+    },
+    "provenance": {
+      "source_api": "pubmed-eutils",
+      "request_url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&retmode=xml&id=38648834,32342462,31366294,40111906,31451200,23014142,34895248,34028164,39707287,40050856,38884772,28939263,33906239,34139937,31100701,30380507,21727180,31852228,32096285,40988264",
+      "fetched_at": "2026-11-08",
+      "task_id": "T4-pubmed-01",
+      "raw_snippet": {
+        "pmid": "39707287",
+        "pubtypes": [
+          "Journal Article",
+          "Randomized Controlled Trial"
+        ],
+        "mesh": [
+          "Humans",
+          "Low Back Pain",
+          "Female",
+          "Male",
+          "Pain Measurement",
+          "Young Adult",
+          "Exercise Therapy",
+          "Treatment Outcome"
+        ]
+      }
+    },
+    "contact": null,
+    "batch": "B3-2026-11-08",
+    "tags": [
+      "low-back",
+      "journal-article",
+      "randomized-controlled-trial"
+    ],
+    "notes": "PMID efetch 核验；证据等级按 PubMed 文献类型与摘要设计判定；DOI 未单独解析。"
+  },
+  {
+    "id": "pmid-38407016",
+    "source_type": "pubmed",
+    "title": "Management of low back pain and lumbosacral radicular syndrome: the Guideline of the Royal Dutch Society for Physical Therapy (KNGF).",
+    "authors": [
+      "Apeldoorn AT",
+      "Swart NM",
+      "Conijn D",
+      "Meerhoff GA",
+      "Ostelo RW"
+    ],
+    "year": 2024,
+    "journal": "European journal of physical and rehabilitation medicine",
+    "volume": "60",
+    "issue": "2",
+    "pages": "292-318",
+    "doi": "10.23736/S1973-9087.24.08352-7",
+    "pmid": "38407016",
+    "abstract": "BACKGROUND: Significant progress and new insights have been gained since the Dutch Physical Therapy guideline on low back pain (LBP) in 2013 and the Cesar en Mensendieck guideline in 2009, necessitating an update of these guidelines.\nAIM: To update and develop an evidence-based guideline for the comprehensive management of LBP and lumbosacral radicular syndrome (LRS) without serious specific conditions (red flags) for Dutch physical therapists and Cesar and Mensendieck Therapists.\nDESIGN: Clinical practice guideline.\nSETTING: Inpatient and outpatient.\nPOPULATION: Adults with LBP and/or LRS.\nMETHODS: Clinically relevant questions were identified based on perceived barriers in current practice of physical therapy. All clinical questions were answered using published guidelines, systematic reviews, narrative reviews or systematic reviews performed by the project group. Recommendations were formulated based on evidence and additional considerations, as described in the Grading of Recommendations Assessment, Development and Evaluation (GRADE) Evidence-to-Decision framework. Patients participated in every phase.\nRESULTS: The guideline describes a comprehensive assessment based on the International Classification of Functioning, Disability and Health (ICF) Core Set for LBP and LRS, including the identification of alarm symptoms and red flags. Patients are assigned to three treatment profiles (low, moderate and high risk of persistent symptoms) based on prognostic factors for persistent LBP. The guideline recommends offering simple and less intensive support to people who are likely to recover quickly (low-risk profile) and more complex and intensive support to people with a moderate or high risk of persistent complaints. Criteria for initiating and discontinuing physical therapy, and referral to a general practitioner are specified. Recommendations are formulated for information and advice, measurement instruments, active and passive interventions and behavior-oriented treatment.\nCONCLUSIONS: An evidence based physical therapy guideline for the management of patients with LBP and LRS without red flags for physical therapists and Cesar and Mensendieck therapists was developed. Cornerstones of physical therapy assessment and treatment are risk stratification, shared decision-making, information and advice, and exercises.\nCLINICAL REHABILITATION IMPACT: This guideline provides guidance for clinicians and patients to optimize treatment outcomes in patients with LBP and LRS and offers transparency for other healthcare providers and stakeholders.",
+    "key_finding": "KNGF 指南：腰痛/腰骶神经根综合征需先识别红旗征，再按风险分层选择运动与教育。",
+    "topics": [
+      "low-back",
+      "safety-redflag"
+    ],
+    "applies_to": [
+      "action-library",
+      "intervention-engine",
+      "posture-assessment",
+      "safety-check"
+    ],
+    "evidence_level": "guideline",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/38407016/",
+    "retrieved_at": "2026-11-08",
+    "verified": true,
+    "verification": {
+      "verifier": "RiseLoop verifier (automated PMID efetch)",
+      "method": "pmid-efetch",
+      "checked_at": "2026-11-08",
+      "doi_resolves": null,
+      "title_match": true,
+      "author_year_match": true,
+      "evidence_level_fit": true
+    },
+    "provenance": {
+      "source_api": "pubmed-eutils",
+      "request_url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&retmode=xml&id=28231784,32643252,32438853,28248609,34003240,34864777,25882471,36963709,33602392,34200510,34189141,39453541,34794594,38407016,36599029,24239490,25629215,38880725,35583521,39607420",
+      "fetched_at": "2026-11-08",
+      "task_id": "T4-pubmed-01",
+      "raw_snippet": {
+        "pmid": "38407016",
+        "pubtypes": [
+          "Journal Article",
+          "Practice Guideline"
+        ],
+        "mesh": [
+          "Humans",
+          "Exercise Therapy",
+          "General Practitioners",
+          "Low Back Pain",
+          "Physical Therapy Modalities",
+          "Treatment Outcome"
+        ]
+      }
+    },
+    "contact": null,
+    "batch": "B3-2026-11-08",
+    "tags": [
+      "low-back",
+      "safety-redflag",
+      "journal-article",
+      "practice-guideline",
+      "multi-topic"
+    ],
+    "notes": "PMID efetch 核验；证据等级按 PubMed 文献类型与摘要设计判定；DOI 未单独解析。 同一记录同时支撑：low-back、safety-redflag。"
+  },
+  {
+    "id": "pmid-32096285",
+    "source_type": "pubmed",
+    "title": "Association between objectively measured physical behaviour and neck- and/or low back pain: A systematic review.",
+    "authors": [
+      "Øverås CK",
+      "Villumsen M",
+      "Axén I",
+      "Cabrita M",
+      "Leboeuf-Yde C",
+      "Hartvigsen J",
+      "Mork PJ"
+    ],
+    "year": 2020,
+    "journal": "European journal of pain (London, England)",
+    "volume": "24",
+    "issue": "6",
+    "pages": "1007-1022",
+    "doi": "10.1002/ejp.1551",
+    "pmid": "32096285",
+    "abstract": "BACKGROUND AND OBJECTIVE: Clinical guidelines recommend physical activity to manage neck pain (NP) and low back pain (LBP). However, studies used to support these guidelines are based on self-reports of physical behaviour, which are prone to bias and misclassification. This systematic review aimed to investigate associations between objectively measured physical behaviour and the risk or prognosis of NP and/or LBP.\nDATABASES AND DATA TREATMENT: Literature searches were performed in MEDLINE, Embase and Scopus from their inception until 18 January 2019. We considered prospective cohort studies for eligibility. Article selection, data extraction and critical appraisal were carried out by independent reviewers. Results were stratified on activity/sedentariness.\nRESULTS: Ten articles out of 897 unique records identified met the inclusion criteria, of which eight studied working populations with mainly blue-collar workers. The overall results indicate that increased sitting time at work reduces the risk of NP and LBP while increased physical activity during work and/or leisure increases the risk of these conditions among blue-collar workers; however, associations were weak. Physical activity was not associated with prognosis of LBP (no studies investigated prognosis of NP). Most of the included articles have methodological shortcomings.\nCONCLUSIONS: This review indicates that, among blue-collar workers, increased sitting at work may protect against NP and LBP while increased physical activity during work and/or leisure may increase this risk. There was no evidence supporting physical activity as a prognostic factor for LBP. Findings should be interpreted with caution due to the weak associations and few available studies with methodological shortcomings.\nSIGNIFICANCE: Based on prospective cohort studies with objectively measured physical behaviour, this review questions the common notion that increased physical activity is associated with reduced risk or better prognosis of NP and/or LBP. We found that, among blue-collar workers, increased sitting time at work reduces the risk of NP and LBP, whereas physical activity somewhat increases the risk. Despite methodological shortcomings, there was consistency in the direction of the results, although high-quality articles reported the weakest associations. Systematic review registration: PROSPERO CRD42018100765.",
+    "key_finding": "蓝领队列中工作久坐与颈腰痛风险降低相关、工作或休闲活动风险略升，关联弱需谨慎。",
+    "topics": [
+      "low-back"
+    ],
+    "applies_to": [
+      "action-library",
+      "intervention-engine",
+      "posture-assessment"
+    ],
+    "evidence_level": "systematic-review",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/32096285/",
+    "retrieved_at": "2026-11-08",
+    "verified": true,
+    "verification": {
+      "verifier": "RiseLoop verifier (automated PMID efetch)",
+      "method": "pmid-efetch",
+      "checked_at": "2026-11-08",
+      "doi_resolves": null,
+      "title_match": true,
+      "author_year_match": true,
+      "evidence_level_fit": true
+    },
+    "provenance": {
+      "source_api": "pubmed-eutils",
+      "request_url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&retmode=xml&id=38648834,32342462,31366294,40111906,31451200,23014142,34895248,34028164,39707287,40050856,38884772,28939263,33906239,34139937,31100701,30380507,21727180,31852228,32096285,40988264",
+      "fetched_at": "2026-11-08",
+      "task_id": "T4-pubmed-01",
+      "raw_snippet": {
+        "pmid": "32096285",
+        "pubtypes": [
+          "Journal Article",
+          "Research Support, Non-U.S. Gov't",
+          "Systematic Review"
+        ],
+        "mesh": [
+          "Exercise",
+          "Humans",
+          "Leisure Activities",
+          "Low Back Pain",
+          "Neck Pain",
+          "Prospective Studies"
+        ]
+      }
+    },
+    "contact": null,
+    "batch": "B3-2026-11-08",
+    "tags": [
+      "low-back",
+      "journal-article",
+      "research-support-non-u-s-gov-t",
+      "systematic-review"
+    ],
+    "notes": "PMID efetch 核验；证据等级按 PubMed 文献类型与摘要设计判定；DOI 未单独解析。"
+  },
+  {
+    "id": "pmid-31451200",
+    "source_type": "pubmed",
+    "title": "No consensus on causality of spine postures or physical exposure and low back pain: A systematic review of systematic reviews.",
+    "authors": [
+      "Swain CTV",
+      "Pan F",
+      "Owen PJ",
+      "Schmidt H",
+      "Belavy DL"
+    ],
+    "year": 2020,
+    "journal": "Journal of biomechanics",
+    "volume": "102",
+    "issue": null,
+    "pages": "109312",
+    "doi": "10.1016/j.jbiomech.2019.08.006",
+    "pmid": "31451200",
+    "abstract": "Specific spinal postures and physical activities have been linked to low back pain (LBP) but previous reviews have produced contrasting outcomes. This umbrella review examined (1) what relationship, if any, is evident between specific spinal postures or physical activities and LBP; (2) the quality of existing systematic reviews in this area; and (3) the extent to which previous systematic reviews demonstrate causality. Five electronic databases and reference lists of relevant articles were searched from January 1990 to June 2018. Systematic reviews and meta-analyses on spine posture or physical exposure and LBP symptoms (self-report) or outcomes (e.g. work absence, medical consultation) were included. The AMSTAR and the Bradford Hill Criteria were utilised to critically appraise the quality of included systematic reviews and to determine the extent to which these reviews demonstrated causality. Two independent reviewers screened 4285 publications with 41 reviews included in the final review. Both positive and null associations between spine posture, prolonged standing, sitting, bending and twisting, awkward postures, whole body vibration, and components of heavy physical work were reported. Results from meta-analyses were more consistently in favour of an association, whereas systematic reviews that included only prospective studies were less able to provide consistent conclusions. Evidence that these factors precede first time LBP or have a dose response relationship with LBP outcomes was mixed. Despite the availability of many reviews, there is no consensus regarding causality of physical exposure to LBP. Association has been documented but does not provide a causal explanation for LBP.",
+    "key_finding": "系统综述间对脊柱姿势或身体暴露与腰痛的因果关系无共识；关联不等于因果。",
+    "topics": [
+      "low-back"
+    ],
+    "applies_to": [
+      "action-library",
+      "intervention-engine",
+      "posture-assessment"
+    ],
+    "evidence_level": "systematic-review",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/31451200/",
+    "retrieved_at": "2026-11-08",
+    "verified": true,
+    "verification": {
+      "verifier": "RiseLoop verifier (automated PMID efetch)",
+      "method": "pmid-efetch",
+      "checked_at": "2026-11-08",
+      "doi_resolves": null,
+      "title_match": true,
+      "author_year_match": true,
+      "evidence_level_fit": true
+    },
+    "provenance": {
+      "source_api": "pubmed-eutils",
+      "request_url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&retmode=xml&id=38648834,32342462,31366294,40111906,31451200,23014142,34895248,34028164,39707287,40050856,38884772,28939263,33906239,34139937,31100701,30380507,21727180,31852228,32096285,40988264",
+      "fetched_at": "2026-11-08",
+      "task_id": "T4-pubmed-01",
+      "raw_snippet": {
+        "pmid": "31451200",
+        "pubtypes": [
+          "Journal Article",
+          "Research Support, Non-U.S. Gov't",
+          "Systematic Review"
+        ],
+        "mesh": [
+          "Exercise",
+          "Humans",
+          "Low Back Pain",
+          "Posture",
+          "Systematic Reviews as Topic"
+        ]
+      }
+    },
+    "contact": null,
+    "batch": "B3-2026-11-08",
+    "tags": [
+      "low-back",
+      "journal-article",
+      "research-support-non-u-s-gov-t",
+      "systematic-review"
+    ],
+    "notes": "PMID efetch 核验；证据等级按 PubMed 文献类型与摘要设计判定；DOI 未单独解析。"
+  },
+  {
+    "id": "pmid-28939263",
+    "source_type": "pubmed",
+    "title": "Effects of stretching exercise training and ergonomic modifications on musculoskeletal discomforts of office workers: a randomized controlled trial.",
+    "authors": [
+      "Shariat A",
+      "Cleland JA",
+      "Danaee M",
+      "Kargarfard M",
+      "Sangelaji B",
+      "Tamrin SBM"
+    ],
+    "year": 2018,
+    "journal": "Brazilian journal of physical therapy",
+    "volume": "22",
+    "issue": "2",
+    "pages": "144-153",
+    "doi": "10.1016/j.bjpt.2017.09.003",
+    "pmid": "28939263",
+    "abstract": "OBJECTIVE: To evaluate the effectiveness of exercise, ergonomic modification, and a combination of training exercise and ergonomic modification on the scores of pain in office workers with neck, shoulders, and lower back pain.\nMETHODS: Participants (N=142) in this randomized controlled trial were office workers aged 20-50 years old with neck, shoulders, and lower back pain. They were randomly assigned to either the ergonomic modification group, the exercise group, the combined exercise and ergonomic modification group, or the control group (no-treatment). The exercise training group performed a series of stretching exercises, while the ergonomic group received some modification in the working place. Outcome measures were assessed by the Cornell Musculoskeletal Disorders Questionnaire at baseline, after 2, 4, and 6 months of intervention.\nRESULTS: There was significant differences in pain scores for neck (MD -10.55; 95%CI -14.36 to -6.74), right shoulder (MD -12.17; 95%CI -16.87 to -7.47), left shoulder (MD -11.1; 95%CI -15.1 to -7.09) and lower back (MD -7.8; 95%CI -11.08 to -4.53) between the exercise and control groups. Also, significant differences were seen in pain scores for neck (MD -9.99; 95%CI -13.63 to -6.36), right shoulder (MD -11.12; 95%CI -15.59 to -6.65), left shoulder (MD -10.67; 95%CI -14.49 to -6.85) and lower back (MD -6.87; 95%CI -10 to -3.74) between the combined exercise and ergonomic modification and control groups. The significant improvement from month 4 to 6, was only seen in exercise group (p<0.05).\nCONCLUSION: To have a long term effective on MSDs, physical therapists and occupational therapists should use stretching exercises in their treatment programs rather than solely rely on ergonomic modification.\nCLINICAL TRIAL ID: NCT02874950 - https://www.clinicaltrials.gov/ct2/show/NCT02874950.",
+    "key_finding": "拉伸训练在6个月内改善办公人群颈肩腰疼痛，优于单纯工位改造。",
+    "topics": [
+      "low-back"
+    ],
+    "applies_to": [
+      "action-library",
+      "intervention-engine",
+      "posture-assessment"
+    ],
+    "evidence_level": "rct",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/28939263/",
+    "retrieved_at": "2026-11-08",
+    "verified": true,
+    "verification": {
+      "verifier": "RiseLoop verifier (automated PMID efetch)",
+      "method": "pmid-efetch",
+      "checked_at": "2026-11-08",
+      "doi_resolves": null,
+      "title_match": true,
+      "author_year_match": true,
+      "evidence_level_fit": true
+    },
+    "provenance": {
+      "source_api": "pubmed-eutils",
+      "request_url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&retmode=xml&id=38648834,32342462,31366294,40111906,31451200,23014142,34895248,34028164,39707287,40050856,38884772,28939263,33906239,34139937,31100701,30380507,21727180,31852228,32096285,40988264",
+      "fetched_at": "2026-11-08",
+      "task_id": "T4-pubmed-01",
+      "raw_snippet": {
+        "pmid": "28939263",
+        "pubtypes": [
+          "Journal Article"
+        ],
+        "mesh": [
+          "Ergonomics",
+          "Exercise Therapy",
+          "Humans",
+          "Low Back Pain",
+          "Musculoskeletal Diseases",
+          "Neck Pain",
+          "Surveys and Questionnaires",
+          "Workplace"
+        ]
+      }
+    },
+    "contact": null,
+    "batch": "B3-2026-11-08",
+    "tags": [
+      "low-back",
+      "journal-article"
+    ],
+    "notes": "PMID efetch 核验；证据等级按 PubMed 文献类型与摘要设计判定；DOI 未单独解析。 研究设计：随机对照试验。"
+  },
+  {
+    "id": "pmid-36963709",
+    "source_type": "pubmed",
+    "title": "A Systematic Review of Clinical Practice Guidelines for Persons With Non-specific Low Back Pain With and Without Radiculopathy: Identification of Best Evidence for Rehabilitation to Develop the WHO's Package of Interventions for Rehabilitation.",
+    "authors": [
+      "Zaina F",
+      "Côté P",
+      "Cancelliere C",
+      "Di Felice F",
+      "Donzelli S",
+      "Rauch A",
+      "Verville L",
+      "Negrini S",
+      "Nordin M"
+    ],
+    "year": 2023,
+    "journal": "Archives of physical medicine and rehabilitation",
+    "volume": "104",
+    "issue": "11",
+    "pages": "1913-1927",
+    "doi": "10.1016/j.apmr.2023.02.022",
+    "pmid": "36963709",
+    "abstract": "OBJECTIVE: To Identify evidence-based rehabilitation interventions for persons with non-specific low back pain (LBP) with and without radiculopathy and to develop recommendations from high-quality clinical practice guidelines (CPGs) to inform the World Health Organization's (WHO) Package of Interventions for Rehabilitation (PIR).\nDATA SOURCE: We searched MEDLINE, EMBASE, CINAHL, PsycINFO, National Health Services Economic Evaluation Database, Health Technology Assessment Database, PEDro, the Trip Database, the Index to Chiropractic Literature and the gray literature.\nSTUDY SELECTION: Eligible guidelines were (1) published between 2009 and 2019 in English, French, Italian, or Swedish; (2) included adults or children with non-specific LBP with or without radiculopathy; and (3) assessed the benefits of rehabilitation interventions on functioning. Pairs of independent reviewers assessed the quality of the CPGs using AGREE II.\nDATA SYNTHESIS: We identified 4 high-quality CPGs. Recommended interventions included (1) education about recovery expectations, self-management strategies, and maintenance of usual activities; (2) multimodal approaches incorporating education, exercise, and spinal manipulation; (3) nonsteroidal anti-inflammatory drugs combined with education in the acute stage; and (4) intensive interdisciplinary rehabilitation that includes exercise and cognitive/behavioral interventions for persistent pain. We did not identify high-quality CPGs for people younger than 16 years of age.\nCONCLUSION: We developed evidence-based recommendations from high-quality CPGs to inform the WHO PIR for people with LBP with and without radiculopathy. These recommendations emphasize the potential benefits of education, exercise, manual therapy, and cognitive/behavioral interventions.",
+    "key_finding": "高质量腰痛指南推荐教育、运动、手法与认知行为干预，覆盖伴或不伴神经根病。",
+    "topics": [
+      "safety-redflag"
+    ],
+    "applies_to": [
+      "safety-check"
+    ],
+    "evidence_level": "systematic-review",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/36963709/",
+    "retrieved_at": "2026-11-08",
+    "verified": true,
+    "verification": {
+      "verifier": "RiseLoop verifier (automated PMID efetch)",
+      "method": "pmid-efetch",
+      "checked_at": "2026-11-08",
+      "doi_resolves": null,
+      "title_match": true,
+      "author_year_match": true,
+      "evidence_level_fit": true
+    },
+    "provenance": {
+      "source_api": "pubmed-eutils",
+      "request_url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&retmode=xml&id=28231784,32643252,32438853,28248609,34003240,34864777,25882471,36963709,33602392,34200510,34189141,39453541,34794594,38407016,36599029,24239490,25629215,38880725,35583521,39607420",
+      "fetched_at": "2026-11-08",
+      "task_id": "T5-pubmed-01",
+      "raw_snippet": {
+        "pmid": "36963709",
+        "pubtypes": [
+          "Systematic Review",
+          "Journal Article",
+          "Research Support, Non-U.S. Gov't"
+        ],
+        "mesh": [
+          "Adult",
+          "Child",
+          "Humans",
+          "Radiculopathy",
+          "Low Back Pain",
+          "Musculoskeletal Manipulations",
+          "World Health Organization"
+        ]
+      }
+    },
+    "contact": null,
+    "batch": "B1-2026-11-08",
+    "tags": [
+      "safety-redflag",
+      "systematic-review",
+      "journal-article",
+      "research-support-non-u-s-gov-t"
+    ],
+    "notes": "PMID efetch 核验；证据等级按 PubMed 文献类型与摘要设计判定；DOI 未单独解析。"
+  },
+  {
+    "id": "pmid-32438853",
+    "source_type": "pubmed",
+    "title": "International Framework for Red Flags for Potential Serious Spinal Pathologies.",
+    "authors": [
+      "Finucane LM",
+      "Downie A",
+      "Mercer C",
+      "Greenhalgh SM",
+      "Boissonnault WG",
+      "Pool-Goudzwaard AL",
+      "Beneciuk JM",
+      "Leech RL",
+      "Selfe J"
+    ],
+    "year": 2020,
+    "journal": "The Journal of orthopaedic and sports physical therapy",
+    "volume": "50",
+    "issue": "7",
+    "pages": "350-372",
+    "doi": "10.2519/jospt.2020.9971",
+    "pmid": "32438853",
+    "abstract": "The International Federation of Orthopaedic Manipulative Physical Therapists (IFOMPT) led the development of a framework to help clinicians assess and manage people who may have serious spinal pathology. While rare, serious spinal pathology can have devastating and life-changing or life-limiting consequences, and must be identified early and managed appropriately. Red flags (signs and symptoms that might raise suspicion of serious spinal pathology) have historically been used by clinicians to identify serious spinal pathology. Currently, there is an absence of high-quality evidence for the diagnostic accuracy of most red flags. This framework is intended to provide a clinical-reasoning pathway to clarify the role of red flags. J Orthop Sports Phys Ther 2020;50(7):350-372. Epub 21 May 2020. doi:10.2519/jospt.2020.9971.",
+    "key_finding": "IFOMPT 红旗框架：多数红旗征诊断准确性证据不足，需用临床推理识别严重脊柱病变。",
+    "topics": [
+      "safety-redflag"
+    ],
+    "applies_to": [
+      "safety-check"
+    ],
+    "evidence_level": "guideline",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/32438853/",
+    "retrieved_at": "2026-11-08",
+    "verified": true,
+    "verification": {
+      "verifier": "RiseLoop verifier (automated PMID efetch)",
+      "method": "pmid-efetch",
+      "checked_at": "2026-11-08",
+      "doi_resolves": null,
+      "title_match": true,
+      "author_year_match": true,
+      "evidence_level_fit": true
+    },
+    "provenance": {
+      "source_api": "pubmed-eutils",
+      "request_url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&retmode=xml&id=28231784,32643252,32438853,28248609,34003240,34864777,25882471,36963709,33602392,34200510,34189141,39453541,34794594,38407016,36599029,24239490,25629215,38880725,35583521,39607420",
+      "fetched_at": "2026-11-08",
+      "task_id": "T5-pubmed-01",
+      "raw_snippet": {
+        "pmid": "32438853",
+        "pubtypes": [
+          "Journal Article",
+          "Practice Guideline"
+        ],
+        "mesh": [
+          "Adult",
+          "Aged",
+          "Back Pain",
+          "Clinical Decision Rules",
+          "Clinical Reasoning",
+          "Female",
+          "Humans",
+          "Male"
+        ]
+      }
+    },
+    "contact": null,
+    "batch": "B1-2026-11-08",
+    "tags": [
+      "safety-redflag",
+      "journal-article",
+      "practice-guideline"
+    ],
+    "notes": "PMID efetch 核验；证据等级按 PubMed 文献类型与摘要设计判定；DOI 未单独解析。"
+  },
+  {
+    "id": "pmid-28231784",
+    "source_type": "pubmed",
+    "title": "Accuracy of clinical neurological examination in diagnosing lumbo-sacral radiculopathy: a systematic literature review.",
+    "authors": [
+      "Tawa N",
+      "Rhoda A",
+      "Diener I"
+    ],
+    "year": 2017,
+    "journal": "BMC musculoskeletal disorders",
+    "volume": "18",
+    "issue": "1",
+    "pages": "93",
+    "doi": "10.1186/s12891-016-1383-2",
+    "pmid": "28231784",
+    "abstract": "BACKGROUND: Lumbar radiculopathy remains a clinical challenge among primary care clinicians in both assessment and diagnosis. This often leads to misdiagnosis and inappropriate treatment of patients resulting in poor health outcomes, exacerbating this already debilitating condition. This review evaluated 12 primary diagnostic accuracy studies that specifically assessed the performance of various individual and grouped clinical neurological tests in detecting nerve root impingement, as established in the current literature.\nMETHODS: Eight electronic data bases were searched for relevant articles from inception until July 2016. All primary diagnostic studies which investigated the accuracy of clinical neurological test (s) in diagnosing lumbar radiculopathy among patients with low back and referred leg symptoms were screened for inclusion. Qualifying studies were retrieved and independently assessed for methodological quality using the 'Quality Assessment of Diagnostic tests Accuracy Studies' criteria.\nRESULTS: A total of 12 studies which investigated standard components of clinical neurological examination of (sensory, motor, tendon reflex and neuro-dynamics) of the lumbo-sacral spine were included. The mean inter-observer agreement on quality assessment by two independent reviewers was fair (k = 0.3 - 0.7). The diagnostic performance of sensory testing using MR imaging as a reference standard demonstrated a sensitivity (confidence interval 95%) 0.61 (0.47-0.73) and a specificity of 0.63 (0.38-0.84). Motor tests sensitivity was poor to moderate, ranging from 0.13 (0.04-0.31) to 0.61 (0.36-0.83). Generally, the diagnostic performance of reflex testing was notably good with specificity ranging from (confidence interval 95%) 0.60 (0.51-0.69) to 0.93 (0.87-0.97) and sensitivity ranging from 0.14 (0.09-0.21) to 0.67 (0.21-0.94). Femoral nerve stretch test had a high sensitivity of (confidence interval 95%) 1.00 (0.40-1.00) and specificity of 0.83 (0.52-0.98) while SLR test recorded a mean sensitivity of 0.84 (0.72-0.92) and specificity of 0.78 (0.67-0.87).\nCONCLUSIONS: There is a scarcity of studies on the diagnostic accuracy of clinical neurological examination testing. Furthermore there seem to be a disconnect among researchers regarding the diagnostic utility of lower limb neuro-dynamic tests which include the Straight Leg Raise and Femoral Nerve tests for sciatic and femoral nerve respectively. Whether these tests are able to detect the presence of disc herniation and subsequent nerve root compression or hyper-sensitivity of the sacral and femoral plexus due to mechanical irritation still remains debatable.",
+    "key_finding": "腰椎神经根病神经检查研究稀缺；直腿抬高试验敏感度0.84、特异度0.78。",
+    "topics": [
+      "safety-redflag"
+    ],
+    "applies_to": [
+      "safety-check"
+    ],
+    "evidence_level": "systematic-review",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/28231784/",
+    "retrieved_at": "2026-11-08",
+    "verified": true,
+    "verification": {
+      "verifier": "RiseLoop verifier (automated PMID efetch)",
+      "method": "pmid-efetch",
+      "checked_at": "2026-11-08",
+      "doi_resolves": null,
+      "title_match": true,
+      "author_year_match": true,
+      "evidence_level_fit": true
+    },
+    "provenance": {
+      "source_api": "pubmed-eutils",
+      "request_url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&retmode=xml&id=28231784,32643252,32438853,28248609,34003240,34864777,25882471,36963709,33602392,34200510,34189141,39453541,34794594,38407016,36599029,24239490,25629215,38880725,35583521,39607420",
+      "fetched_at": "2026-11-08",
+      "task_id": "T5-pubmed-01",
+      "raw_snippet": {
+        "pmid": "28231784",
+        "pubtypes": [
+          "Journal Article",
+          "Systematic Review"
+        ],
+        "mesh": [
+          "Humans",
+          "Intervertebral Disc Degeneration",
+          "Intervertebral Disc Displacement",
+          "Low Back Pain",
+          "Lumbar Vertebrae",
+          "Neurologic Examination",
+          "Radiculopathy",
+          "Sacrum"
+        ]
+      }
+    },
+    "contact": null,
+    "batch": "B1-2026-11-08",
+    "tags": [
+      "safety-redflag",
+      "journal-article",
+      "systematic-review"
+    ],
+    "notes": "PMID efetch 核验；证据等级按 PubMed 文献类型与摘要设计判定；DOI 未单独解析。"
+  },
+  {
+    "id": "pmid-24239490",
+    "source_type": "pubmed",
+    "title": "An evidence-based clinical guideline for the diagnosis and treatment of lumbar disc herniation with radiculopathy.",
+    "authors": [
+      "Kreiner DS",
+      "Hwang SW",
+      "Easa JE",
+      "Resnick DK",
+      "Baisden JL",
+      "Bess S",
+      "Cho CH",
+      "DePalma MJ",
+      "Dougherty P",
+      "Fernand R",
+      "Ghiselli G",
+      "Hanna AS",
+      "Lamer T",
+      "Lisi AJ",
+      "Mazanec DJ",
+      "Meagher RJ",
+      "Nucci RC",
+      "Patel RD",
+      "Sembrano JN",
+      "Sharma AK",
+      "Summers JT",
+      "Taleghani CK",
+      "Tontz WL",
+      "Toton JF",
+      "North American Spine Society"
+    ],
+    "year": 2014,
+    "journal": "The spine journal : official journal of the North American Spine Society",
+    "volume": "14",
+    "issue": "1",
+    "pages": "180-91",
+    "doi": "10.1016/j.spinee.2013.08.003",
+    "pmid": "24239490",
+    "abstract": "BACKGROUND CONTEXT: The objective of the North American Spine Society's (NASS) Evidence-Based Clinical Guideline for the Diagnosis and Treatment of Lumbar Disc Herniation with Radiculopathy is to provide evidence-based recommendations to address key clinical questions surrounding the diagnosis and treatment of lumbar disc herniation with radiculopathy. The guideline is intended to reflect contemporary treatment concepts for symptomatic lumbar disc herniation with radiculopathy as reflected in the highest quality clinical literature available on this subject as of July 2011. The goals of the guideline recommendations are to assist in delivering optimum efficacious treatment and functional recovery from this spinal disorder.\nPURPOSE: To provide an evidence-based educational tool to assist spine specialists in the diagnosis and treatment of lumbar disc herniation with radiculopathy.\nSTUDY DESIGN: Systematic review and evidence-based clinical guideline.\nMETHODS: This guideline is a product of the Lumbar Disc Herniation with Radiculopathy Work Group of NASS' Evidence-Based Guideline Development Committee. The work group consisted of multidisciplinary spine care specialists trained in the principles of evidence-based analysis. A literature search addressing each question and using a specific search protocol was performed on English-language references found in Medline, Embase (Drugs and Pharmacology), and four additional evidence-based databases to identify articles. The relevant literature was then independently rated using the NASS-adopted standardized levels of evidence. An evidentiary table was created for each of the questions. Final recommendations to answer each clinical question were developed via work group discussion, and grades were assigned to the recommendations using standardized grades of recommendation. In the absence of Level I to IV evidence, work group consensus statements have been developed using a modified nominal group technique, and these statements are clearly identified as such in the guideline.\nRESULTS: Twenty-nine clinical questions were formulated and addressed, and the answers are summarized in this article. The respective recommendations were graded by strength of the supporting literature, which was stratified by levels of evidence.\nCONCLUSIONS: The clinical guideline has been created using the techniques of evidence-based medicine and best available evidence to aid practitioners in the care of patients with symptomatic lumbar disc herniation with radiculopathy. The entire guideline document, including the evidentiary tables, suggestions for future research, and all the references, is available electronically on the NASS Web site at http://www.spine.org/Pages/PracticePolicy/ClinicalCare/ClinicalGuidlines/Default.aspx and will remain updated on a timely schedule.",
+    "key_finding": "NASS 指南：腰椎间盘突出伴神经根病的诊断与治疗建议按证据等级分级。",
+    "topics": [
+      "safety-redflag"
+    ],
+    "applies_to": [
+      "safety-check"
+    ],
+    "evidence_level": "guideline",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/24239490/",
+    "retrieved_at": "2026-11-08",
+    "verified": true,
+    "verification": {
+      "verifier": "RiseLoop verifier (automated PMID efetch)",
+      "method": "pmid-efetch",
+      "checked_at": "2026-11-08",
+      "doi_resolves": null,
+      "title_match": true,
+      "author_year_match": true,
+      "evidence_level_fit": true
+    },
+    "provenance": {
+      "source_api": "pubmed-eutils",
+      "request_url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&retmode=xml&id=28231784,32643252,32438853,28248609,34003240,34864777,25882471,36963709,33602392,34200510,34189141,39453541,34794594,38407016,36599029,24239490,25629215,38880725,35583521,39607420",
+      "fetched_at": "2026-11-08",
+      "task_id": "T5-pubmed-01",
+      "raw_snippet": {
+        "pmid": "24239490",
+        "pubtypes": [
+          "Journal Article",
+          "Practice Guideline",
+          "Systematic Review"
+        ],
+        "mesh": [
+          "Diskectomy",
+          "Evidence-Based Medicine",
+          "Glucocorticoids",
+          "Humans",
+          "Injections, Epidural",
+          "Intervertebral Disc Displacement",
+          "Radiculopathy",
+          "Recovery of Function"
+        ]
+      }
+    },
+    "contact": null,
+    "batch": "B1-2026-11-08",
+    "tags": [
+      "safety-redflag",
+      "journal-article",
+      "practice-guideline",
+      "systematic-review"
+    ],
+    "notes": "PMID efetch 核验；证据等级按 PubMed 文献类型与摘要设计判定；DOI 未单独解析。"
+  },
+  {
+    "id": "pmid-21168100",
+    "source_type": "pubmed",
+    "title": "An evidence-based clinical guideline for the diagnosis and treatment of cervical radiculopathy from degenerative disorders.",
+    "authors": [
+      "Bono CM",
+      "Ghiselli G",
+      "Gilbert TJ",
+      "Kreiner DS",
+      "Reitman C",
+      "Summers JT",
+      "Baisden JL",
+      "Easa J",
+      "Fernand R",
+      "Lamer T",
+      "Matz PG",
+      "Mazanec DJ",
+      "Resnick DK",
+      "Shaffer WO",
+      "Sharma AK",
+      "Timmons RB",
+      "Toton JF",
+      "North American Spine Society"
+    ],
+    "year": 2011,
+    "journal": "The spine journal : official journal of the North American Spine Society",
+    "volume": "11",
+    "issue": "1",
+    "pages": "64-72",
+    "doi": "10.1016/j.spinee.2010.10.023",
+    "pmid": "21168100",
+    "abstract": "BACKGROUND CONTEXT: The North American Spine Society (NASS) Evidence-Based Clinical Guideline on the Diagnosis and Treatment of Cervical Radiculopathy from Degenerative Disorders provides evidence-based recommendations on key clinical questions concerning the diagnosis and treatment of cervical radiculopathy from degenerative disorders. The guideline addresses these questions based on the highest quality clinical literature available on this subject as of May 2009. The guideline's recommendations assist the practitioner in delivering optimum efficacious treatment of and functional recovery from this common disorder.\nPURPOSE: Provide an evidence-based educational tool to assist spine care providers in improving quality and efficiency of care delivered to patients with cervical radiculopathy from degenerative disorders.\nSTUDY DESIGN: Systematic review and evidence-based clinical guideline.\nMETHODS: This report is from the Cervical Radiculopathy from Degenerative Disorders Work Group of the NASS' Evidence-Based Clinical Guideline Development Committee. The work group consisted of multidisciplinary spine care specialists trained in the principles of evidence-based analysis. Each member of the group formatted a series of clinical questions to be addressed by the group. The final questions agreed on by the group are the subjects of this report. A literature search addressing each question using a specific search protocol was performed on English language references found in MEDLINE, EMBASE (Drugs and Pharmacology), and four additional evidence-based databases. The relevant literature was then independently rated by a minimum of three reviewers using the NASS-adopted standardized levels of evidence. An evidentiary table was created for each of the questions. Final recommendations to answer each clinical question were arrived at via work group discussion, and grades were assigned to the recommendations using standardized grades of recommendation. In the absence of Levels I to IV evidence, work group consensus statements have been developed using a modified nominal group technique, and these statements are clearly identified as such in the guideline.\nRESULTS: Eighteen clinical questions were formulated, addressing issues of natural history, diagnosis, and treatment of cervical radiculopathy from degenerative disorders. The answers are summarized in this article. The respective recommendations were graded by the strength of the supporting literature, which was stratified by levels of evidence.\nCONCLUSIONS: A clinical guideline for cervical radiculopathy from degenerative disorders has been created using the techniques of evidence-based medicine and best available evidence to aid both practitioners and patients involved with the care of this condition. The entire guideline document, including the evidentiary tables, suggestions for future research, and all references, is available electronically at the NASS Web site (www.spine.org) and will remain updated on a timely schedule.",
+    "key_finding": "NASS 指南覆盖颈椎神经根病的自然史、诊断和治疗，建议按证据等级分级。",
+    "topics": [
+      "safety-redflag"
+    ],
+    "applies_to": [
+      "safety-check"
+    ],
+    "evidence_level": "guideline",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/21168100/",
+    "retrieved_at": "2026-11-08",
+    "verified": true,
+    "verification": {
+      "verifier": "RiseLoop verifier (automated PMID efetch)",
+      "method": "pmid-efetch",
+      "checked_at": "2026-11-08",
+      "doi_resolves": null,
+      "title_match": true,
+      "author_year_match": true,
+      "evidence_level_fit": true
+    },
+    "provenance": {
+      "source_api": "pubmed-eutils",
+      "request_url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&retmode=xml&id=35383538,20166095,32710604,28838857,21168100",
+      "fetched_at": "2026-11-08",
+      "task_id": "T5-pubmed-01",
+      "raw_snippet": {
+        "pmid": "21168100",
+        "pubtypes": [
+          "Journal Article",
+          "Practice Guideline",
+          "Systematic Review"
+        ],
+        "mesh": [
+          "Cervical Vertebrae",
+          "Evidence-Based Medicine",
+          "Humans",
+          "Radiculopathy",
+          "Spinal Diseases"
+        ]
+      }
+    },
+    "contact": null,
+    "batch": "B1-2026-11-08",
+    "tags": [
+      "safety-redflag",
+      "journal-article",
+      "practice-guideline",
+      "systematic-review"
+    ],
+    "notes": "PMID efetch 核验；证据等级按 PubMed 文献类型与摘要设计判定；DOI 未单独解析。"
+  },
+  {
+    "id": "pmid-40100250",
+    "source_type": "pubmed",
+    "title": "Digital Physical Activity and Sedentary Behavior Interventions for Community-Living Adults: Umbrella Review.",
+    "authors": [
+      "Russell E",
+      "Kirk A",
+      "Dunlop MD",
+      "Hodgson W",
+      "Patience M",
+      "Egan K"
+    ],
+    "year": 2025,
+    "journal": "Journal of medical Internet research",
+    "volume": "27",
+    "issue": null,
+    "pages": "e66294",
+    "doi": "10.2196/66294",
+    "pmid": "40100250",
+    "abstract": "BACKGROUND: Digital interventions hold significant potential for improving physical activity (PA) and reducing sedentary behavior (SB) in adults. Despite increasing interest, there remain surprising gaps in the current knowledge of how best to deliver these interventions, including incorporating appropriate theoretical frameworks and behavior change techniques. Following numerous systematic reviews, there is now significant potential for umbrella reviews to provide an overview of the current evidence.\nOBJECTIVE: This umbrella review aimed to explore digital PA and SB interventions for community-living adults across effectiveness, key components, and methodological quality.\nMETHODS: This review followed the Joanna Briggs Institute framework for umbrella reviews. Key search terms were developed iteratively, incorporating physical and sedentary activity alongside digital interventions. We searched 7 online databases (Web of Science Core Collection, CINAHL, APA PsycINFO, Inspec, the Cochrane Library, MEDLINE [Ovid], and PROSPERO) alongside gray literature databases. Information was extracted and tabulated from each included article on intervention effectiveness, key components, and content acknowledging both the digital and human elements. The study quality was appraised using A Measurement Tool to Assess systematic Reviews 2 (AMSTAR 2). The corrected covered area method was used to assess the overlap of primary studies included in the systematic reviews. All relevant research findings were extracted and reported.\nRESULTS: Search terms identified 330 articles, of which 5 (1.5%) met the inclusion criteria. The most common PA outcomes identified were daily steps, moderate-to-vigorous PA, total PA, and PA change. Reviews with meta-analysis reported that digital interventions improved multiple PA outcomes (daily steps, moderate-to-vigorous PA time, and total PA time). However, findings from the remaining systematic reviews were mixed. Similarly, the findings for SB were contrasting. Regarding intervention components, monitor- and sensor-only intervention delivery methods were most frequently implemented. Eleven theoretical frameworks were identified, with social cognitive theory being the most prominent theory. In total, 28 different behavior change techniques were reported, with goal setting, self-monitoring, feedback, and social support being the most frequently used. All 5 systematic reviews were of low or critically low quality, each incorporating unique primary studies (corrected covered area=0%).\nCONCLUSIONS: This umbrella review highlights the potential of digital interventions to increase PA and reduce SB among community-living adults. However, the disparate nature of current academic knowledge means potentially efficacious research may not realistically translate to real work impact. Our review identified a lack of consensus around outcomes and components at both individual (eg, difficult to collate and compare findings) and multiple study (poor reported quality of systematic reviews) levels. Collective, concerted action is required to standardize outcomes and improve systematic review reporting to optimize future learning around digital interventions to increase PA and reduce SB in community-living adults, including traditionally overlooked populations, like informal carers.\nTRIAL REGISTRATION: PROSPERO CRD42023450773; https://www.crd.york.ac.uk/PROSPERO/view/CRD42023450773.",
+    "key_finding": "数字干预可改善身体活动，但久坐结果不一致；目标设定、自我监测、反馈与社会支持最常用。",
+    "topics": [
+      "bct"
+    ],
+    "applies_to": [
+      "intervention-engine",
+      "qa-responder",
+      "weekly-review"
+    ],
+    "evidence_level": "systematic-review",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/40100250/",
+    "retrieved_at": "2026-11-08",
+    "verified": true,
+    "verification": {
+      "verifier": "RiseLoop verifier (automated PMID efetch)",
+      "method": "pmid-efetch",
+      "checked_at": "2026-11-08",
+      "doi_resolves": null,
+      "title_match": true,
+      "author_year_match": true,
+      "evidence_level_fit": true
+    },
+    "provenance": {
+      "source_api": "pubmed-eutils",
+      "request_url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&retmode=xml&id=39685110,38787601,37700303,37955615,27145905,40100250,26560834,41326782,32219090,31029140,29714027,39758774,33044539,36548136,34778736,41569829,33044538,32058808,36106651,37074621",
+      "fetched_at": "2026-11-08",
+      "task_id": "T6-pubmed-01",
+      "raw_snippet": {
+        "pmid": "40100250",
+        "pubtypes": [
+          "Journal Article",
+          "Systematic Review",
+          "Research Support, Non-U.S. Gov't"
+        ],
+        "mesh": [
+          "Humans",
+          "Sedentary Behavior",
+          "Exercise",
+          "Adult",
+          "Independent Living",
+          "Health Promotion"
+        ]
+      }
+    },
+    "contact": null,
+    "batch": "B3-2026-11-08",
+    "tags": [
+      "bct",
+      "journal-article",
+      "systematic-review",
+      "research-support-non-u-s-gov-t"
+    ],
+    "notes": "PMID efetch 核验；证据等级按 PubMed 文献类型与摘要设计判定；DOI 未单独解析。"
+  },
+  {
+    "id": "pmid-38787601",
+    "source_type": "pubmed",
+    "title": "Digital Behavior Change Intervention Designs for Habit Formation: Systematic Review.",
+    "authors": [
+      "Zhu Y",
+      "Long Y",
+      "Wang H",
+      "Lee KP",
+      "Zhang L",
+      "Wang SJ"
+    ],
+    "year": 2024,
+    "journal": "Journal of medical Internet research",
+    "volume": "26",
+    "issue": null,
+    "pages": "e54375",
+    "doi": "10.2196/54375",
+    "pmid": "38787601",
+    "abstract": "BACKGROUND: With the development of emerging technologies, digital behavior change interventions (DBCIs) help to maintain regular physical activity in daily life.\nOBJECTIVE: To comprehensively understand the design implementations of habit formation techniques in current DBCIs, a systematic review was conducted to investigate the implementations of behavior change techniques, types of habit formation techniques, and design strategies in current DBCIs.\nMETHODS: The process of this review followed the PRISMA (Preferred Reporting Item for Systematic Reviews and Meta-Analyses) guidelines. A total of 4 databases were systematically searched from 2012 to 2022, which included Web of Science, Scopus, ACM Digital Library, and PubMed. The inclusion criteria encompassed studies that used digital tools for physical activity, examined behavior change intervention techniques, and were written in English.\nRESULTS: A total of 41 identiﬁed research articles were included in this review. The results show that the most applied behavior change techniques were the self-monitoring of behavior, goal setting, and prompts and cues. Moreover, habit formation techniques were identified and developed based on intentions, cues, and positive reinforcement. Commonly used methods included automatic monitoring, descriptive feedback, general guidelines, self-set goals, time-based cues, and virtual rewards.\nCONCLUSIONS: A total of 32 commonly design strategies of habit formation techniques were summarized and mapped to the proposed conceptual framework, which was categorized into target-mediated (generalization and personalization) and technology-mediated interactions (explicitness and implicitness). Most of the existing studies use the explicit interaction, aligning with the personalized habit formation techniques in the design strategies of DBCIs. However, implicit interaction design strategies are lacking in the reviewed studies. The proposed conceptual framework and potential solutions can serve as guidelines for designing strategies aimed at habit formation within DBCIs.",
+    "key_finding": "数字行为改变干预最常用自我监测、目标设定与提示线索；习惯形成设计仍缺隐性交互。",
+    "topics": [
+      "bct"
+    ],
+    "applies_to": [
+      "intervention-engine",
+      "qa-responder",
+      "weekly-review"
+    ],
+    "evidence_level": "systematic-review",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/38787601/",
+    "retrieved_at": "2026-11-08",
+    "verified": true,
+    "verification": {
+      "verifier": "RiseLoop verifier (automated PMID efetch)",
+      "method": "pmid-efetch",
+      "checked_at": "2026-11-08",
+      "doi_resolves": null,
+      "title_match": true,
+      "author_year_match": true,
+      "evidence_level_fit": true
+    },
+    "provenance": {
+      "source_api": "pubmed-eutils",
+      "request_url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&retmode=xml&id=39685110,38787601,37700303,37955615,27145905,40100250,26560834,41326782,32219090,31029140,29714027,39758774,33044539,36548136,34778736,41569829,33044538,32058808,36106651,37074621",
+      "fetched_at": "2026-11-08",
+      "task_id": "T6-pubmed-01",
+      "raw_snippet": {
+        "pmid": "38787601",
+        "pubtypes": [
+          "Journal Article",
+          "Systematic Review",
+          "Research Support, Non-U.S. Gov't"
+        ],
+        "mesh": [
+          "Humans",
+          "Habits",
+          "Behavior Therapy",
+          "Exercise",
+          "Health Behavior"
+        ]
+      }
+    },
+    "contact": null,
+    "batch": "B3-2026-11-08",
+    "tags": [
+      "bct",
+      "journal-article",
+      "systematic-review",
+      "research-support-non-u-s-gov-t"
+    ],
+    "notes": "PMID efetch 核验；证据等级按 PubMed 文献类型与摘要设计判定；DOI 未单独解析。"
+  },
+  {
+    "id": "pmid-38178230",
+    "source_type": "pubmed",
+    "title": "Impact of feedback generation and presentation on self-monitoring behaviors, dietary intake, physical activity, and weight: a systematic review and meta-analysis.",
+    "authors": [
+      "Krukowski RA",
+      "Denton AH",
+      "König LM"
+    ],
+    "year": 2024,
+    "journal": "The international journal of behavioral nutrition and physical activity",
+    "volume": "21",
+    "issue": "1",
+    "pages": "3",
+    "doi": "10.1186/s12966-023-01555-6",
+    "pmid": "38178230",
+    "abstract": "Self-monitoring of dietary intake, physical activity, and weight is a key strategy in behavioral interventions, and some interventions provide self-monitoring feedback to facilitate goal setting and promote engagement. This systematic review aimed to evaluate whether feedback increases intervention effectiveness, and which forms of feedback presentation (e.g., personalized vs. not personalized) and generation (i.e., human vs. algorithm-generated) are most effective. To achieve this aim, 5 electronic databases (PubMed/MEDLINE, Web of Science, CINAHL, PsycINFO, and Google Scholar) were searched in April 2022 and yielded 694 unique records, out of which 24 articles reporting on 19 studies were included (with a total of 3261 participants). Two reviewers independently screened titles and abstracts and then full texts and categorized articles as eligible or excluded according to the pre-registered criteria (i.e., availability of full text, peer reviewed manuscript in English; adult participants in a randomized controlled trial that included both self-monitoring and feedback; comparisons of different forms of feedback or comparisons of feedback vs. no feedback; primary outcomes of diet, physical activity, self-monitoring behavior, and/or weight). All included studies were assessed for methodological quality independently by two reviewers using the revised Cochrane risk-of-bias tool for randomized studies (version 2). Ten studies compared feedback to no feedback, 5 compared human- vs. algorithm-generated feedback, and the remaining 4 studies compared formats of feedback presentation (e.g., frequency, richness). A random effects meta-analysis indicated that physical activity interventions with feedback provision were more effective than physical activity interventions without feedback (d = 0.73, 95% CI [0.09;1.37]). No meta-analysis could be conducted for other comparisons due to heterogeneity of study designs and outcomes. There were mixed results regarding which form of feedback generation and presentation is superior. Limitations of the evidence included in this review were: lack of details about feedback provided, the brevity of most interventions, the exclusion of studies that did not isolate feedback when testing intervention packages, and the high risk of bias in many studies. This systematic review underlines the importance of including feedback in behavioral interventions; however, more research is needed to identify most effective forms of feedback generation and presentation to maximize intervention effectiveness.Trial registration (PROSPERO)CRD42022316206.",
+    "key_finding": "含反馈的身体活动干预比无反馈更有效（d=0.73）；最佳反馈形式仍不明确。",
+    "topics": [
+      "bct"
+    ],
+    "applies_to": [
+      "intervention-engine",
+      "qa-responder",
+      "weekly-review"
+    ],
+    "evidence_level": "systematic-review",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/38178230/",
+    "retrieved_at": "2026-11-08",
+    "verified": true,
+    "verification": {
+      "verifier": "RiseLoop verifier (automated PMID efetch)",
+      "method": "pmid-efetch",
+      "checked_at": "2026-11-08",
+      "doi_resolves": null,
+      "title_match": true,
+      "author_year_match": true,
+      "evidence_level_fit": true
+    },
+    "provenance": {
+      "source_api": "pubmed-eutils",
+      "request_url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&retmode=xml&id=38178230",
+      "fetched_at": "2026-11-08",
+      "task_id": "T6-pubmed-01",
+      "raw_snippet": {
+        "pmid": "38178230",
+        "pubtypes": [
+          "Meta-Analysis",
+          "Systematic Review",
+          "Journal Article",
+          "Research Support, N.I.H., Extramural"
+        ],
+        "mesh": [
+          "Adult",
+          "Humans",
+          "Feedback",
+          "Exercise",
+          "Diet",
+          "Eating",
+          "Randomized Controlled Trials as Topic"
+        ]
+      }
+    },
+    "contact": null,
+    "batch": "B3-2026-11-08",
+    "tags": [
+      "bct",
+      "meta-analysis",
+      "systematic-review",
+      "journal-article",
+      "research-support-n-i-h-extramural"
+    ],
+    "notes": "PMID efetch 核验；证据等级按 PubMed 文献类型与摘要设计判定；DOI 未单独解析。"
+  },
+  {
+    "id": "pmid-39685110",
+    "source_type": "pubmed",
+    "title": "Time to Form a Habit: A Systematic Review and Meta-Analysis of Health Behaviour Habit Formation and Its Determinants.",
+    "authors": [
+      "Singh B",
+      "Murphy A",
+      "Maher C",
+      "Smith AE"
+    ],
+    "year": 2024,
+    "journal": "Healthcare (Basel, Switzerland)",
+    "volume": "12",
+    "issue": "23",
+    "pages": null,
+    "doi": "10.3390/healthcare12232488",
+    "pmid": "39685110",
+    "abstract": "Background: Healthy lifestyles depend on forming crucial habits through the process of habit formation, emphasising the need to establish positive habits and break negative ones for lasting behaviour changes. This systematic review aims to explore the time required for developing health-related habits. Methods: Six databases (Scopus, PsychINFO, CINAHL, EMBASE, Medline and PubMed) were searched to identify experimental intervention studies assessing self-report habit or automaticity questionnaires (e.g., the self-report habit index (SRHI) or the self-report behavioural automaticity index (SRBAI)), or the duration to reach automaticity in health-related behaviours. Habit formation determinants were also evaluated. Meta-analysis was performed to assess the change in the SRHI or SRBAI habit scores between pre- and post-intervention, and the study quality was assessed using the PEDro scale. Results: A total of 20 studies involving 2601 participants (mean age range: 21.5-73.5 years) were included. Most studies had a high risk of bias rating (n = 11). Health behaviours included physical activity (n = 8), drinking water (n = 2), vitamin consumption (n = 1), flossing (n = 3), healthy diet (n = 8), microwaving a dishcloth (for foodborne disease reduction, n = 2) and sedentary behaviour reduction (n = 1). Four studies reported the median or mean times to reach habit formation, ranging from 59-66 days (median) and 106-154 days (means), with substantial individual variability (4-335 days). The meta-analysis showed significant improvements in habit scores pre- to post-intervention across different habits (standardised mean difference: 0.69, 95% CI: 0.49-0.88). Frequency, timing, type of habit, individual choice, affective judgements, behavioural regulation and preparatory habits significantly influence habit strength, with morning practices and self-selected habits generally exhibiting greater strength. Conclusions: Emerging evidence on health-related habit formation indicates that while habits can start forming within about two months, the time required varies significantly across individuals. A limitation of this meta-analysis is the relatively small number of studies included, with flossing and diet having the most evidence among the behaviours examined. Despite this, improvements in habit strength post-intervention are evident across various behaviours, suggesting that targeted interventions can be effective. Future research should aim to expand the evidence base with well-designed studies to better understand and enhance the process of establishing beneficial health habits.",
+    "key_finding": "健康习惯形成约需2个月，个体差异4–335天；频率、时机与自我选择影响习惯强度。",
+    "topics": [
+      "bct"
+    ],
+    "applies_to": [
+      "intervention-engine",
+      "qa-responder",
+      "weekly-review"
+    ],
+    "evidence_level": "systematic-review",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/39685110/",
+    "retrieved_at": "2026-11-08",
+    "verified": true,
+    "verification": {
+      "verifier": "RiseLoop verifier (automated PMID efetch)",
+      "method": "pmid-efetch",
+      "checked_at": "2026-11-08",
+      "doi_resolves": null,
+      "title_match": true,
+      "author_year_match": true,
+      "evidence_level_fit": true
+    },
+    "provenance": {
+      "source_api": "pubmed-eutils",
+      "request_url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&retmode=xml&id=39685110,38787601,37700303,37955615,27145905,40100250,26560834,41326782,32219090,31029140,29714027,39758774,33044539,36548136,34778736,41569829,33044538,32058808,36106651,37074621",
+      "fetched_at": "2026-11-08",
+      "task_id": "T6-pubmed-01",
+      "raw_snippet": {
+        "pmid": "39685110",
+        "pubtypes": [
+          "Journal Article",
+          "Review"
+        ],
+        "mesh": []
+      }
+    },
+    "contact": null,
+    "batch": "B3-2026-11-08",
+    "tags": [
+      "bct",
+      "journal-article",
+      "review"
+    ],
+    "notes": "PMID efetch 核验；证据等级按 PubMed 文献类型与摘要设计判定；DOI 未单独解析。 研究设计：系统综述与 Meta 分析。"
+  },
+  {
+    "id": "pmid-37700303",
+    "source_type": "pubmed",
+    "title": "Effects of habit formation interventions on physical activity habit strength: meta-analysis and meta-regression.",
+    "authors": [
+      "Ma H",
+      "Wang A",
+      "Pei R",
+      "Piao M"
+    ],
+    "year": 2023,
+    "journal": "The international journal of behavioral nutrition and physical activity",
+    "volume": "20",
+    "issue": "1",
+    "pages": "109",
+    "doi": "10.1186/s12966-023-01493-3",
+    "pmid": "37700303",
+    "abstract": "BACKGROUND: Interventions aimed at promoting physical activity (PA) behavior through habit formation pathways are gaining popularity, as they differ from conventional interventions that rely on intention pathways. Past research has established a positive correlation between PA habits and behavior. However, the efficacy of current interventions designed to form PA habits and improve PA automaticity is not yet fully ascertained. Additionally, the intervention components that significantly impact the effectiveness of these interventions are yet to be determined.\nMETHODS: This systematic review was conducted in accordance with the Preferred Reporting Items for Systematic Reviews and Meta-Analyses guidelines. We conducted a search of three databases (PubMed, Embase, and Cochrane Library) from January 2000 to December 2022, with a focus on interventions for developing PA habits. Two independent authors conducted paper selection, quality assessment, data extraction, and coding of behavior change techniques (BCTs). The effect size of interventions was calculated using standardized mean difference. Subgroup analyses were carried out based on follow-up duration, delivery method, sample characteristics, and theory. Furthermore, we employed meta-regression to investigate the association between BCTs and PA habits.\nRESULTS: Ten eligible studies with relatively high quality were included in the final data set. Characteristics of studies varied in intervention sample and delivery way. The habit formation interventions significantly increased PA habit (SMD = 0.31, 95% CI 0.14-0.48, P < .001) compared to the control groups. Subgroup analysis demonstrated that the duration of follow-up ≤ 12 weeks have a higher effect size on PA habit than the duration > 12 weeks. Meta-regression revealed that problem solving has a significant positive association with effectiveness improvement (β = 0.36, 95% CI 0.17-0.55), while social reward is linked with a reduction in effectiveness (β = -0.40, 95% CI -0.74-0.06).\nCONCLUSIONS: Our findings reveal that habit formation interventions are effective in fostering PA habit. Future studies could leverage the insights form this study to optimize the intervention design and achieve better effectiveness.",
+    "key_finding": "习惯形成干预可提升身体活动习惯强度（SMD=0.31）；问题解决与效果正相关。",
+    "topics": [
+      "bct"
+    ],
+    "applies_to": [
+      "intervention-engine",
+      "qa-responder",
+      "weekly-review"
+    ],
+    "evidence_level": "systematic-review",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/37700303/",
+    "retrieved_at": "2026-11-08",
+    "verified": true,
+    "verification": {
+      "verifier": "RiseLoop verifier (automated PMID efetch)",
+      "method": "pmid-efetch",
+      "checked_at": "2026-11-08",
+      "doi_resolves": null,
+      "title_match": true,
+      "author_year_match": true,
+      "evidence_level_fit": true
+    },
+    "provenance": {
+      "source_api": "pubmed-eutils",
+      "request_url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&retmode=xml&id=39685110,38787601,37700303,37955615,27145905,40100250,26560834,41326782,32219090,31029140,29714027,39758774,33044539,36548136,34778736,41569829,33044538,32058808,36106651,37074621",
+      "fetched_at": "2026-11-08",
+      "task_id": "T6-pubmed-01",
+      "raw_snippet": {
+        "pmid": "37700303",
+        "pubtypes": [
+          "Systematic Review",
+          "Meta-Analysis",
+          "Journal Article"
+        ],
+        "mesh": [
+          "Humans",
+          "Habits",
+          "Exercise",
+          "Behavior Therapy",
+          "Databases, Factual",
+          "Intention"
+        ]
+      }
+    },
+    "contact": null,
+    "batch": "B3-2026-11-08",
+    "tags": [
+      "bct",
+      "systematic-review",
+      "meta-analysis",
+      "journal-article"
+    ],
+    "notes": "PMID efetch 核验；证据等级按 PubMed 文献类型与摘要设计判定；DOI 未单独解析。"
+  },
+  {
+    "id": "pmid-30943983",
+    "source_type": "pubmed",
+    "title": "A systematic review of just-in-time adaptive interventions (JITAIs) to promote physical activity.",
+    "authors": [
+      "Hardeman W",
+      "Houghton J",
+      "Lane K",
+      "Jones A",
+      "Naughton F"
+    ],
+    "year": 2019,
+    "journal": "The international journal of behavioral nutrition and physical activity",
+    "volume": "16",
+    "issue": "1",
+    "pages": "31",
+    "doi": "10.1186/s12966-019-0792-7",
+    "pmid": "30943983",
+    "abstract": "BACKGROUND: Progress in mobile health (mHealth) technology has enabled the design of just-in-time adaptive interventions (JITAIs). We define JITAIs as having three features: behavioural support that directly corresponds to a need in real-time; content or timing of support is adapted or tailored according to input collected by the system since support was initiated; support is system-triggered. We conducted a systematic review of JITAIs for physical activity to identify their features, feasibility, acceptability and effectiveness.\nMETHODS: We searched Scopus, Medline, Embase, PsycINFO, Web of Science, DBLP, ACM Digital Library, Cochrane Central Register of Controlled Trials, ClinicalTrials.gov and the ISRCTN register using terms related to physical activity, mHealth interventions and JITAIs. We included primary studies of any design reporting data about JITAIs, irrespective of population, age and setting. Outcomes included physical activity, engagement, uptake, feasibility and acceptability. Paper screening and data extraction were independently validated. Synthesis was narrative. We used the mHealth Evidence Reporting and Assessment checklist to assess quality of intervention descriptions.\nRESULTS: We screened 2200 titles, 840 abstracts, 169 full-text papers, and included 19 papers reporting 14 unique JITAIs, including six randomised studies. Five JITAIs targeted both physical activity and sedentary behaviour, five sedentary behaviour only, and four physical activity only. JITAIs prompted breaks following sedentary periods and/or suggested physical activities during opportunistic moments, typically over three to four weeks. Feasibility challenges related to the technology, sensor reliability and timeliness of just-in-time messages. Overall, participants found JITAIs acceptable. We found mixed evidence for intervention effects on behaviour, but no study was sufficiently powered to detect any effects. Common behaviour change techniques were goal setting (behaviour), prompts/cues, feedback on behaviour and action planning. Five studies reported a theory-base. We found lack of evidence about cost-effectiveness, uptake, reach, impact on health inequalities, and sustained engagement.\nCONCLUSIONS: Research into JITAIs to increase physical activity and reduce sedentary behaviour is in its early stages. Consistent use and a shared definition of the term 'JITAI' will aid evidence synthesis. We recommend robust evaluation of theory and evidence-based JITAIs in representative populations. Decision makers and health professionals need to be cautious in signposting patients to JITAIs until such evidence is available, although they are unlikely to cause health-related harm.\nREFERENCE: PROSPERO 2017 CRD42017070849.",
+    "key_finding": "JITAI 多在久坐后提示打断，可行性可接受但效果证据混合、样本量不足。",
+    "topics": [
+      "bct"
+    ],
+    "applies_to": [
+      "intervention-engine",
+      "qa-responder",
+      "weekly-review"
+    ],
+    "evidence_level": "systematic-review",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/30943983/",
+    "retrieved_at": "2026-11-08",
+    "verified": true,
+    "verification": {
+      "verifier": "RiseLoop verifier (automated PMID efetch)",
+      "method": "pmid-efetch",
+      "checked_at": "2026-11-08",
+      "doi_resolves": null,
+      "title_match": true,
+      "author_year_match": true,
+      "evidence_level_fit": true
+    },
+    "provenance": {
+      "source_api": "pubmed-eutils",
+      "request_url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&retmode=xml&id=41456066,34489366,35616653,35849158,37199911,30943983,28153768,39420510,35830497,38917474",
+      "fetched_at": "2026-11-08",
+      "task_id": "T6-pubmed-01",
+      "raw_snippet": {
+        "pmid": "30943983",
+        "pubtypes": [
+          "Journal Article",
+          "Research Support, Non-U.S. Gov't",
+          "Systematic Review"
+        ],
+        "mesh": [
+          "Behavior Therapy",
+          "Cost-Benefit Analysis",
+          "Exercise",
+          "Health Promotion",
+          "Humans",
+          "Sedentary Behavior"
+        ]
+      }
+    },
+    "contact": null,
+    "batch": "B3-2026-11-08",
+    "tags": [
+      "bct",
+      "journal-article",
+      "research-support-non-u-s-gov-t",
+      "systematic-review"
+    ],
+    "notes": "PMID efetch 核验；证据等级按 PubMed 文献类型与摘要设计判定；DOI 未单独解析。"
+  },
+  {
+    "id": "pmid-27145905",
+    "source_type": "pubmed",
+    "title": "Devices for Self-Monitoring Sedentary Time or Physical Activity: A Scoping Review.",
+    "authors": [
+      "Sanders JP",
+      "Loveday A",
+      "Pearson N",
+      "Edwardson C",
+      "Yates T",
+      "Biddle SJ",
+      "Esliger DW"
+    ],
+    "year": 2016,
+    "journal": "Journal of medical Internet research",
+    "volume": "18",
+    "issue": "5",
+    "pages": "e90",
+    "doi": "10.2196/jmir.5373",
+    "pmid": "27145905",
+    "abstract": "BACKGROUND: It is well documented that meeting the guideline levels (150 minutes per week) of moderate-to-vigorous physical activity (PA) is protective against chronic disease. Conversely, emerging evidence indicates the deleterious effects of prolonged sitting. Therefore, there is a need to change both behaviors. Self-monitoring of behavior is one of the most robust behavior-change techniques available. The growing number of technologies in the consumer electronics sector provides a unique opportunity for individuals to self-monitor their behavior.\nOBJECTIVE: The aim of this study is to review the characteristics and measurement properties of currently available self-monitoring devices for sedentary time and/or PA.\nMETHODS: To identify technologies, four scientific databases were systematically searched using key terms related to behavior, measurement, and population. Articles published through October 2015 were identified. To identify technologies from the consumer electronic sector, systematic searches of three Internet search engines were also performed through to October 1, 2015.\nRESULTS: The initial database searches identified 46 devices and the Internet search engines identified 100 devices yielding a total of 146 technologies. Of these, 64 were further removed because they were currently unavailable for purchase or there was no evidence that they were designed for, had been used in, or could readily be modified for self-monitoring purposes. The remaining 82 technologies were included in this review (73 devices self-monitored PA, 9 devices self-monitored sedentary time). Of the 82 devices included, this review identified no published articles in which these devices were used for the purpose of self-monitoring PA and/or sedentary behavior; however, a number of technologies were found via Internet searches that matched the criteria for self-monitoring and provided immediate feedback on PA (ActiGraph Link, Microsoft Band, and Garmin Vivofit) and sedentary time (activPAL VT, the Lumo Back, and Darma).\nCONCLUSIONS: There are a large number of devices that self-monitor PA; however, there is a greater need for the development of tools to self-monitor sedentary time. The novelty of these devices means they have yet to be used in behavior change interventions, although the growing field of wearable technology may facilitate this to change.",
+    "key_finding": "自监测设备多针对身体活动，针对久坐时间的工具仍不足，且少见于行为干预。",
+    "topics": [
+      "bct"
+    ],
+    "applies_to": [
+      "intervention-engine",
+      "qa-responder",
+      "weekly-review"
+    ],
+    "evidence_level": "other",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/27145905/",
+    "retrieved_at": "2026-11-08",
+    "verified": true,
+    "verification": {
+      "verifier": "RiseLoop verifier (automated PMID efetch)",
+      "method": "pmid-efetch",
+      "checked_at": "2026-11-08",
+      "doi_resolves": null,
+      "title_match": true,
+      "author_year_match": true,
+      "evidence_level_fit": true
+    },
+    "provenance": {
+      "source_api": "pubmed-eutils",
+      "request_url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&retmode=xml&id=39685110,38787601,37700303,37955615,27145905,40100250,26560834,41326782,32219090,31029140,29714027,39758774,33044539,36548136,34778736,41569829,33044538,32058808,36106651,37074621",
+      "fetched_at": "2026-11-08",
+      "task_id": "T6-pubmed-01",
+      "raw_snippet": {
+        "pmid": "27145905",
+        "pubtypes": [
+          "Journal Article",
+          "Research Support, Non-U.S. Gov't",
+          "Scoping Review"
+        ],
+        "mesh": [
+          "Behavior Therapy",
+          "Electronics",
+          "Exercise",
+          "Humans",
+          "Internet",
+          "Monitoring, Physiologic",
+          "Sedentary Behavior",
+          "Self Care"
+        ]
+      }
+    },
+    "contact": null,
+    "batch": "B3-2026-11-08",
+    "tags": [
+      "bct",
+      "journal-article",
+      "research-support-non-u-s-gov-t",
+      "scoping-review"
+    ],
+    "notes": "PMID efetch 核验；证据等级按 PubMed 文献类型与摘要设计判定；DOI 未单独解析。 研究设计：范围综述（scoping review）。"
+  }
+]
