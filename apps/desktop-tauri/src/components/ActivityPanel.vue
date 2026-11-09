@@ -236,11 +236,10 @@ onBeforeUnmount(() => {
   if (advanceTimer) clearTimeout(advanceTimer);
 });
 </script>
-
 <template>
   <div class="activity-panel">
-    <div class="overlay-layout">
-      <section v-if="action" class="overlay-card plan-card">
+    <m3e-card v-if="action" variant="elevated" class="surface-card">
+      <div class="surface-body plan-body-wrap">
         <header class="card-head">
           <h2>{{ action.name }}</h2>
           <span class="step-count">第 {{ index + 1 }} / {{ actions.length }} 个动作</span>
@@ -292,9 +291,11 @@ onBeforeUnmount(() => {
             </div>
           </div>
         </div>
-      </section>
+      </div>
+    </m3e-card>
 
-      <section class="overlay-card feedback-card">
+    <m3e-card variant="elevated" class="surface-card">
+      <div class="surface-body">
         <header class="card-head">
           <h3>完成反馈</h3>
         </header>
@@ -342,38 +343,31 @@ onBeforeUnmount(() => {
             跳过
           </m3e-button>
         </div>
-      </section>
-
+      </div>
       <LoadingOverlay v-if="submitting" label="正在提交反馈…" />
-    </div>
+    </m3e-card>
   </div>
 </template>
 
 <style scoped>
-/* 与干预卡片互斥显示，直接占满内容区 */
+/* 与干预卡片同一套外观：m3e-card + surface-card / surface-body */
 .activity-panel {
   display: grid;
-  place-items: start center;
-  padding: 0.5rem 0 1rem;
-}
-
-.overlay-layout {
-  position: relative;
-  display: grid;
-  grid-template-columns: 1fr;
   gap: 1rem;
-  width: min(56rem, 100%);
-  max-height: 100%;
-  overflow: auto;
-  padding: 0.2rem;
+  width: min(48rem, 100%);
+  margin: 0 auto;
+  padding-bottom: 1.5rem;
+  justify-items: stretch;
 }
 
-.overlay-card {
-  position: relative;
-  padding: 1.25rem;
-  border-radius: 1.25rem;
-  color: var(--md-sys-color-on-surface, #e6e1e5);
-  box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.35);
+.activity-panel m3e-card {
+  display: block;
+  width: 100%;
+}
+
+.surface-body {
+  display: grid;
+  gap: 0.75rem;
 }
 
 .card-head {
@@ -381,17 +375,16 @@ onBeforeUnmount(() => {
   align-items: baseline;
   justify-content: space-between;
   gap: 0.75rem;
-  margin-bottom: 0.5rem;
 }
 
 .card-head h2 {
   margin: 0;
-  font-size: 1.1rem;
+  font-size: 1.4rem;
 }
 
 .card-head h3 {
   margin: 0;
-  font-size: 0.95rem;
+  font-size: 1rem;
   color: var(--md-sys-color-on-surface-variant);
 }
 
@@ -402,13 +395,13 @@ onBeforeUnmount(() => {
 }
 
 .lead {
-  margin: 0 0 0.5rem;
+  margin: 0;
   color: var(--md-sys-color-on-surface-variant);
   font-size: 0.8rem;
 }
 
 .plan-tabs {
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.25rem;
 }
 
 .plan-body {
@@ -459,7 +452,6 @@ onBeforeUnmount(() => {
   grid-template-columns: 9rem minmax(0, 1fr);
   gap: 1rem;
   align-items: stretch;
-  margin-top: 0.9rem;
 }
 
 .camera {
@@ -555,7 +547,7 @@ onBeforeUnmount(() => {
 }
 
 .error {
-  margin: 0.6rem 0 0;
+  margin: 0;
   color: var(--md-sys-color-error);
   font-size: 0.8rem;
 }
@@ -564,7 +556,6 @@ onBeforeUnmount(() => {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  margin-top: 0.75rem;
 }
 
 @media (max-width: 720px) {

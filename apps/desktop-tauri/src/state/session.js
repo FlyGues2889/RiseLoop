@@ -400,6 +400,19 @@ export async function tickHeartbeat({ force = false } = {}) {
       const paused = await timerCommand("timer_pause");
       if (paused) state.timer = paused;
       pushLog(`该起来活动了：匹配 ${actions.length} 个动作，首选「${preferred.name}」`);
+    } else if (state.heartbeat.reason === "cooldown" && force) {
+      // 手动“立即开始活动”：即使后端还在冷却期，也直接取动作让用户开始
+      const fallback = await activeApi.actions(state.heartbeat.state ?? state.currentState);
+      if (fallback?.length) {
+        const preferred = pickActionForPlan(fallback, state.planPreference) ?? fallback[0];
+        state.pendingActions = fallback.slice(0, 3);
+        state.pending = preferred;
+        const paused = await timerCommand("timer_pause");
+        if (paused) state.timer = paused;
+        pushLog(`手动开始：${state.pendingActions.length} 个动作，首选「${preferred.name}」`);
+        return;
+      }
+      pushLog("刚推送过，云端也没有返回可用动作");
     } else if (state.heartbeat.reason === "cooldown") {
       pushLog("刚推送过，10 分钟内不会重复提醒（手动“立即开始活动”可跳过）");
     } else if (!state.heartbeat.triggered) {
