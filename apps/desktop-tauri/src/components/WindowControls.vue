@@ -26,12 +26,14 @@ async function close() {
 
 <template>
   <div v-if="tauri" class="window-controls">
-    <m3e-icon-button aria-label="最小化" title="最小化" @click="minimize">
+    <m3e-icon-button id="win-minimize" aria-label="最小化" @click="minimize">
       <span class="material-symbols-rounded">minimize</span>
     </m3e-icon-button>
-    <m3e-icon-button aria-label="关闭" title="关闭到托盘" @click="close">
+    <m3e-tooltip for="win-minimize">最小化</m3e-tooltip>
+    <m3e-icon-button id="win-close" aria-label="关闭到托盘" @click="close">
       <span class="material-symbols-rounded">close</span>
     </m3e-icon-button>
+    <m3e-tooltip for="win-close">关闭到托盘</m3e-tooltip>
   </div>
 </template>
 
@@ -39,7 +41,7 @@ async function close() {
 .window-controls {
   display: flex;
   align-items: center;
-  gap: 2px;
-  margin-left: 10px;
+  gap: 0.2rem;
+  margin-left: 0.625rem;
 }
 </style>

@@ -44,6 +44,14 @@ pub fn run() {
             let timer = Arc::new(SittingTimer::new(DEFAULT_THRESHOLD_MINUTES));
             app.manage(timer.clone());
 
+            // 点击系统通知（tap）时把主窗口唤回前台；插件只在通知仍在屏幕时上报点击。
+            let notification_handle = app.handle().clone();
+            app.notification().on_action(move |_action| {
+                let handle = notification_handle.clone();
+                let focus_handle = handle.clone();
+                let _ = handle.run_on_main_thread(move || focus_main_window(&focus_handle));
+            })?;
+
             let open_item = MenuItem::with_id(app, "open", "打开 Rise Loop", true, None::<&str>)?;
             let pause_item = MenuItem::with_id(app, "pause", "暂停计时", true, None::<&str>)?;
             let reset_item = MenuItem::with_id(app, "reset", "重新计时", true, None::<&str>)?;

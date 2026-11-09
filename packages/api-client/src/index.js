@@ -42,7 +42,7 @@ export function describeError(error) {
       title: "无法连接云服务",
       message: `${error.method} ${error.url} 未响应`,
       detail: error.payload?.cause ?? null,
-      hint: "本地演示请先在项目根目录运行 pnpm demo；云端模式请检查服务地址与网络。",
+      hint: "服务暂时连不上。检查网络或服务地址后重试，也可以先切到本地试用。",
     };
   }
 
@@ -118,6 +118,8 @@ export function createApiClient({ baseUrl, getBaseUrl, getToken }) {
       request("/auth/login", { method: "POST", body: { email, password }, auth: false }),
     assessment: (payload) => request("/assessment", { method: "POST", body: payload }),
     heartbeat: (payload) => request("/sitting/heartbeat", { method: "POST", body: payload }),
+    postureRisk: (payload) => request("/posture/risk", { method: "POST", body: payload }),
+    postureInfer: (payload) => request("/posture/infer", { method: "POST", body: payload }),
     currentIntervention: () => request("/intervention/current"),
     feedback: (payload) => request("/intervention/feedback", { method: "POST", body: payload }),
     askQuestion: (payload) => request("/qa/ask", { method: "POST", body: payload }),

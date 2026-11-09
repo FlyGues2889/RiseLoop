@@ -8,4 +8,7 @@ import "./assets/theme.css";
 import "./assets/styles.css";
 import "./assets/font.css";
 
+import { initSystemTheme } from "./theme.js";
+
+initSystemTheme();
 createApp(App).mount("#app");

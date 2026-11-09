@@ -1,5 +1,7 @@
 <script setup>
 import ErrorBanner from "./ErrorBanner.vue";
+import LoadingOverlay from "./LoadingOverlay.vue";
+import MedicalNote from "./MedicalNote.vue";
 import { enterDemo, login, register, state } from "../state/session.js";
 </script>
 
@@ -7,7 +9,7 @@ import { enterDemo, login, register, state } from "../state/session.js";
   <m3e-card variant="elevated" class="surface-card">
     <div class="surface-body">
       <header class="page-head">
-        <h1>开始今天的干预</h1>
+        <h1>今天，从一次起身开始</h1>
       </header>
 
       <form @submit.prevent="login">
@@ -26,7 +28,7 @@ import { enterDemo, login, register, state } from "../state/session.js";
 
         <ErrorBanner :error="state.error" />
 
-        <m3e-button class="block" variant="filled" size="medium" :disabled.prop="state.busy" @click="login">
+        <m3e-button class="primary-action" variant="filled":disabled.prop="state.busy" @click="login">
           {{ state.busy ? "登录中…" : "登录" }}
         </m3e-button>
         <m3e-button class="register" variant="text" size="small" :disabled.prop="state.busy" @click="register">
@@ -41,15 +43,9 @@ import { enterDemo, login, register, state } from "../state/session.js";
         </m3e-button>
       </div>
 
-      <m3e-callout class="disclaimer medical-note">
-        <span class="material-symbols-rounded" slot="icon">medical_information</span>
-        <span slot="label">指导提示</span>
-        <p>
-          本产品为健康指导工具，不提供医疗诊断或治疗建议。<br>
-          如出现持续疼痛、放射痛、麻木加重、肢体无力等较为严重的问题，请及时就医。
-        </p>
-      </m3e-callout>
+      <MedicalNote />
     </div>
+    <LoadingOverlay v-if="state.busy" label="正在登录…" />
   </m3e-card>
 </template>
 
@@ -63,23 +59,27 @@ import { enterDemo, login, register, state } from "../state/session.js";
   margin-bottom: 1rem;
 }
 
-.block {
+/* 登录 / 创建账号：这两个是全站唯一允许的整宽按钮 */
+.primary-action {
+  display: block;
   width: 100%;
+  margin-top: 0.75rem;
 }
 
 .register {
   display: block;
-  margin: 10px auto 0;
+  width: 100%;
+  margin: 0.5rem 0 0;
 }
 
 .alt {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  margin-top: 18px;
-  padding-top: 14px;
+  gap: 0.375rem;
+  margin-top: 1.125rem;
+  padding-top: 0.875rem;
   color: var(--md-sys-color-secondary);
-  font-size: 13px;
+  font-size: 0.813rem;
 }
 </style>

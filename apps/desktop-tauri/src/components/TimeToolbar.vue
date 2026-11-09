@@ -1,6 +1,14 @@
 <script setup>
 import { computed } from "vue";
-import { resetTimer, setThreshold, state, toggleTimer } from "../state/session.js";
+import {
+  fastForward,
+  refreshTimer,
+  resetTimer,
+  setThreshold,
+  state,
+  tickHeartbeat,
+  toggleTimer,
+} from "../state/session.js";
 
 const thresholdOptions = [30, 40, 45, 50, 60];
 
@@ -47,6 +55,13 @@ function onAction() {
 function onThreshold(event) {
   setThreshold(Number(event.target.value));
 }
+
+async function demoFastForward() {
+  await fastForward(state.timer.threshold_minutes);
+  await refreshTimer();
+  // 兜底：确保点击后一定问一次云端，而不是干等下一次心跳
+  if (state.phase === "main" && !state.pending) await tickHeartbeat();
+}
 </script>
 
 <template>
@@ -57,7 +72,7 @@ function onThreshold(event) {
         <span class="material-symbols-rounded lead-icon">{{ leadIcon }}</span>
         <span class="time mono">{{ timeText }}</span>
         <span class="remaining">
-          {{ overdue ? "已达提醒阈值" : "距提醒" }}
+          {{ overdue ? "已到提醒时间" : "距提醒" }}
           <b v-if="!overdue" class="mono">{{ remainingText }}</b>
         </span>
       </div>
@@ -75,10 +90,25 @@ function onThreshold(event) {
         </m3e-option>
       </m3e-select>
 
-      <m3e-button variant="tonal" size="small" @click="onAction" slot="trailing">
-        <span slot="icon" class="material-symbols-rounded">{{ actionIcon }}</span>
-        {{ actionLabel }}
-      </m3e-button>
+      <div slot="trailing" class="timer-actions">
+        <m3e-button v-if="!overdue" variant="tonal" size="small" @click="onAction">
+          <span slot="icon" class="material-symbols-rounded">{{ actionIcon }}</span>
+          {{ actionLabel }}
+        </m3e-button>
+      </div>
+    </m3e-list-item>
+
+    <m3e-list-item>
+      <div class="timer-actions">
+        <m3e-button variant="outlined" size="small" @click="resetTimer">
+          <span class="material-symbols-rounded" slot="icon">refresh</span>
+          重新计时
+        </m3e-button>
+        <m3e-button variant="text" size="small" @click="demoFastForward">
+          <span class="material-symbols-rounded" slot="icon">keyboard_double_arrow_right</span>
+          立即开始活动
+        </m3e-button>
+      </div>
     </m3e-list-item>
   </m3e-list>
 </template>
@@ -88,21 +118,32 @@ function onThreshold(event) {
   display: block;
 }
 
+.timer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.timer-actions m3e-button {
+  flex: 0 0 auto;
+}
+
 .time-row {
   display: flex;
-  align-items: baseline;
-  gap: 8px;
+  align-items: center;
+  gap: 0.5rem;
   min-width: 0;
-  margin-top: 4px;
+  margin-top: 0.25rem;
 }
 
 .lead-icon {
-  font-size: 20px;
+  font-size: 1.25rem;
   color: var(--md-sys-color-primary);
 }
 
 .time {
-  font-size: 22px;
+  font-size: 1.375rem;
   font-weight: 600;
   line-height: 1.1;
   letter-spacing: -0.01em;
@@ -112,7 +153,7 @@ function onThreshold(event) {
 .remaining {
   margin-left: auto;
   color: var(--md-sys-color-on-surface-variant);
-  font-size: 12px;
+  font-size: 0.75rem;
   white-space: nowrap;
 }
 
@@ -132,7 +173,7 @@ function onThreshold(event) {
 }
 
 .progress-row {
-  margin-top: 10px;
+  margin-top: 0.625rem;
 }
 
 .track {
@@ -146,7 +187,7 @@ function onThreshold(event) {
 
 .threshold {
   display: inline-block;
-  width: 108px;
-  margin-left: 12px;
+  width: 6.75rem;
+  margin-left: 0.75rem;
 }
 </style>

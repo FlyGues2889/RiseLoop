@@ -89,6 +89,10 @@ test("达到阈值返回动作并进入冷却", async () => {
   const first = await instance.heartbeat({ sitting_minutes: 46, threshold_minutes: 45 });
   assert.equal(first.triggered, true);
   assert.equal(first.action.id, "a-s1");
+  assert.equal(first.actions.length, 2);
+  assert.equal(first.actions[0].id, "a-s1");
+  assert.equal(first.actions[1].id, "a-s0");
+  assert.match(first.actions[1].match_reason, /更温和备选/);
 
   const second = await instance.heartbeat({ sitting_minutes: 50, threshold_minutes: 45 });
   assert.equal(second.triggered, false);

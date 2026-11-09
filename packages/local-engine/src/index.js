@@ -1,4 +1,4 @@
-import { pickAction, selectActions, toPayload } from "./actions.js";
+import { rankActions, selectActions, toPayload } from "./actions.js";
 import { DURATION_BY_STATE, STATE_NAMES, decide, emptyCounters } from "./machine.js";
 import { MEDICAL_DISCLAIMER, SafetyShortCircuit, detectInPayload } from "./safety.js";
 
@@ -238,8 +238,8 @@ export function createLocalEngine({
         }
       }
 
-      const action = pickAction(library, { state: current.state, bodyParts: bodyParts() });
-      if (!action) {
+      const ranked = rankActions(library, { state: current.state, bodyParts: bodyParts() });
+      if (ranked.length === 0) {
         return Promise.resolve({
           triggered: false,
           reason: "no_action_available",
@@ -250,9 +250,10 @@ export function createLocalEngine({
         });
       }
 
+      const primary = ranked[0].action;
       saveSession({
         ...current,
-        pending_action_id: action.id,
+        pending_action_id: primary.id,
         last_push_at: new Date(now()).toISOString(),
         sitting_minutes: sitting,
       });
@@ -264,7 +265,8 @@ export function createLocalEngine({
         sitting_minutes: sitting,
         threshold_minutes: threshold,
         next_check_minutes: threshold,
-        action: toPayload(action),
+        action: toPayload(primary, ranked[0].matchReason),
+        actions: ranked.map((item) => toPayload(item.action, item.matchReason)),
       });
     },
 
@@ -323,10 +325,17 @@ export function createLocalEngine({
         sitting_minutes: 0,
       });
 
-      const nextAction = output.stop_exercise
-        ? null
-        : pickAction(library, { state: output.to_state, bodyParts: bodyParts(), maxMinutes: output.duration_minutes[1] }) ??
-          pickAction(library, { state: output.to_state });
+      const nextRanked = output.stop_exercise
+        ? []
+        : rankActions(library, {
+            state: output.to_state,
+            bodyParts: bodyParts(),
+            maxMinutes: output.duration_minutes[1],
+          });
+      const nextFallback = nextRanked.length
+        ? nextRanked
+        : rankActions(library, { state: output.to_state, bodyParts: bodyParts() });
+      const nextAction = nextFallback[0]?.action ?? null;
 
       return Promise.resolve({
         from_state: output.from_state,

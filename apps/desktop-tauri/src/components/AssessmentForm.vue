@@ -1,6 +1,8 @@
 <script setup>
 import { reactive } from "vue";
 import ErrorBanner from "./ErrorBanner.vue";
+import LoadingOverlay from "./LoadingOverlay.vue";
+import MedicalNote from "./MedicalNote.vue";
 import { state, submitAssessment } from "../state/session.js";
 
 const bodyPartOptions = [
@@ -42,18 +44,11 @@ function onPainChange(event) {
   <m3e-card variant="elevated" class="surface-card">
     <div class="surface-body">
       <header class="page-head">
-        <h1>评估</h1>
-        <p>初次见面，请填写一些基本信息。这能帮助生成相对准确的建议和方案。</p>
+        <h1>先了解你的情况</h1>
+        <p>只需一分钟，填几项基本信息。填得越具体，建议越贴合你。</p>
       </header>
 
-      <m3e-callout class="disclaimer medical-note">
-        <span class="material-symbols-rounded" slot="icon">medical_information</span>
-        <span slot="label">指导提示</span>
-        <p>
-          本产品为健康行为指导工具，不提供医疗诊断或治疗建议。<br>
-          如出现持续疼痛、放射痛、麻木加重、肢体无力或外伤后剧痛，请及时就医。
-        </p>
-      </m3e-callout><br>
+      <MedicalNote />
 
       <m3e-list variant="segmented" class="assessForm">
         <m3e-list-item>
@@ -62,7 +57,7 @@ function onPainChange(event) {
         </m3e-list-item>
         <m3e-list-item>
           每日久坐时长
-          <span slot="supporting-text">每天久坐的时间大致总和</span>
+          <span slot="supporting-text">按一天平时大致估算</span>
           <m3e-form-field variant="filled" class="field" slot="trailing">
             <input id="sedentary-minutes" v-model.number="form.sedentary_minutes" type="number" min="0" max="1440" />
             <span slot="suffix-text">分钟</span>
@@ -70,7 +65,7 @@ function onPainChange(event) {
         </m3e-list-item>
         <m3e-list-item>
           每次休息可用时长
-          <span slot="supporting-text">您希望休息阶段的时长</span>
+          <span slot="supporting-text">一次休息通常能腾出多久</span>
           <m3e-form-field variant="filled" class="field" slot="trailing">
             <input id="available-minutes" v-model.number="form.available_minutes" type="number" min="1" max="120" />
             <span slot="suffix-text">分钟</span>
@@ -85,7 +80,7 @@ function onPainChange(event) {
         </m3e-list-item>
 
         <m3e-list-item>
-          另外，在下面的部位里，您有哪些部位不太舒服？<br><br>
+          哪些部位不太舒服？可以多选。<br><br>
           <m3e-chip-set class="chips">
             <m3e-filter-chip v-for="option in bodyPartOptions" :key="option.value" :value="option.value"
               :selected.prop="form.body_parts.includes(option.value)" @change="togglePart(option.value)">
@@ -94,7 +89,7 @@ function onPainChange(event) {
           </m3e-chip-set>
         </m3e-list-item>
         <m3e-list-item>
-          就您来说，最严重的部分有多痛？<br>
+          最难受的部位现在有多痛？<br>0分表示无疼痛，10分表示无法忍受。<br>
           <m3e-slider class="slider" max="10" step="1" @input="onPainChange" @change="onPainChange">
             <m3e-slider-thumb :value.prop="form.pain_score"></m3e-slider-thumb>
           </m3e-slider>
@@ -113,11 +108,12 @@ function onPainChange(event) {
 
       <ErrorBanner :error="state.error" />
 
-      <m3e-button class="block" variant="filled" size="medium" :disabled.prop="state.busy"
+      <m3e-button class="primary-action" variant="filled" size="medium" :disabled.prop="state.busy"
         @click="submitAssessment(form)">
-        {{ state.busy ? "提交中…" : "生成干预计划" }}
+        {{ state.busy ? "提交中…" : "生成我的方案" }}
       </m3e-button>
     </div>
+    <LoadingOverlay v-if="state.busy" label="正在生成方案…" />
   </m3e-card>
 </template>
 
@@ -125,7 +121,7 @@ function onPainChange(event) {
 m3e-list.assessForm {
   margin-bottom: 1rem;
 
-  --m3e-form-field-font-size:1.4rem
+  --m3e-form-field-font-size: 1.4rem
 }
 
 .field {
@@ -135,8 +131,8 @@ m3e-list.assessForm {
 
 .field-label {
   display: block;
-  margin-bottom: 8px;
-  font-size: 13px;
+  margin-bottom: 0.5rem;
+  font-size: 0.813rem;
   color: var(--md-sys-color-on-surface-variant);
 }
 
@@ -161,14 +157,13 @@ m3e-list.assessForm {
 .slider {
   display: block;
   width: 100%;
-  margin: 12px 0 0;
+  margin: 0.75rem 0 0;
   --m3e-slider-min-width: 100%;
-  --m3e-slider-tick-size: 3px;
+  --m3e-slider-tick-size: 0.2rem;
 }
 
 
-.block {
-  width: 100%;
+.primary-action {
   margin-top: 2rem;
 }
 </style>

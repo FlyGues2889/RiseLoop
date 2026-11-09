@@ -1,5 +1,6 @@
 :root,
 .light-theme {
+    color-scheme: light;
     --md-sys-color-primary-rgb: 0, 108, 77;
     --md-sys-color-primary: #006c4d;
     --md-sys-color-on-primary-rgb: 255, 255, 255;
@@ -81,6 +82,7 @@
 }
 
 .dark-theme {
+    color-scheme: dark;
     --md-sys-color-primary-rgb: 107, 219, 173;
     --md-sys-color-primary: #6bdbad;
     --md-sys-color-on-primary-rgb: 0, 56, 38;

@@ -10,7 +10,8 @@
     "tauri": "tauri"
   },
   "dependencies": {
-    "@m3e/web": "^2.11.3",
+    "@m3e/web": "^2.12.0",
+    "@mediapipe/tasks-vision": "^1.2.2",
     "@riseloop/api-client": "workspace:*",
     "@riseloop/local-engine": "workspace:*",
     "@tauri-apps/api": "^2",

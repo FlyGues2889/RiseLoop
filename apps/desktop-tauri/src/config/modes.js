@@ -23,7 +23,7 @@ export const MODES = {
 };
 
 export const DEMO_UNAVAILABLE = [
-  "CodeArts 智能问答与 AI 洞察",
-  "云端周度聚合",
+  "智能问答与周报洞察",
+  "云端周报汇总",
   "跨设备同步",
 ];

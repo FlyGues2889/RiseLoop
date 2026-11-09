@@ -3,10 +3,52 @@ import { createApiClient, ApiError, describeError } from "@riseloop/api-client";
 import { computed, reactive } from "vue";
 
 import { DEMO_UNAVAILABLE, MODES } from "../config/modes.js";
+import {
+  DEFAULT_PLAN_PREFERENCE,
+  isPlanPreference,
+  pickActionForPlan,
+} from "../config/plans.js";
 import { clearLocalLogs, loadLocalLogs, localApi, localEngine, saveLocalLogs } from "./local.js";
+
+const PLAN_KEY = "riseloop.plan.v1";
+const POSTURE_EVENTS_KEY = "riseloop.posture.events.v1";
 
 let activeBaseUrl = MODES.cloud.baseUrl;
 let memoryToken = null;
+
+function loadPlanPreference() {
+  try {
+    const saved = localStorage.getItem(PLAN_KEY);
+    return isPlanPreference(saved) ? saved : DEFAULT_PLAN_PREFERENCE;
+  } catch {
+    return DEFAULT_PLAN_PREFERENCE;
+  }
+}
+
+function savePlanPreference(value) {
+  try {
+    localStorage.setItem(PLAN_KEY, value);
+  } catch {
+    /* 存储不可用时仅保留内存态 */
+  }
+}
+
+function loadPostureEvents() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(POSTURE_EVENTS_KEY) ?? "[]");
+    return Array.isArray(parsed) ? parsed.slice(0, 20) : [];
+  } catch {
+    return [];
+  }
+}
+
+function savePostureEvents(events) {
+  try {
+    localStorage.setItem(POSTURE_EVENTS_KEY, JSON.stringify(events.slice(0, 20)));
+  } catch {
+    /* 存储不可用时仅保留内存态 */
+  }
+}
 
 const remoteApi = createApiClient({
   getBaseUrl: () => activeBaseUrl,
@@ -25,6 +67,7 @@ let activeApi = remoteApi;
 export const state = reactive({
   phase: "auth",
   mode: MODES.cloud.id,
+  planPreference: loadPlanPreference(),
   busy: false,
   email: "",
   password: "",
@@ -39,6 +82,12 @@ export const state = reactive({
     overdue: false,
   },
   pending: null,
+  pendingActions: [],
+  postureOpen: false,
+  logOpen: false,
+  postureRisk: null,
+  postureReport: null,
+  postureEvents: loadPostureEvents(),
   lastFeedback: null,
   safety: null,
   error: null,
@@ -64,6 +113,7 @@ function handleError(error) {
   if (error instanceof ApiError && error.isSafetyShortCircuit) {
     state.safety = error.payload;
     state.pending = null;
+    state.pendingActions = [];
     state.error = null;
     return;
   }
@@ -76,7 +126,7 @@ export async function applyToken(response) {
     try {
       await invoke("store_session_token", { token: response.access_token });
     } catch (error) {
-      pushLog(`令牌未写入系统钥匙串，本次会话仅保存在内存：${String(error)}`);
+      pushLog("登录凭证没存进系统钥匙串，这次只在本次运行有效");
     }
   }
   state.phase = "assessment";
@@ -105,6 +155,7 @@ function resetViewState() {
   state.currentState = null;
   state.assessment = null;
   state.pending = null;
+  state.pendingActions = [];
   state.lastFeedback = null;
   state.safety = null;
   state.error = null;
@@ -159,7 +210,7 @@ export async function enterDemo() {
     } else {
       pushLog("本地模式：全部数据保存在本机，不连接任何服务");
     }
-    pushLog(`本地模式不连接云端智能体：${DEMO_UNAVAILABLE.join("、")}不可用`);
+    pushLog(`本地模式不连云端：${DEMO_UNAVAILABLE.join("、")}暂不可用`);
   } catch (error) {
     useCloud();
     state.error = describeError(error);
@@ -172,7 +223,7 @@ export async function exitDemo() {
   await clearToken();
   useCloud();
   resetViewState();
-  pushLog("已退出本地模式，回到云端模式");
+  pushLog("已回到云端模式");
 }
 
 export async function register() {
@@ -181,7 +232,7 @@ export async function register() {
   state.error = null;
   try {
     await applyToken(await activeApi.register(state.email, state.password));
-    pushLog("账号已创建，令牌已写入系统钥匙串");
+    pushLog("账号已创建，登录凭证已保存");
   } catch (error) {
     handleError(error);
   } finally {
@@ -210,7 +261,7 @@ export async function logout() {
   }
   await clearToken();
   resetViewState();
-  pushLog("已退出并从钥匙串清除令牌");
+  pushLog("已退出，登录凭证已清除");
 }
 
 export async function submitAssessment(form) {
@@ -313,6 +364,7 @@ export async function resetTimer({ silent = false } = {}) {
   if (reset) state.timer = reset;
   if (!state.timer.running) await startTimer();
   state.pending = null;
+  state.pendingActions = [];
   if (!silent) pushLog(`久坐计时已重置（${state.timer.threshold_minutes} 分钟提醒）`);
 }
 
@@ -335,11 +387,25 @@ export async function tickHeartbeat() {
       sitting_minutes: sittingMinutes.value,
       threshold_minutes: state.timer.threshold_minutes,
     });
-    if (state.heartbeat.triggered && state.heartbeat.action) {
-      state.pending = state.heartbeat.action;
+    const actions = state.heartbeat.actions?.length
+      ? state.heartbeat.actions
+      : state.heartbeat.action
+        ? [state.heartbeat.action]
+        : [];
+    if (state.heartbeat.triggered && actions.length > 0) {
+      const preferred = pickActionForPlan(actions, state.planPreference) ?? actions[0];
+      state.pendingActions = actions;
+      state.pending = preferred;
       const paused = await timerCommand("timer_pause");
       if (paused) state.timer = paused;
-      pushLog(`触发干预：${state.heartbeat.action.name}`);
+      pushLog(`该起来活动了：匹配 ${actions.length} 个动作，首选「${preferred.name}」`);
+    } else if (!state.heartbeat.triggered) {
+      // 便于排查“点了没反应”：把云端判定写进会话记录
+      pushLog(
+        `还没到提醒阈值（已坐 ${sittingMinutes.value} 分钟 / 阈值 ${state.timer.threshold_minutes} 分钟）`
+      );
+    } else {
+      pushLog("到点了，但云端没有返回可用动作");
     }
   } catch (error) {
     handleError(error);
@@ -354,9 +420,10 @@ export async function submitFeedback(payload) {
     state.lastFeedback = result;
     state.currentState = result.to_state;
     state.pending = null;
+    state.pendingActions = [];
     await resetTimer({ silent: true });
     pushLog(
-      `${result.from_state} → ${result.to_state}（${result.transition_type}）${result.reason}`
+      `${result.from_state} → ${result.to_state}：${result.reason}`
     );
   } catch (error) {
     handleError(error);
@@ -402,10 +469,105 @@ export function continueAfterFeedback() {
   state.lastFeedback = null;
 }
 
+export function selectPendingAction(action) {
+  if (!action) return;
+  state.pending = action;
+}
+
+export function selectPlan(planId) {
+  if (!isPlanPreference(planId)) return;
+  state.planPreference = planId;
+  savePlanPreference(planId);
+  const preferred = pickActionForPlan(state.pendingActions, planId);
+  if (preferred) state.pending = preferred;
+}
+
+export function openPosture() {
+  state.postureOpen = true;
+}
+
+export function closePosture() {
+  state.postureOpen = false;
+}
+
+export function recordPostureRisk(result, postureClass, confidence = null) {
+  if (!result) return;
+  const at = new Date().toISOString();
+  state.postureRisk = result;
+  state.postureReport = {
+    posture_class: postureClass,
+    confidence,
+    risk_level: result.risk_level,
+    brli: result.brli,
+    recommended_plan: result.recommended_plan,
+    citation_count: result.citations?.length ?? 0,
+    updated_at: at,
+  };
+
+  if (result.risk_level !== "high" && result.risk_level !== "very_high") return;
+  const last = state.postureEvents[0];
+  const cooldownMs = 5 * 60 * 1000;
+  if (last && new Date(at).getTime() - new Date(last.at).getTime() < cooldownMs) return;
+  const events = [
+    {
+      at,
+      posture_class: postureClass,
+      risk_level: result.risk_level,
+      brli: result.brli,
+    },
+    ...state.postureEvents,
+  ].slice(0, 20);
+  state.postureEvents = events;
+  savePostureEvents(events);
+}
+
+export async function evaluatePostureRisk(payload) {
+  if (state.mode === MODES.demo.id) return null;
+  try {
+    const result = await activeApi.postureRisk(payload);
+    recordPostureRisk(result, payload.posture_class, payload.confidence);
+    return result;
+  } catch (error) {
+    if (error instanceof ApiError && error.isSafetyShortCircuit) {
+      handleError(error);
+      return null;
+    }
+    return null;
+  }
+}
+
+export async function evaluatePostureInfer(payload) {
+  if (state.mode === MODES.demo.id) return { localMode: true };
+  try {
+    const result = await activeApi.postureInfer(payload);
+    recordPostureRisk(result.risk, result.posture, result.confidence);
+    return result;
+  } catch (error) {
+    if (error instanceof ApiError && error.isSafetyShortCircuit) {
+      handleError(error);
+      return null;
+    }
+    throw error;
+  }
+}
+
+export function applyPostureRecommendation(result) {
+  if (!result?.actions?.length) return false;
+  state.pendingActions = result.actions;
+  state.pending = result.actions[0];
+  if (isPlanPreference(result.recommended_plan)) {
+    state.planPreference = result.recommended_plan;
+    savePlanPreference(result.recommended_plan);
+  }
+  pushLog(`姿势风险已更新，负荷 ${result.brli.toFixed(2)}，推荐动作已调整`);
+  return true;
+}
+
 export function dismissSafety() {
   state.safety = null;
   state.phase = "main";
   state.pending = null;
+  state.pendingActions = [];
   state.error = null;
 }
 
@@ -413,6 +575,16 @@ export async function clearAllData() {
   const reset = await timerCommand("timer_reset");
   localEngine.reset();
   clearLocalLogs();
+  try {
+    localStorage.removeItem(PLAN_KEY);
+    localStorage.removeItem(POSTURE_EVENTS_KEY);
+  } catch {
+    /* 存储不可用时忽略 */
+  }
+  state.planPreference = DEFAULT_PLAN_PREFERENCE;
+  state.postureRisk = null;
+  state.postureReport = null;
+  state.postureEvents = [];
   await clearToken();
   useCloud();
   resetViewState();

@@ -4,7 +4,21 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Rise Loop</title>
+    <meta name="color-scheme" content="light dark" />
+    <title>Rise Loop · 久坐打断</title>
+    <script>
+      // 在首屏绘制前应用系统主题，避免暗色系统下的白屏闪烁。
+      (() => {
+        try {
+          const dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+          document.documentElement.classList.toggle("dark-theme", dark);
+          document.documentElement.classList.toggle("light-theme", !dark);
+          document.documentElement.style.colorScheme = dark ? "dark" : "light";
+        } catch {
+          /* 老 WebView 不支持 matchMedia 时保持浅色 */
+        }
+      })();
+    </script>
   </head>
 
   <body>

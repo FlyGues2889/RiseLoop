@@ -2,11 +2,7 @@
 import { computed, ref } from "vue";
 import WindowControls from "./WindowControls.vue";
 import { clearAllData, logout, modeBadge, state } from "../state/session.js";
-
-const stateLabel = computed(() => {
-  const map = { S0: "急性缓解状态", S1: "激活状态", S2: "强化状态", S3: "维持状态" };
-  return map[state.currentState] || "未评估";
-});
+import { monitor, ui as cameraUi } from "../state/postureMonitor.js";
 
 const isSignedIn = computed(() => state.phase !== "auth");
 
@@ -18,6 +14,13 @@ const profileLabel = computed(() => {
 
 const confirmOpen = ref(false);
 const clearing = ref(false);
+
+const monitorStatus = computed(() => {
+  if (monitor.status === "running") return "监测中";
+  if (monitor.status === "paused") return "已暂停";
+  if (monitor.status === "starting") return "启动中";
+  return "未开启";
+});
 
 async function confirmClear() {
   clearing.value = true;
@@ -40,8 +43,6 @@ async function confirmClear() {
     </div>
 
     <div class="side">
-      <span class="pill">{{ stateLabel }}</span>
-
       <m3e-icon-button class="profile" variant="standard" size="small" aria-label="个人信息与账号操作">
         <m3e-menu-trigger for="profile-menu">
           <span class="material-symbols-rounded icon">account_circle</span>
@@ -57,9 +58,19 @@ async function confirmClear() {
       <span slot="icon" class="material-symbols-rounded">account_circle</span>
       {{ profileLabel }}
     </m3e-menu-item>
+    <m3e-menu-item v-if="isSignedIn" @click="state.logOpen = true">
+      <span slot="icon" class="material-symbols-rounded">history</span>
+      会话记录
+      <m3e-badge slot="trailing-icon" class="menu-count">{{ state.log.length }}</m3e-badge>
+    </m3e-menu-item>
+    <m3e-menu-item v-if="isSignedIn" @click="cameraUi.dialogOpen = true">
+      <span slot="icon" class="material-symbols-rounded">videocam</span>
+      姿势监测设置
+      <span class="menu-status">{{ monitorStatus }}</span>
+    </m3e-menu-item>
     <m3e-menu-item v-if="isSignedIn" @click="confirmOpen = true">
       <span slot="icon" class="material-symbols-rounded">delete_sweep</span>
-      清除数据
+      清除本机数据
     </m3e-menu-item>
     <m3e-menu-item v-if="isSignedIn" @click="logout">
       <span slot="icon" class="material-symbols-rounded">logout</span>
@@ -76,17 +87,17 @@ async function confirmClear() {
   >
     <h2 slot="header">清除本机数据？</h2>
     <p>
-      将删除本机保存的评估结果、干预记录、会话日志与登录令牌，操作不可撤销。
+      会删除本机的评估结果、干预记录、会话日志和登录凭证。删除后无法恢复。
     </p>
     <p class="hint">
-      云端账号与云端历史数据不受影响。
+      云端账号和历史数据不受影响。
     </p>
-    <m3e-button slot="actions" variant="text" @click="confirmOpen = false">
-      取消
-    </m3e-button>
-    <m3e-button slot="actions" variant="filled" :disabled.prop="clearing" @click="confirmClear">
-      {{ clearing ? "清除中…" : "确认清除" }}
-    </m3e-button>
+    <div slot="actions" end class="dialog-actions">
+      <m3e-button variant="text" @click="confirmOpen = false">取消</m3e-button>
+      <m3e-button variant="filled" :disabled.prop="clearing" @click="confirmClear">
+        {{ clearing ? "清除中…" : "确认清除" }}
+      </m3e-button>
+    </div>
   </m3e-dialog>
 </template>
 
@@ -95,7 +106,7 @@ async function confirmClear() {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 28px;
+  gap: 1.75rem;
   padding: 0.8rem 0.9rem 0.8rem 2.4rem;
   color: var(--md-sys-color-primary);
   user-select: none;
@@ -104,7 +115,7 @@ async function confirmClear() {
 .brand {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 0.625rem;
   min-width: 0;
 }
 
@@ -116,50 +127,55 @@ async function confirmClear() {
 }
 
 .mode {
-  padding: 2px 8px;
-  border-radius: 999px;
+  padding: 0.2rem 0.5rem;
+  border-radius: 62.438rem;
   background: var(--md-sys-color-secondary-container);
   color: var(--md-sys-color-on-secondary-container);
-  font-size: 11px;
+  font-size: 0.688rem;
   white-space: nowrap;
 }
 
 .side {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 0.375rem;
   margin-left: auto;
 }
 
 .profile {
-  --m3e-icon-button-icon-size: 24px;
+  --m3e-icon-button-icon-size: 1.5rem;
   color: var(--md-sys-color-primary);
 }
 
 .icon {
-  font-size: 24px;
+  font-size: 1.5rem;
   line-height: 1;
   display: block;
 }
 
-.pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 4px 11px;
-  border-radius: 999px;
-  background: var(--md-sys-color-secondary-container);
-  color: var(--md-sys-color-on-secondary-container);
-  font-size: 12px;
-  font-weight: 500;
-  white-space: nowrap;
+.menu-status {
+  margin-left: 0.5rem;
+  color: var(--md-sys-color-outline);
+  font-size: 0.7rem;
+}
+
+.menu-count {
+  --m3e-badge-container-color: var(--md-sys-color-tertiary-container);
+  --m3e-badge-color: var(--md-sys-color-on-tertiary-container);
+  --m3e-badge-medium-font-size: 0.68rem;
 }
 
 .confirm {
-  --m3e-dialog-max-width: 420px;
+  --m3e-dialog-max-width: 26.25rem;
 }
 
 .confirm .hint {
-  margin-top: 8px;
+  margin-top: 0.5rem;
+}
+
+.dialog-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
 }
 </style>
