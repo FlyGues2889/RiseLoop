@@ -100,6 +100,9 @@ function pickField(event, field, value) {
 <template>
   <m3e-card variant="elevated" class="surface-card">
     <div class="surface-body">
+      <!-- 主界面的错误过去只写进 state.error，没人渲染，用户看不到 -->
+      <ErrorBanner :error="state.error" />
+
       <article v-if="result">
         <div class="result-head">
           <h1 class="transition mono">

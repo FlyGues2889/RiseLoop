@@ -87,6 +87,8 @@ async def get_current_user_id(
     settings: Settings = request.app.state.settings
     try:
         payload = decode_token(credentials.credentials, settings.jwt_secret)
-    except TokenError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid_token")
+    except TokenError as exc:
+        # 过期和伪造要分开：前者只需重新登录，后者说明凭证本身有问题。
+        detail = "token_expired" if str(exc) == "expired" else "invalid_token"
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=detail) from exc
     return str(payload["sub"])

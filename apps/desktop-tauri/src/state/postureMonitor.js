@@ -1,6 +1,7 @@
 // 常驻姿势监测：摄像头生命周期、关键点采样、分钟级窗口汇总与云端上报。
 // 画面只在本机处理，出网的只有 33 个归一化关键点。
 import { reactive } from "vue";
+import { describeError } from "@riseloop/api-client";
 
 import { toContractKeypoints } from "../data/keypoints.js";
 import { evaluatePostureInfer, state } from "./session.js";
@@ -226,7 +227,8 @@ async function flushWindow() {
     };
     monitor.error = "";
   } catch (err) {
-    monitor.error = "这一分钟没能连上云端，稍后自动重试。";
+    // 失败原因要照实说：网络断了和被云端拦下不是一回事。
+    monitor.error = describeError(err).hint ?? "这一分钟没能拿到云端结果，稍后自动重试。";
   }
 }
 

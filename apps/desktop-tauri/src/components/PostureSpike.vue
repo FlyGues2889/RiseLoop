@@ -381,8 +381,9 @@ async function start() {
     status.value = "画面不上传，每 2 秒上传一次关键点";
     tick();
   } catch (err) {
-    error.value = "启动没成功，请重试一次。";
-    status.value = "摄像头未开启";
+    // 走到这里说明已经拿到摄像头，只是画面没能渲染出来
+    error.value = "摄像头已连接，但画面没能显示。重试一次，或换个摄像头。";
+    status.value = "画面未显示";
     stop();
   } finally {
     loading.value = false;

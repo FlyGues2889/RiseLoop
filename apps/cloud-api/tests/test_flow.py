@@ -2,6 +2,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.core.config import Settings
+from app.core.security import encode_token
 from app.main import create_app
 
 
@@ -45,6 +46,25 @@ def test_login_rejects_wrong_password(client):
     client.post("/auth/register", json={"email": "a@b.com", "password": "12345678"})
     response = client.post("/auth/login", json={"email": "a@b.com", "password": "bad-pass"})
     assert response.status_code == 401
+    # 前端按 detail 区分「密码错」和「会话过期」，两者不能混用同一个 401 文案。
+    assert response.json()["detail"] == "invalid_credentials"
+
+
+def test_expired_token_is_reported_as_expired(client):
+    expired = encode_token("user-1", "test-secret", -60)
+    response = client.get("/review/weekly", headers={"Authorization": f"Bearer {expired}"})
+    assert response.status_code == 401
+    assert response.json()["detail"] == "token_expired"
+
+
+def test_tampered_token_is_reported_as_invalid(client):
+    token = encode_token("user-1", "test-secret", 600)
+    head, payload, _signature = token.split(".")
+    response = client.get(
+        "/review/weekly", headers={"Authorization": f"Bearer {head}.{payload}.forged"}
+    )
+    assert response.status_code == 401
+    assert response.json()["detail"] == "invalid_token"
 
 
 def test_protected_route_requires_token(client):

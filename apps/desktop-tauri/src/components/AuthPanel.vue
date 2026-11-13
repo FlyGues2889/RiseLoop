@@ -28,7 +28,7 @@ import { enterDemo, login, register, state } from "../state/session.js";
 
         <ErrorBanner :error="state.error" />
 
-        <m3e-button class="primary-action" variant="filled":disabled.prop="state.busy" @click="login">
+        <m3e-button class="primary-action" variant="filled" :disabled.prop="state.busy" @click="login">
           {{ state.busy ? "登录中…" : "登录" }}
         </m3e-button>
         <m3e-button class="register" variant="text" size="small" :disabled.prop="state.busy" @click="register">

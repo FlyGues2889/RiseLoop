@@ -117,7 +117,20 @@ function handleError(error) {
     state.error = null;
     return;
   }
+  // 凭证真的失效时，说清原因并退回登录页，而不是留在主界面反复失败。
+  if (error instanceof ApiError && error.isSessionExpired) {
+    void expireSession(error);
+    return;
+  }
   state.error = describeError(error);
+}
+
+async function expireSession(error) {
+  const view = describeError(error);
+  await clearToken();
+  resetViewState();
+  state.error = view;
+  pushLog("登录状态已失效，已退回登录页，请重新登录");
 }
 
 export async function applyToken(response) {
@@ -291,6 +304,15 @@ function previewTimer(command, args) {
   if (command === "timer_reset") {
     return { ...timer, sitting_seconds: 0, remaining_seconds: timer.threshold_seconds, overdue: false };
   }
+  if (command === "timer_restart") {
+    return {
+      ...timer,
+      running: true,
+      sitting_seconds: 0,
+      remaining_seconds: timer.threshold_seconds,
+      overdue: false,
+    };
+  }
   if (command === "timer_set_threshold") {
     const threshold = args.minutes * 60;
     return {
@@ -360,12 +382,12 @@ export async function toggleTimer() {
 }
 
 export async function resetTimer({ silent = false } = {}) {
-  const reset = await timerCommand("timer_reset");
-  if (reset) state.timer = reset;
-  if (!state.timer.running) await startTimer();
+  // 重置即重新开始一轮：托盘和界面共用这条路径，避免“清零了但没在走”。
+  const restarted = await timerCommand("timer_restart");
+  if (restarted) state.timer = restarted;
   state.pending = null;
   state.pendingActions = [];
-  if (!silent) pushLog(`久坐计时已重置（${state.timer.threshold_minutes} 分钟提醒）`);
+  if (!silent) pushLog(`久坐计时已重新开始（${state.timer.threshold_minutes} 分钟提醒）`);
 }
 
 export async function setThreshold(minutes) {
@@ -559,7 +581,8 @@ export async function evaluatePostureInfer(payload) {
     recordPostureRisk(result.risk, result.posture, result.confidence);
     return result;
   } catch (error) {
-    if (error instanceof ApiError && error.isSafetyShortCircuit) {
+    if (error instanceof ApiError && (error.isSafetyShortCircuit || error.isSessionExpired)) {
+      // 安全短路与凭证失效都交给统一出口（后者会退回登录页）
       handleError(error);
       return null;
     }
@@ -588,6 +611,8 @@ export function dismissSafety() {
 }
 
 export async function clearAllData() {
+  // 先停下再清零：reset 会保留 running，直接 reset 会让计时在清空后继续走。
+  await timerCommand("timer_pause");
   const reset = await timerCommand("timer_reset");
   localEngine.reset();
   clearLocalLogs();
