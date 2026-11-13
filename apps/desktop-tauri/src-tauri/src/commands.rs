@@ -28,6 +28,11 @@ pub fn timer_reset(timer: State<'_, Arc<SittingTimer>>) -> TimerSnapshot {
 }
 
 #[tauri::command]
+pub fn timer_restart(timer: State<'_, Arc<SittingTimer>>) -> TimerSnapshot {
+    timer.restart()
+}
+
+#[tauri::command]
 pub fn timer_seed_elapsed(minutes: u64, timer: State<'_, Arc<SittingTimer>>) -> TimerSnapshot {
     timer.seed_elapsed(minutes)
 }

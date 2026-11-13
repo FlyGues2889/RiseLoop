@@ -82,6 +82,29 @@ impl SittingTimer {
         snapshot(&inner)
     }
 
+    /// 重置为全新一轮并立即开始计时。
+    ///
+    /// 托盘“重新计时”与反馈提交后的重开都走这里：用户点了就要看到秒数在走，
+    /// 不能停在“已清零但没开始”的中间态。
+    pub fn restart(&self) -> TimerSnapshot {
+        let mut inner = self.lock();
+        inner.accumulated = Duration::ZERO;
+        inner.notified = false;
+        inner.running = true;
+        inner.started_at = Some(Instant::now());
+        snapshot(&inner)
+    }
+
+    /// 运行中暂停、暂停中继续，托盘的“暂停 / 继续”共用这一项。
+    pub fn toggle(&self) -> TimerSnapshot {
+        let running = self.lock().running;
+        if running {
+            self.pause()
+        } else {
+            self.start()
+        }
+    }
+
     /// 仅用于演示：把已累计久坐时间直接推进到指定分钟数。
     pub fn seed_elapsed(&self, minutes: u64) -> TimerSnapshot {
         let mut inner = self.lock();
@@ -263,6 +286,54 @@ mod tests {
         timer.reset();
         assert!(!timer.snapshot().running, "暂停态 reset 不应自动开始");
         assert_eq!(timer.snapshot().sitting_seconds, 0);
+    }
+
+    #[test]
+    fn toggle_pauses_then_resumes_without_losing_accumulated_time() {
+        let timer = SittingTimer::new(DEFAULT_THRESHOLD_MINUTES);
+        timer.start();
+        sleep(Duration::from_millis(1100));
+        let paused = timer.toggle();
+        assert!(!paused.running, "运行中切换应暂停");
+        let frozen = paused.sitting_seconds;
+        assert!(frozen >= 1, "暂停时应保留已累计的时间");
+
+        sleep(Duration::from_millis(120));
+        let resumed = timer.toggle();
+        assert!(resumed.running, "暂停中切换应恢复计时");
+        assert!(resumed.sitting_seconds >= frozen, "恢复是继续累计，不是清零");
+        sleep(Duration::from_millis(120));
+        assert!(timer.snapshot().sitting_seconds >= frozen);
+    }
+
+    #[test]
+    fn restart_from_paused_starts_a_fresh_round() {
+        let timer = SittingTimer::new(DEFAULT_THRESHOLD_MINUTES);
+        timer.start();
+        timer.seed_elapsed(20);
+        timer.pause();
+        assert!(!timer.snapshot().running);
+
+        let restarted = timer.restart();
+        assert!(restarted.running, "暂停态重新计时应立即开始");
+        assert!(restarted.sitting_seconds <= 1, "重新计时从 0 开始");
+        assert_eq!(restarted.remaining_seconds, DEFAULT_THRESHOLD_MINUTES * 60);
+        assert!(!restarted.overdue);
+    }
+
+    #[test]
+    fn restart_allows_a_new_threshold_trigger() {
+        let timer = SittingTimer::new(DEFAULT_THRESHOLD_MINUTES);
+        timer.start();
+        timer.seed_elapsed(DEFAULT_THRESHOLD_MINUTES + 1);
+        assert!(timer.tick().is_some(), "越过阈值应触发");
+
+        timer.pause();
+        timer.restart();
+        assert!(timer.tick().is_none(), "刚重开的一轮不应立刻再触发");
+
+        timer.seed_elapsed(DEFAULT_THRESHOLD_MINUTES + 1);
+        assert!(timer.tick().is_some(), "重开后应允许再次触发");
     }
 
     #[test]

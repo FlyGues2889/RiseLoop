@@ -1,6 +1,7 @@
 mod commands;
 mod timer;
 
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
@@ -14,6 +15,42 @@ use timer::{SittingTimer, TimerSnapshot, DEFAULT_THRESHOLD_MINUTES};
 
 const THRESHOLD_EVENT: &str = "riseloop://threshold";
 const TICK_EVENT: &str = "riseloop://tick";
+const TRAY_ID: &str = "riseloop-tray";
+const PAUSE_LABEL: &str = "暂停计时";
+const RESUME_LABEL: &str = "继续计时";
+
+fn pause_label(running: bool) -> &'static str {
+    if running {
+        PAUSE_LABEL
+    } else {
+        RESUME_LABEL
+    }
+}
+
+fn tray_tooltip(running: bool) -> &'static str {
+    if running {
+        "Rise Loop · 久坐计时进行中"
+    } else {
+        "Rise Loop · 久坐计时已暂停"
+    }
+}
+
+/// 托盘菜单是原生控件，前端改不到它：文字与提示由 Rust 侧跟着计时状态同步。
+/// 只在状态真正变化时写入，避免每秒重建菜单。
+fn sync_tray_menu(
+    app: &tauri::AppHandle<tauri::Wry>,
+    pause_item: &MenuItem<tauri::Wry>,
+    running: bool,
+    last_running: &AtomicBool,
+) {
+    if last_running.swap(running, Ordering::Relaxed) == running {
+        return;
+    }
+    let _ = pause_item.set_text(pause_label(running));
+    if let Some(tray) = app.tray_by_id(TRAY_ID) {
+        let _ = tray.set_tooltip(Some(tray_tooltip(running)));
+    }
+}
 
 fn focus_main_window(app: &tauri::AppHandle) {
     if let Some(window) = app.get_webview_window("main") {
@@ -53,28 +90,45 @@ pub fn run() {
             })?;
 
             let open_item = MenuItem::with_id(app, "open", "打开 Rise Loop", true, None::<&str>)?;
-            let pause_item = MenuItem::with_id(app, "pause", "暂停计时", true, None::<&str>)?;
+            let initial_running = timer.snapshot().running;
+            let pause_item = MenuItem::with_id(
+                app,
+                "pause",
+                pause_label(initial_running),
+                true,
+                None::<&str>,
+            )?;
             let reset_item = MenuItem::with_id(app, "reset", "重新计时", true, None::<&str>)?;
             let quit_item = MenuItem::with_id(app, "quit", "退出", true, None::<&str>)?;
             let menu = Menu::with_items(app, &[&open_item, &pause_item, &reset_item, &quit_item])?;
 
+            let pause_running = Arc::new(AtomicBool::new(initial_running));
+            let menu_pause_item = pause_item.clone();
+            let menu_running = pause_running.clone();
+
             let tray_timer = timer.clone();
-            TrayIconBuilder::with_id("riseloop-tray")
+            TrayIconBuilder::with_id(TRAY_ID)
                 .icon(
                     app.default_window_icon()
                         .cloned()
                         .expect("missing app icon"),
                 )
-                .tooltip("Rise Loop 久坐提醒")
+                .tooltip(tray_tooltip(initial_running))
                 .menu(&menu)
                 .show_menu_on_left_click(false)
                 .on_menu_event(move |app, event| match event.id().as_ref() {
                     "open" => focus_main_window(app),
+                    // 同一项切换：运行中就暂停，已暂停就继续
                     "pause" => {
-                        tray_timer.pause();
+                        let snapshot = tray_timer.toggle();
+                        sync_tray_menu(app, &menu_pause_item, snapshot.running, &menu_running);
+                        let _ = app.emit(TICK_EVENT, &snapshot);
                     }
+                    // 重置后立刻开新一轮，不停在“已清零但没开始”
                     "reset" => {
-                        tray_timer.reset();
+                        let snapshot = tray_timer.restart();
+                        sync_tray_menu(app, &menu_pause_item, snapshot.running, &menu_running);
+                        let _ = app.emit(TICK_EVENT, &snapshot);
                     }
                     "quit" => app.exit(0),
                     _ => {}
@@ -93,9 +147,13 @@ pub fn run() {
 
             let handle = app.handle().clone();
             let tick_timer = timer.clone();
+            let tick_pause_item = pause_item.clone();
+            let tick_running = pause_running.clone();
             thread::spawn(move || loop {
                 thread::sleep(Duration::from_secs(1));
                 let snapshot = tick_timer.snapshot();
+                // 前端按钮、心跳自动暂停也会改状态，这里兜住托盘文字
+                sync_tray_menu(&handle, &tick_pause_item, snapshot.running, &tick_running);
                 let _ = handle.emit(TICK_EVENT, &snapshot);
                 if let Some(triggered) = tick_timer.tick() {
                     notify_break(&handle, &triggered);
@@ -116,6 +174,7 @@ pub fn run() {
             commands::timer_start,
             commands::timer_pause,
             commands::timer_reset,
+            commands::timer_restart,
             commands::timer_seed_elapsed,
             commands::timer_set_threshold,
             commands::store_session_token,
