@@ -19,6 +19,16 @@ export default defineConfig(() => ({
   //
   // 1. prevent Vite from obscuring rust errors
   clearScreen: false,
+  // 多入口：主窗口之外还有自制通知窗口（透明、置顶、可变形的方案小窗）
+  build: {
+    rollupOptions: {
+      input: {
+        main: "index.html",
+        notice: "notice.html",
+      },
+    },
+  },
+
   // 2. tauri expects a fixed port, fail if that port is not available
   server: {
     port: 1420,

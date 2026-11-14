@@ -1,0 +1,232 @@
+/* 自制通知窗口：整窗透明，真正可见的只有卡片本身。
+   卡片贴着工作区右下角，展开时底边不动，向上生长。 */
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: transparent;
+}
+
+body {
+  color: var(--md-sys-color-on-surface);
+  font-family: "Nunito", "HarmonyOS Sans SC", "Microsoft YaHei", "Segoe UI", sans-serif;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+}
+
+#notice {
+  height: 100%;
+}
+
+.stage {
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  padding: 0.625rem;
+}
+
+.card {
+  position: relative;
+  width: 100%;
+  border-radius: 1.25rem;
+  background: var(--md-sys-color-surface-container-high);
+  box-shadow: 0 0.625rem 1.75rem rgba(0, 0, 0, 0.18);
+  overflow: hidden;
+}
+
+.card.expanded {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 0.875rem 0.75rem 1rem;
+}
+
+.mark {
+  flex: 0 0 auto;
+  width: 2.25rem;
+  height: 2.25rem;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  font-size: 1.25rem;
+  color: var(--md-sys-color-on-primary-container);
+  background: var(--md-sys-color-primary-container);
+}
+
+.titles {
+  flex: 1;
+  min-width: 0;
+}
+
+.titles strong {
+  display: block;
+  font-size: 0.938rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.titles small {
+  display: block;
+  margin-top: 0.2rem;
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.75rem;
+}
+
+.close {
+  flex: 0 0 auto;
+  width: 1.75rem;
+  height: 1.75rem;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--md-sys-color-outline);
+  cursor: pointer;
+}
+
+.close:hover {
+  background: var(--md-sys-color-surface-container-highest);
+  color: var(--md-sys-color-on-surface);
+}
+
+.close .material-symbols-rounded {
+  font-size: 1.125rem;
+}
+
+/* 展开区域用 grid-rows 0fr → 1fr 做高度动画，窗口尺寸已提前跳到位 */
+.reveal {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 320ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.card.expanded .reveal {
+  flex: 1;
+  min-height: 0;
+  grid-template-rows: 1fr;
+}
+
+.reveal-inner {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.card.expanded .reveal-inner {
+  overflow-y: auto;
+  padding: 0 1rem 0.25rem;
+}
+
+.action-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.action-head strong {
+  font-size: 0.938rem;
+}
+
+.action-head .mono {
+  color: var(--md-sys-color-primary);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.steps {
+  margin: 0.625rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.5rem;
+  counter-reset: notice-step;
+}
+
+.steps li {
+  counter-increment: notice-step;
+  display: flex;
+  gap: 0.625rem;
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.813rem;
+  line-height: 1.6;
+}
+
+.steps li::before {
+  content: counter(notice-step);
+  flex: 0 0 auto;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-top: 0.15rem;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 0.2rem solid var(--md-sys-color-outline-variant);
+  color: var(--md-sys-color-outline);
+  font-size: 0.625rem;
+}
+
+.source {
+  margin-top: 0.75rem;
+  padding: 0.5rem 0.625rem;
+  border-radius: 0.75rem;
+  background: var(--md-sys-color-surface-container);
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.688rem;
+  line-height: 1.5;
+}
+
+.pending {
+  margin: 0.75rem 0 0;
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.813rem;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.875rem 0 1rem;
+}
+
+.foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0 1rem 0.875rem;
+}
+
+.countdown {
+  color: var(--md-sys-color-outline);
+  font-size: 0.688rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 0.2rem;
+  background: var(--md-sys-color-surface-variant);
+}
+
+.bar i {
+  display: block;
+  height: 100%;
+  background: var(--md-sys-color-primary);
+  transition: width 200ms linear;
+}

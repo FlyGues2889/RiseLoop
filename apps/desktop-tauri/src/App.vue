@@ -40,6 +40,13 @@ onMounted(async () => {
             tickHeartbeat();
           })
         );
+        // 用户在自制通知里点「开始」：已经有待办就直接展示，没有就立刻要一次动作
+        unlisteners.value.push(
+          await listen("riseloop://notice-start", () => {
+            if (state.pending) return;
+            tickHeartbeat({ force: true });
+          })
+        );
       } catch {
         /* 事件桥不可用时依赖轮询刷新 */
       }

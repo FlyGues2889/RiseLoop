@@ -1,0 +1,174 @@
+//! 自制通知窗口：右下角悬浮卡片，点击后原地展开为方案小窗。
+//!
+//! 系统通知（tauri-plugin-notification）保留为兜底：窗口创建失败或平台不支持透明窗口时回退。
+
+use std::sync::Mutex;
+
+use serde::{Deserialize, Serialize};
+use tauri::{
+    AppHandle, Emitter, LogicalSize, Manager, PhysicalPosition, State, WebviewUrl,
+    WebviewWindow, WebviewWindowBuilder, Wry,
+};
+
+pub const NOTICE_LABEL: &str = "notice";
+/// 新通知到达时推给通知窗口
+pub const NOTICE_EVENT: &str = "riseloop://notice";
+/// 主窗口算好动作后补推给通知窗口
+pub const NOTICE_ACTION_EVENT: &str = "riseloop://notice-action";
+/// 用户在通知里点「开始」，主窗口接住去展示干预
+pub const NOTICE_START_EVENT: &str = "riseloop://notice-start";
+
+const WIDTH: f64 = 380.0;
+const COLLAPSED_HEIGHT: f64 = 168.0;
+const EXPANDED_HEIGHT: f64 = 520.0;
+/// 距屏幕工作区右下角的留白
+const MARGIN: f64 = 16.0;
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NoticeAction {
+    pub name: String,
+    pub duration_minutes: u64,
+    pub steps: Vec<String>,
+    pub source: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NoticePayload {
+    pub title: String,
+    pub body: String,
+    pub sitting_minutes: u64,
+    #[serde(default)]
+    pub action: Option<NoticeAction>,
+}
+
+/// 通知窗口当前展示的内容。主窗口是业务真相，这里只做展示缓存。
+#[derive(Default)]
+pub struct NoticeState {
+    payload: Mutex<Option<NoticePayload>>,
+}
+
+pub fn create_window(app: &AppHandle<Wry>) -> tauri::Result<WebviewWindow<Wry>> {
+    let window = WebviewWindowBuilder::new(app, NOTICE_LABEL, WebviewUrl::App("notice.html".into()))
+        .title("Rise Loop 提醒")
+        .inner_size(WIDTH, COLLAPSED_HEIGHT)
+        .transparent(true)
+        .decorations(false)
+        .shadow(false)
+        .resizable(false)
+        .maximizable(false)
+        .minimizable(false)
+        .always_on_top(true)
+        .skip_taskbar(true)
+        .focused(false)
+        .visible(false)
+        .build()?;
+    // 折叠态不抢焦点：用户正在别的窗口打字时也不打断
+    let _ = window.set_focusable(false);
+    Ok(window)
+}
+
+/// 弹出一条通知；窗口不可用时返回 false，调用方回退到系统通知。
+pub fn show(app: &AppHandle<Wry>, payload: NoticePayload) -> bool {
+    let Some(window) = app.get_webview_window(NOTICE_LABEL) else {
+        return false;
+    };
+    if let Some(state) = app.try_state::<NoticeState>() {
+        if let Ok(mut current) = state.payload.lock() {
+            *current = Some(payload.clone());
+        }
+    }
+    let _ = window.set_focusable(false);
+    let _ = place(app, &window, COLLAPSED_HEIGHT);
+    let _ = app.emit_to(NOTICE_LABEL, NOTICE_EVENT, &payload);
+    if window.show().is_err() {
+        return false;
+    }
+    true
+}
+
+/// 锚定在工作区右下角，向上生长：展开时底边不动，视觉上从卡片往上长。
+fn place(app: &AppHandle<Wry>, window: &WebviewWindow<Wry>, height: f64) -> tauri::Result<()> {
+    window.set_size(LogicalSize::new(WIDTH, height))?;
+    let Some(monitor) = app.primary_monitor()? else {
+        return Ok(());
+    };
+    let scale = monitor.scale_factor();
+    let area = monitor.work_area();
+    let width = (WIDTH * scale).round() as i32;
+    let height = (height * scale).round() as i32;
+    let margin = (MARGIN * scale).round() as i32;
+    let x = area.position.x + area.size.width as i32 - width - margin;
+    let y = area.position.y + area.size.height as i32 - height - margin;
+    window.set_position(PhysicalPosition::new(x.max(0), y.max(0)))
+}
+
+#[tauri::command]
+pub fn notice_current(state: State<'_, NoticeState>) -> Option<NoticePayload> {
+    state.payload.lock().ok().and_then(|current| current.clone())
+}
+
+/// 展开/收起：窗口尺寸先一步跳到位（多出来的是透明区），卡片动画在页面里跑。
+#[tauri::command]
+pub fn notice_set_expanded(app: AppHandle<Wry>, expanded: bool) -> Result<(), String> {
+    let window = app
+        .get_webview_window(NOTICE_LABEL)
+        .ok_or_else(|| "notice window is not ready".to_string())?;
+    if expanded {
+        let _ = window.set_focusable(true);
+    }
+    let height = if expanded { EXPANDED_HEIGHT } else { COLLAPSED_HEIGHT };
+    place(&app, &window, height).map_err(|error| error.to_string())?;
+    if !expanded {
+        let _ = window.set_focusable(false);
+    }
+    Ok(())
+}
+
+#[tauri::command]
+pub fn notice_dismiss(app: AppHandle<Wry>) -> Result<(), String> {
+    if let Some(window) = app.get_webview_window(NOTICE_LABEL) {
+        let _ = window.hide();
+    }
+    Ok(())
+}
+
+/// 主窗口算完动作后把摘要补进通知卡片，通知窗口不再自己请求业务接口。
+#[tauri::command]
+pub fn notice_set_action(app: AppHandle<Wry>, action: NoticeAction) -> Result<(), String> {
+    if let Some(state) = app.try_state::<NoticeState>() {
+        if let Ok(mut current) = state.payload.lock() {
+            if let Some(payload) = current.as_mut() {
+                payload.action = Some(action.clone());
+            }
+        }
+    }
+    let _ = app.emit_to(NOTICE_LABEL, NOTICE_ACTION_EVENT, &action);
+    Ok(())
+}
+
+#[tauri::command]
+pub fn notice_start(app: AppHandle<Wry>) -> Result<(), String> {
+    focus_main(&app);
+    let _ = app.emit_to("main", NOTICE_START_EVENT, ());
+    if let Some(window) = app.get_webview_window(NOTICE_LABEL) {
+        let _ = window.hide();
+    }
+    Ok(())
+}
+
+#[tauri::command]
+pub fn notice_open_main(app: AppHandle<Wry>) -> Result<(), String> {
+    focus_main(&app);
+    if let Some(window) = app.get_webview_window(NOTICE_LABEL) {
+        let _ = window.hide();
+    }
+    Ok(())
+}
+
+fn focus_main(app: &AppHandle<Wry>) {
+    if let Some(window) = app.get_webview_window("main") {
+        let _ = window.show();
+        let _ = window.unminimize();
+        let _ = window.set_focus();
+    }
+}

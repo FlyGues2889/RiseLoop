@@ -1,4 +1,5 @@
 mod commands;
+mod notice;
 mod timer;
 
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -60,6 +61,7 @@ fn focus_main_window(app: &tauri::AppHandle) {
     }
 }
 
+/// 系统通知：只在自制通知窗口不可用时兜底，正常路径走 notice 窗口。
 fn notify_break(app: &tauri::AppHandle, snapshot: &TimerSnapshot) {
     let minutes = snapshot.sitting_seconds / 60;
     let _ = app
@@ -80,6 +82,12 @@ pub fn run() {
         .setup(|app| {
             let timer = Arc::new(SittingTimer::new(DEFAULT_THRESHOLD_MINUTES));
             app.manage(timer.clone());
+
+            // 自制通知窗口：先建好藏起来，到点直接展示，避免第一次提醒卡顿。
+            app.manage(notice::NoticeState::default());
+            if let Err(error) = notice::create_window(app.handle()) {
+                eprintln!("notice window unavailable, fallback to system toast: {error}");
+            }
 
             // 点击系统通知（tap）时把主窗口唤回前台；插件只在通知仍在屏幕时上报点击。
             let notification_handle = app.handle().clone();
@@ -156,7 +164,20 @@ pub fn run() {
                 sync_tray_menu(&handle, &tick_pause_item, snapshot.running, &tick_running);
                 let _ = handle.emit(TICK_EVENT, &snapshot);
                 if let Some(triggered) = tick_timer.tick() {
-                    notify_break(&handle, &triggered);
+                    // 自制通知优先；窗口没建起来时回退系统通知
+                    let minutes = triggered.sitting_seconds / 60;
+                    let shown = notice::show(
+                        &handle,
+                        notice::NoticePayload {
+                            title: "该起身了".to_string(),
+                            body: format!("已经连续久坐 {minutes} 分钟。"),
+                            sitting_minutes: minutes,
+                            action: None,
+                        },
+                    );
+                    if !shown {
+                        notify_break(&handle, &triggered);
+                    }
                     let _ = handle.emit(THRESHOLD_EVENT, &triggered);
                 }
             });
@@ -180,6 +201,12 @@ pub fn run() {
             commands::store_session_token,
             commands::load_session_token,
             commands::clear_session_token,
+            notice::notice_current,
+            notice::notice_set_expanded,
+            notice::notice_dismiss,
+            notice::notice_set_action,
+            notice::notice_start,
+            notice::notice_open_main,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

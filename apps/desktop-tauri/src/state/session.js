@@ -8,6 +8,7 @@ import {
   isPlanPreference,
   pickActionForPlan,
 } from "../config/plans.js";
+import { sourceForAction } from "../data/actionSources.js";
 import { clearLocalLogs, loadLocalLogs, localApi, localEngine, saveLocalLogs } from "./local.js";
 
 const PLAN_KEY = "riseloop.plan.v1";
@@ -357,6 +358,27 @@ export function tickPreview() {
   };
 }
 
+/**
+ * 主窗口是业务真相：算好动作后把摘要推给通知窗口，
+ * 通知窗口只负责展示，不自己请求接口。
+ */
+async function pushNoticeAction(action) {
+  if (!hasTauri || !action) return;
+  const entry = sourceForAction(action.id);
+  try {
+    await invoke("notice_set_action", {
+      action: {
+        name: action.name,
+        duration_minutes: action.duration_minutes ?? 0,
+        steps: (action.steps ?? []).slice(0, 3),
+        source: entry?.title ?? null,
+      },
+    });
+  } catch {
+    /* 通知窗口没开时忽略 */
+  }
+}
+
 async function startTimer() {
   const next = await timerCommand("timer_start");
   if (next) state.timer = next;
@@ -383,6 +405,7 @@ export async function toggleTimer() {
 
 export async function resetTimer({ silent = false } = {}) {
   // 重置即重新开始一轮：托盘和界面共用这条路径，避免“清零了但没在走”。
+  if (hasTauri) invoke("notice_dismiss").catch(() => { });
   const restarted = await timerCommand("timer_restart");
   if (restarted) state.timer = restarted;
   state.pending = null;
@@ -421,6 +444,7 @@ export async function tickHeartbeat({ force = false } = {}) {
       state.pending = preferred;
       const paused = await timerCommand("timer_pause");
       if (paused) state.timer = paused;
+      await pushNoticeAction(preferred);
       pushLog(`该起来活动了：匹配 ${actions.length} 个动作，首选「${preferred.name}」`);
     } else if (state.heartbeat.reason === "cooldown" && force) {
       // 手动“立即开始活动”：即使后端还在冷却期，也直接取动作让用户开始
@@ -431,6 +455,7 @@ export async function tickHeartbeat({ force = false } = {}) {
         state.pending = preferred;
         const paused = await timerCommand("timer_pause");
         if (paused) state.timer = paused;
+        await pushNoticeAction(preferred);
         pushLog(`手动开始：${state.pendingActions.length} 个动作，首选「${preferred.name}」`);
         return;
       }

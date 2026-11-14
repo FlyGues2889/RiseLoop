@@ -1,0 +1,151 @@
+<script setup>
+import { computed, onBeforeUnmount, onMounted, ref } from "vue";
+
+import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
+
+const AUTO_DISMISS_SECONDS = 15;
+const TICK_MS = 200;
+
+const payload = ref(null);
+const action = ref(null);
+const expanded = ref(false);
+const hovering = ref(false);
+const remaining = ref(AUTO_DISMISS_SECONDS);
+
+const unlisteners = [];
+let stopwatch = null;
+
+const steps = computed(() => (action.value?.steps ?? []).slice(0, 3));
+const progress = computed(() =>
+  Math.max(0, Math.min(100, (remaining.value / AUTO_DISMISS_SECONDS) * 100))
+);
+const secondsLeft = computed(() => Math.max(1, Math.ceil(remaining.value)));
+
+function applyPayload(next) {
+  if (!next) return;
+  payload.value = next;
+  action.value = next.action ?? null;
+  expanded.value = false;
+  remaining.value = AUTO_DISMISS_SECONDS;
+  invoke("notice_set_expanded", { expanded: false }).catch(() => { });
+}
+
+function tick() {
+  if (hovering.value || expanded.value || !payload.value) return;
+  remaining.value -= TICK_MS / 1000;
+  if (remaining.value <= 0) dismiss();
+}
+
+async function expand() {
+  if (expanded.value || !payload.value) return;
+  await invoke("notice_set_expanded", { expanded: true }).catch(() => { });
+  expanded.value = true;
+}
+
+function collapse() {
+  if (!expanded.value) return;
+  expanded.value = false;
+  remaining.value = AUTO_DISMISS_SECONDS;
+  invoke("notice_set_expanded", { expanded: false }).catch(() => { });
+}
+
+async function dismiss() {
+  remaining.value = AUTO_DISMISS_SECONDS;
+  await invoke("notice_dismiss").catch(() => { });
+}
+
+async function start() {
+  await invoke("notice_start").catch(() => { });
+}
+
+async function openMain() {
+  await invoke("notice_open_main").catch(() => { });
+}
+
+function onKeydown(event) {
+  if (event.key === "Escape") {
+    if (expanded.value) collapse();
+    else dismiss();
+  }
+}
+
+onMounted(async () => {
+  try {
+    applyPayload(await invoke("notice_current"));
+  } catch {
+    /* 单独打开页面时没有内容 */
+  }
+  stopwatch = window.setInterval(tick, TICK_MS);
+  window.addEventListener("keydown", onKeydown);
+  unlisteners.push(
+    await listen("riseloop://notice", (event) => applyPayload(event.payload))
+  );
+  unlisteners.push(
+    await listen("riseloop://notice-action", (event) => {
+      action.value = event.payload ?? null;
+    })
+  );
+});
+
+onBeforeUnmount(() => {
+  if (stopwatch) window.clearInterval(stopwatch);
+  window.removeEventListener("keydown", onKeydown);
+  unlisteners.forEach((off) => off());
+});
+</script>
+
+<template>
+  <div
+    class="stage"
+    @mouseenter="hovering = true"
+    @mouseleave="hovering = false"
+  >
+    <article v-if="payload" class="card" :class="{ expanded }">
+      <header class="head">
+        <span class="mark material-symbols-rounded">self_improvement</span>
+        <div class="titles">
+          <strong>{{ payload.title }}</strong>
+          <small>{{ payload.body }}</small>
+        </div>
+        <button class="close" type="button" aria-label="关闭提醒" @click="dismiss">
+          <span class="material-symbols-rounded">close</span>
+        </button>
+      </header>
+
+      <div class="reveal">
+        <div class="reveal-inner">
+          <template v-if="action">
+            <div class="action-head">
+              <strong>{{ action.name }}</strong>
+              <span class="mono">{{ action.duration_minutes }} 分钟</span>
+            </div>
+            <ol class="steps">
+              <li v-for="(step, index) in steps" :key="index">{{ step }}</li>
+            </ol>
+            <p v-if="action.source" class="source">{{ action.source }}</p>
+          </template>
+          <p v-else class="pending">正在准备动作…</p>
+
+          <div class="row">
+            <m3e-button variant="filled" size="small" @click="start">开始</m3e-button>
+            <m3e-button variant="text" size="small" @click="dismiss">稍后</m3e-button>
+            <m3e-button variant="text" size="small" @click="openMain">打开主界面</m3e-button>
+          </div>
+        </div>
+      </div>
+
+      <footer v-if="!expanded" class="foot">
+        <m3e-button variant="tonal" size="small" @click="expand">
+          <span class="material-symbols-rounded" slot="icon">expand_less</span>
+          看看动作
+        </m3e-button>
+        <span class="countdown">{{ secondsLeft }} 秒后收起</span>
+      </footer>
+
+      <div v-if="!expanded" class="bar">
+        <i :style="{ width: progress + '%' }"></i>
+      </div>
+    </article>
+  </div>
+</template>
