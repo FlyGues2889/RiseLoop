@@ -285,11 +285,11 @@ onBeforeUnmount(() => {
                 </m3e-button>
               </template>
               <template v-else>
-                <m3e-button v-if="!running" variant="filled" size="small" @click="toggleAction">
+                <m3e-button v-if="!running" variant="outlined" size="small" @click="toggleAction">
                   <span slot="icon" class="material-symbols-rounded">play_arrow</span>
                   {{ fresh ? "开始" : "继续" }}
                 </m3e-button>
-                <m3e-button v-else variant="filled" size="small" @click="toggleAction">
+                <m3e-button v-else variant="outlined" size="small" @click="toggleAction">
                   <span slot="icon" class="material-symbols-rounded">pause</span>
                   暂停
                 </m3e-button>

@@ -137,6 +137,9 @@ onUnmounted(() => {
   position: relative;
   height: calc(100vh - 3rem);
   --m3e-content-pane-container-color: var(--md-sys-color-surface) !important;
+  /* 内容区贴着窗口底边：上两角保留圆角，下两角跟着窗口走成直角。
+     组件的形状变量内联给 border-radius，所以这里能直接写四角的值。 */
+  --m3e-content-pane-container-shape: 1.75rem 1.75rem 0 0;
 }
 
 .view {

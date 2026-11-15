@@ -333,11 +333,11 @@ onBeforeUnmount(() => {
               </div>
               <m3e-linear-progress-indicator class="progress" :value.prop="progress"></m3e-linear-progress-indicator>
               <div class="timer-actions">
-                <m3e-button v-if="!running" variant="filled" size="medium" @click="startTick">
+                <m3e-button v-if="!running" variant="outlined" size="medium" @click="startTick">
                   <span slot="icon" class="material-symbols-rounded">play_arrow</span>
                   {{ remaining === stepTotal ? "开始倒计时" : "继续" }}
                 </m3e-button>
-                <m3e-button v-else variant="filled" size="medium" @click="stopTick">
+                <m3e-button v-else variant="outlined" size="medium" @click="stopTick">
                   <span slot="icon" class="material-symbols-rounded">pause</span>
                   暂停
                 </m3e-button>
@@ -357,17 +357,17 @@ onBeforeUnmount(() => {
                 </div>
               </div>
             </div>
+
+            <m3e-callout v-if="action.caution" variant="error" class="caution-callout">
+              <span slot="icon" class="material-symbols-rounded">health_and_safety</span>
+              <span slot="label">健康提示</span>
+              {{ action.caution }}
+            </m3e-callout>
           </div>
         </div>
 
       </div>
     </m3e-card>
-
-    <m3e-callout v-if="action && !feedbackOpen && action.caution" variant="error" class="caution-callout">
-      <span slot="icon" class="material-symbols-rounded">health_and_safety</span>
-      <span slot="label">健康提示</span>
-      {{ action.caution }}
-    </m3e-callout>
 
     <m3e-card v-if="feedbackOpen" variant="elevated" class="surface-card">
       <div class="surface-body">
@@ -586,6 +586,10 @@ onBeforeUnmount(() => {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
+  /* 和上面的评分滑杆留出距离，别贴着 */
+  margin-top: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 0.0625rem solid var(--md-sys-color-outline-variant);
 }
 
 @media (max-width: 720px) {
