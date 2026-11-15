@@ -50,9 +50,15 @@ function choose(planId) {
 }
 
 .title {
-  margin: 0 0 0.75rem;
+  margin: 0 0 0.375rem;
   font-size: 1rem;
   font-weight: 600;
+}
+
+.plan-card .lead {
+  margin-bottom: 1rem;
+  font-size: 0.75rem;
+  line-height: 1.65;
 }
 
 .plans {
