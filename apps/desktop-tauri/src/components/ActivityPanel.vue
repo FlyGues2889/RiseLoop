@@ -4,6 +4,15 @@ import ActionCamera from "./ActionCamera.vue";
 import ErrorBanner from "./ErrorBanner.vue";
 import LoadingOverlay from "./LoadingOverlay.vue";
 import { resolveFraming } from "../data/actionFraming.js";
+import {
+  actionSession,
+  finishAction,
+  loadAction,
+  nextStep as advanceStep,
+  pauseAction,
+  playAction,
+  prevStep as retreatStep,
+} from "../state/actionSession.js";
 import { state, submitFeedback } from "../state/session.js";
 
 const actions = computed(() => {
@@ -20,7 +29,6 @@ const steps = computed(() => {
   const list = action.value?.steps ?? [];
   return list.length ? list : ["按动作要领完成这一步"];
 });
-const stepIndex = ref(0);
 const cameraOpen = ref(true);
 
 const framing = computed(() => resolveFraming(action.value));
@@ -90,9 +98,19 @@ function planStepSeconds(list, total) {
 const stepSeconds = computed(() =>
   planStepSeconds(steps.value, (action.value?.duration_minutes ?? 1) * 60)
 );
-const stepTotal = computed(() => stepSeconds.value[stepIndex.value] ?? DEFAULT_STEP_SECONDS);
-const remaining = ref(stepTotal.value);
-const running = ref(false);
+
+// 倒计时与当前步骤由 Rust 侧的动作会话推进，这里只读快照；
+// 通知窗读到的是同一份数据，所以两个窗口天然同步。
+const stepIndex = computed(() => {
+  const total = steps.value.length;
+  if (!total) return 0;
+  return Math.min(Math.max(0, actionSession.index), total - 1);
+});
+const stepTotal = computed(() =>
+  actionSession.steps[stepIndex.value]?.seconds ?? stepSeconds.value[stepIndex.value] ?? DEFAULT_STEP_SECONDS
+);
+const remaining = computed(() => actionSession.remaining);
+const running = computed(() => actionSession.running);
 
 const progress = computed(() =>
   Math.max(0, Math.min(100, ((stepTotal.value - remaining.value) / stepTotal.value) * 100))
@@ -104,7 +122,6 @@ const timeText = computed(() => {
   return mm + ":" + ss;
 });
 
-let timer = null;
 let autoStartArmed = false;
 
 function disarmAutoStart() {
@@ -128,119 +145,101 @@ function armAutoStart() {
 }
 
 function stopTick() {
-  running.value = false;
-  if (timer) clearInterval(timer);
-  timer = null;
+  pauseAction();
 }
 
 function startTick() {
-  if (running.value || remaining.value <= 0 || feedbackOpen.value) return;
-  running.value = true;
-  timer = setInterval(() => {
-    if (remaining.value <= 0) {
-      stopTick();
-      return;
-    }
-    remaining.value -= 1;
-    if (remaining.value <= 0) onStepDone();
-  }, 1000);
-}
-
-function resetStep() {
-  remaining.value = stepSeconds.value[stepIndex.value] ?? DEFAULT_STEP_SECONDS;
-}
-
-function onStepDone() {
-  stopTick();
-  if (stepIndex.value < steps.value.length - 1) {
-    stepIndex.value += 1;
-    resetStep();
-    startTick();
+  if (feedbackOpen.value) return;
+  // 会话还没载入时（首次进动作页立刻动鼠标）等载入后再开，别把这次点击丢掉
+  if (!actionSession.loaded) {
+    syncSession().then(() => playAction());
     return;
   }
-  onActionDone();
+  playAction();
 }
 
-function onActionDone() {
-  stopTick();
-  if (actionIndex.value < actions.value.length - 1) {
-    actionIndex.value += 1;
-    stepIndex.value = 0;
-    resetStep();
-    startTick();
-    return;
-  }
-  openFeedback();
+// 把当前动作交给共享会话：步骤文字与每步秒数都由这里算好，通知窗只负责显示
+async function syncSession() {
+  if (!action.value) return;
+  await loadAction(
+    action.value.name,
+    steps.value.map((text, index) => ({
+      text,
+      seconds: stepSeconds.value[index] ?? DEFAULT_STEP_SECONDS,
+    }))
+  );
 }
 
 function nextStep() {
   disarmAutoStart();
-  if (stepIndex.value < steps.value.length - 1) {
-    const wasRunning = running.value;
-    stopTick();
-    stepIndex.value += 1;
-    resetStep();
-    if (wasRunning) startTick();
-    return;
-  }
-  onActionDone();
+  advanceStep();
 }
 
 function prevStep() {
   disarmAutoStart();
-  if (stepIndex.value === 0) return;
-  stopTick();
-  stepIndex.value -= 1;
-  resetStep();
+  retreatStep();
 }
 
-function skipAction() {
+async function switchTo(index, wasRunning) {
+  actionIndex.value = index;
+  await syncSession();
+  if (wasRunning) startTick();
+}
+
+async function skipAction() {
   disarmAutoStart();
-  stopTick();
+  const wasRunning = true;
+  pauseAction();
   if (actionIndex.value < actions.value.length - 1) {
-    actionIndex.value += 1;
-    stepIndex.value = 0;
-    resetStep();
-    startTick();
+    await switchTo(actionIndex.value + 1, wasRunning);
     return;
   }
   openFeedback();
 }
 
-function pickAction(event) {
+async function pickAction(event) {
   const value = event?.target?.value;
   const index = actions.value.findIndex((item) => item.id === value);
   if (index < 0 || index === actionIndex.value) return;
   disarmAutoStart();
   const wasRunning = running.value;
-  stopTick();
-  actionIndex.value = index;
-  stepIndex.value = 0;
-  resetStep();
-  if (wasRunning) startTick();
+  pauseAction();
+  await switchTo(index, wasRunning);
 }
 
 function openFeedback() {
-  stopTick();
+  pauseAction();
   disarmAutoStart();
   feedbackOpen.value = true;
 }
+
+// 一组动作跑完：还有候选动作就接着做，否则进反馈并把主窗唤到前台
+watch(
+  () => actionSession.done,
+  (done) => {
+    if (!done || feedbackOpen.value) return;
+    if (actionIndex.value < actions.value.length - 1) {
+      switchTo(actionIndex.value + 1, true);
+      return;
+    }
+    openFeedback();
+    finishAction();
+  }
+);
 
 function indexOfRecommended() {
   const position = actions.value.findIndex((item) => item.id === recommendedId.value);
   return position >= 0 ? position : 0;
 }
 
-function resetSequence() {
-  stopTick();
+async function resetSequence() {
   actionIndex.value = indexOfRecommended();
-  stepIndex.value = 0;
   feedbackOpen.value = false;
   error.value = "";
   feeling.value = "same";
   painScore.value = state.assessment?.pain_score ?? 2;
   obstacle.value = null;
-  resetStep();
+  await syncSession();
 }
 
 watch(
@@ -303,7 +302,6 @@ onBeforeUnmount(() => {
       <div class="surface-body">
         <div class="step-head">
           <m3e-form-field class="picker" variant="filled" style="--md-sys-density-scale: -3">
-            <label slot="label" for="action-pick">选择动作</label>
             <m3e-select id="action-pick" :value.prop="action.id" @change="pickAction">
               <m3e-option v-for="item in actions" :key="item.id" :value="item.id">
                 {{ item.name }}{{ item.id === recommendedId ? "（推荐）" : "" }}

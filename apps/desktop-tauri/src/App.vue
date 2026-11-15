@@ -15,6 +15,7 @@ import PlanSelector from "./components/PlanSelector.vue";
 import PostureSpike from "./components/PostureSpike.vue";
 import SafetyAlert from "./components/SafetyAlert.vue";
 import StatusBar from "./components/StatusBar.vue";
+import { initActionSession } from "./state/actionSession.js";
 import { closePosture, refreshTimer, restoreSession, state, tickHeartbeat, tickPreview } from "./state/session.js";
 import { monitor, prefs as cameraPrefs, ui as cameraUi } from "./state/postureMonitor.js";
 
@@ -53,6 +54,7 @@ onMounted(async () => {
     }
 
     await refreshTimer().catch(() => { });
+    await initActionSession();
 
     if (cameraPrefs.enabled) {
       monitor.resume().catch(() => { });

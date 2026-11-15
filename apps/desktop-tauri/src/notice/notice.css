@@ -251,3 +251,60 @@ body {
   background: var(--md-sys-color-primary);
   transition: width 200ms linear;
 }
+
+/* 展开态：和主界面同一张动作卡，只是压到 380px 宽 */
+.run-step {
+  margin: 0.5rem 0 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.45;
+  letter-spacing: -0.01em;
+}
+
+.run-meta {
+  margin: 0.35rem 0 0;
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.75rem;
+}
+
+.run-timer {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-top: 0.75rem;
+}
+
+.run-time {
+  font-size: 1.75rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.run-status {
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.7rem;
+}
+
+.run-bar {
+  display: block;
+  margin-top: 0.5rem;
+}
+
+.run-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.run-nav {
+  margin-left: auto;
+}
+
+.run-hint {
+  margin: 0.75rem 0 0;
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.75rem;
+}
+

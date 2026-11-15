@@ -1,3 +1,4 @@
+mod action;
 mod commands;
 mod notice;
 mod timer;
@@ -82,6 +83,18 @@ pub fn run() {
         .setup(|app| {
             let timer = Arc::new(SittingTimer::new(DEFAULT_THRESHOLD_MINUTES));
             app.manage(timer.clone());
+
+            // 动作会话：主窗与通知窗共用一份状态，倒计时在 Rust 侧推进，
+            // 页面被隐藏时也不会被浏览器节流拖慢。
+            let session = Arc::new(action::ActionSession::default());
+            app.manage(session.clone());
+            let action_handle = app.handle().clone();
+            thread::spawn(move || loop {
+                thread::sleep(Duration::from_millis(1000));
+                if let Some(snapshot) = session.tick() {
+                    let _ = action_handle.emit(action::ACTION_EVENT, &snapshot);
+                }
+            });
 
             // 自制通知窗口：先建好藏起来，到点直接展示，避免第一次提醒卡顿。
             app.manage(notice::NoticeState::default());
@@ -240,6 +253,15 @@ pub fn run() {
             notice::notice_set_action,
             notice::notice_start,
             notice::notice_open_main,
+            action::action_state,
+            action::action_load,
+            action::action_play,
+            action::action_pause,
+            action::action_toggle,
+            action::action_next,
+            action::action_prev,
+            action::action_restart,
+            action::action_finish,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
