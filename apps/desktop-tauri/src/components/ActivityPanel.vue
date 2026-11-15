@@ -2,9 +2,11 @@
 import { computed, onBeforeUnmount, ref, watch } from "vue";
 import ActionCamera from "./ActionCamera.vue";
 import ErrorBanner from "./ErrorBanner.vue";
+import EvidenceCallout from "./EvidenceCallout.vue";
 import LoadingOverlay from "./LoadingOverlay.vue";
 import { resolveFraming } from "../data/actionFraming.js";
 import { actionImage } from "../data/actionImages.js";
+import { sourceForAction } from "../data/actionSources.js";
 import {
   actionSession,
   finishAction,
@@ -36,6 +38,7 @@ const framing = computed(() => resolveFraming(action.value));
 // 参考图跟着共享会话走，通知窗里切换步骤时这里也是同一个动作
 const refImage = computed(() => actionImage(actionSession.id || action.value?.id || ""));
 const refOpen = ref(false);
+const actionSource = computed(() => sourceForAction(actionSession.id || action.value?.id || ""));
 
 const feedbackOpen = ref(false);
 const submitting = ref(false);
@@ -328,33 +331,37 @@ onBeforeUnmount(() => {
           </m3e-form-field>
 
           <div class="head-tools">
-            <m3e-button variant="text" size="small" @click="endWorkout">
-              <span slot="icon" class="material-symbols-rounded">stop_circle</span>
-              结束运动
-            </m3e-button>
             <m3e-button variant="text" size="small" @click="cameraOpen = !cameraOpen">
               <span slot="icon" class="material-symbols-rounded">{{ cameraOpen ? "videocam_off" : "videocam" }}</span>
               {{ cameraOpen ? "收起画面" : "打开画面" }}
+            </m3e-button>
+            <m3e-button variant="filled" size="small" @click="endWorkout">
+              <span slot="icon" class="material-symbols-rounded">stop_circle</span>
+              结束运动
             </m3e-button>
           </div>
         </div>
 
         <div class="media-row">
           <div class="media-col">
-            <ActionCamera v-if="cameraOpen" :framing="framing" />
             <button v-if="refImage" class="ref-slot" type="button"
               aria-label="放大参考图" @click="refOpen = true">
               <img class="ref-img" :src="refImage" alt="" loading="lazy" />
               <span class="ref-cap">参考图 · 点击放大</span>
             </button>
+
+            <ActionCamera v-if="cameraOpen" :framing="framing" />
           </div>
 
           <div class="stage">
             <p class="step-text">{{ steps[stepIndex] }}</p>
             <div class="step-meta">
               <p class="step-progress">第 {{ stepIndex + 1 }} / {{ steps.length }} 步</p>
-              <m3e-chip v-if="action.desk_friendly" class="desk-chip">工位可做</m3e-chip>
+              <m3e-chip v-if="action.desk_friendly" class="desk-chip" variant="elevated">工位可做</m3e-chip>
             </div>
+
+            <EvidenceCallout dense title="科学依据" :source="actionSource.source"
+              :url="actionSource.url" :evidence-id="actionSource.evidenceId" />
 
             <div class="timer">
               <div class="timer-head">
@@ -363,7 +370,7 @@ onBeforeUnmount(() => {
               </div>
               <m3e-linear-progress-indicator class="progress" :value.prop="progress"></m3e-linear-progress-indicator>
               <div class="timer-actions">
-                <m3e-button v-if="!running" variant="tonal" size="medium" @click="startTick">
+                <m3e-button v-if="!running" variant="tonal" @click="startTick">
                   <span slot="icon" class="material-symbols-rounded">play_arrow</span>
                   {{ remaining === stepTotal ? "开始倒计时" : "继续" }}
                 </m3e-button>
@@ -544,7 +551,6 @@ onBeforeUnmount(() => {
   overflow: hidden;
   background: var(--md-sys-color-surface);
   cursor: zoom-in;
-  text-align: left;
 }
 
 .ref-img {
@@ -585,7 +591,6 @@ onBeforeUnmount(() => {
 .stage {
   display: flex;
   flex-direction: column;
-  gap: 0.55rem;
   min-width: 0;
 }
 
@@ -601,11 +606,18 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+
+  margin-bottom:0.5rem;
 }
 
 .desk-chip {
   --m3e-chip-container-height: 1.375rem;
   --m3e-chip-label-text-font-size: 0.6875rem;
+  /* 属性标签走 secondary 容器：是说明性信息，不该和主操作抢注意力 */
+  --m3e-elevated-chip-container-color: var(--md-sys-color-secondary-container);
+  --m3e-elevated-chip-elevation: 0;
+  --m3e-elevated-chip-hover-elevation: 0;
+  --m3e-chip-label-text-color: var(--md-sys-color-on-secondary-container);
 }
 
 .step-progress {
@@ -618,7 +630,6 @@ onBeforeUnmount(() => {
   margin-top: auto;
   padding: 0.75rem 0.9rem;
   border-radius: 0.9rem;
-  background: var(--md-sys-color-surface);
 }
 
 .timer-head {

@@ -142,7 +142,7 @@ function formatTime(value) {
 }
 
 .level.low {
-  color: var(--md-sys-color-tertiary);
+  color: var(--md-sys-color-secondary);
 }
 
 .level.medium {

@@ -734,25 +734,30 @@ onBeforeUnmount(() => {
 .risk-badge {
   padding: 0.2rem 0.563rem;
   border-radius: 62.438rem;
-  background: rgba(107, 114, 128, 0.85);
-  color: #fff;
+  background: var(--md-sys-color-surface-container-highest);
+  color: var(--md-sys-color-on-surface-variant);
   font-size: 0.72rem;
 }
 
+/* 四级风险用配色里的容器色：低=主色，中=第三色，高/极高=错误色。色板本身保证对比度 */
 .risk-badge.low {
-  background: rgba(16, 185, 129, 0.85);
+  background: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
 }
 
 .risk-badge.medium {
-  background: rgba(245, 158, 11, 0.9);
+  background: var(--md-sys-color-tertiary-container);
+  color: var(--md-sys-color-on-tertiary-container);
 }
 
 .risk-badge.high {
-  background: rgba(249, 115, 22, 0.92);
+  background: var(--md-sys-color-error-container);
+  color: var(--md-sys-color-on-error-container);
 }
 
 .risk-badge.very_high {
-  background: rgba(239, 68, 68, 0.92);
+  background: var(--md-sys-color-error);
+  color: var(--md-sys-color-on-error);
 }
 
 .risk-line {

@@ -121,7 +121,7 @@ function pickField(event, field, value) {
           <m3e-list-item>
             <span class="material-symbols-rounded" slot="leading">timeline</span>
             {{ result.next_action.name }}
-            <m3e-chip v-if="result.next_action.desk_friendly" class="desk-tag">工位可做</m3e-chip>
+            <m3e-chip v-if="result.next_action.desk_friendly" class="desk-tag" variant="elevated">工位可做</m3e-chip>
             <span slot="trailing">{{ result.next_action.duration_minutes }} 分钟</span>
           </m3e-list-item>
           <m3e-list-item>
@@ -168,6 +168,10 @@ function pickField(event, field, value) {
   vertical-align: middle;
   --m3e-chip-container-height: 1.25rem;
   --m3e-chip-label-text-font-size: 0.625rem;
+  --m3e-elevated-chip-container-color: var(--md-sys-color-secondary-container);
+  --m3e-elevated-chip-elevation: 0;
+  --m3e-elevated-chip-hover-elevation: 0;
+  --m3e-chip-label-text-color: var(--md-sys-color-on-secondary-container);
 }
 
 .result-head {

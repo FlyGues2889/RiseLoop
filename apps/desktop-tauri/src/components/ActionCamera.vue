@@ -119,9 +119,13 @@ function project(points) {
 
 // 画面交给 canvas 自己画：视频层只负责解码。WebView2 里 <video> 与 canvas 叠加时
 // 视频层会整块泛绿或变黑，改成单画布绘制既避开合成问题，「只看骨架」也有底色可用。
-function readSurface() {
+function schemeColor(name, fallback) {
   const styles = getComputedStyle(document.documentElement);
-  return styles.getPropertyValue("--md-sys-color-surface-1").trim() || "#1d2521";
+  return styles.getPropertyValue(name).trim() || fallback;
+}
+
+function readSurface() {
+  return schemeColor("--md-sys-color-surface-1", "#1d2521");
 }
 
 function paintBase() {
@@ -147,6 +151,8 @@ function paintBase() {
 
 function draw(ctx, points, visible) {
   if (!ctx || !points) return;
+  // 压在实时画面上的线必须始终够亮：暗色主题里 primary-container 是深绿，会把骨架吞掉，
+  // 所以这里固定用浅薄荷/白色，不跟主题走
   ctx.strokeStyle = aligned.value ? "#88f8c8" : "rgba(255,255,255,0.72)";
   ctx.lineWidth = 2;
   ctx.lineCap = "round";
@@ -308,7 +314,7 @@ onBeforeUnmount(() => {
   aspect-ratio: 4 / 3;
   box-sizing: border-box;
   overflow: hidden;
-  border: 0.2rem solid var(--md-sys-color-secondary);
+  border: 0.2rem solid var(--md-sys-color-outline);
   border-radius: 0.9rem;
   background: var(--md-sys-color-surface-1);
 }

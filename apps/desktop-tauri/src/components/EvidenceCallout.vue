@@ -4,11 +4,13 @@ defineProps({
   source: { type: String, required: true },
   url: { type: String, default: "" },
   evidenceId: { type: String, default: "" },
+  dense: { type: Boolean, default: false },
 });
 </script>
 
 <template>
-  <m3e-callout class="evidence" variant="surface">
+  <m3e-callout class="evidence" :class="{ dense }" variant="surface">
+    <span slot="label">{{ title }}</span>
     <p>{{ source }}</p>
     <p v-if="evidenceId || url" class="meta">
       <span v-if="evidenceId">{{ evidenceId }}</span>
@@ -20,6 +22,14 @@ defineProps({
 <style scoped>
 .evidence {
   margin-top: 1rem;
+  /* 依据是参考信息，不属于当下操作：标签与图标走 tertiary，正文保持中性 */
+  --m3e-callout-icon-color: var(--md-sys-color-tertiary);
+  --m3e-callout-label-text-color: var(--md-sys-color-tertiary);
+}
+
+/* 放进已有 gap 的纵向布局时，不要再叠外边距 */
+.evidence.dense {
+  margin-top: 0;
 }
 
 .evidence p {

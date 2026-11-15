@@ -43,7 +43,7 @@ async function confirmClear() {
     </div>
 
     <div class="side">
-      <m3e-icon-button class="profile" variant="standard" size="small" aria-label="个人信息与账号操作">
+      <m3e-icon-button class="profile" variant="tonal" size="small" aria-label="个人信息与账号操作">
         <m3e-menu-trigger for="profile-menu">
           <span class="material-symbols-rounded icon">account_circle</span>
         </m3e-menu-trigger>
@@ -144,7 +144,8 @@ async function confirmClear() {
 
 .profile {
   --m3e-icon-button-icon-size: 1.5rem;
-  color: var(--md-sys-color-primary);
+  /* tonal 图标按钮本身就是 secondary 容器，这里把图标色也钉在配对色上 */
+  --m3e-icon-button-icon-color: var(--md-sys-color-on-secondary-container);
 }
 
 .icon {
