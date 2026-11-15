@@ -11,11 +11,14 @@ const actions = computed(() => {
   return state.pending ? [state.pending] : [];
 });
 
+// 推荐动作在这一次干预里保持稳定，手动切换也不会把「推荐」搬走
+const recommendedId = ref(state.pending?.id ?? null);
+
 const actionIndex = ref(0);
 const action = computed(() => actions.value[actionIndex.value] ?? null);
 const steps = computed(() => {
   const list = action.value?.steps ?? [];
-  return list.length ? list : ["按上面的提示完成这个动作"];
+  return list.length ? list : ["按动作要领完成这一步"];
 });
 const stepIndex = ref(0);
 const cameraOpen = ref(true);
@@ -67,11 +70,6 @@ const timeText = computed(() => {
   const mm = String(Math.floor(seconds / 60)).padStart(2, "0");
   const ss = String(seconds % 60).padStart(2, "0");
   return mm + ":" + ss;
-});
-const counterText = computed(() => {
-  const stepsPart = `第 ${stepIndex.value + 1} / ${steps.value.length} 步`;
-  if (actions.value.length <= 1) return stepsPart;
-  return `动作 ${actionIndex.value + 1} / ${actions.value.length} · ${stepsPart}`;
 });
 
 let timer = null;
@@ -131,20 +129,6 @@ function onStepDone() {
   onActionDone();
 }
 
-function stepForward(auto) {
-  if (stepIndex.value < steps.value.length - 1) {
-    stepIndex.value += 1;
-    resetStep();
-    if (auto || running.value) startTick();
-    return;
-  }
-  if (auto) {
-    onActionDone();
-    return;
-  }
-  onActionDone();
-}
-
 function onActionDone() {
   stopTick();
   if (actionIndex.value < actions.value.length - 1) {
@@ -159,7 +143,15 @@ function onActionDone() {
 
 function nextStep() {
   disarmAutoStart();
-  stepForward(false);
+  if (stepIndex.value < steps.value.length - 1) {
+    const wasRunning = running.value;
+    stopTick();
+    stepIndex.value += 1;
+    resetStep();
+    if (wasRunning) startTick();
+    return;
+  }
+  onActionDone();
 }
 
 function prevStep() {
@@ -183,15 +175,33 @@ function skipAction() {
   openFeedback();
 }
 
+function pickAction(event) {
+  const value = event?.target?.value;
+  const index = actions.value.findIndex((item) => item.id === value);
+  if (index < 0 || index === actionIndex.value) return;
+  disarmAutoStart();
+  const wasRunning = running.value;
+  stopTick();
+  actionIndex.value = index;
+  stepIndex.value = 0;
+  resetStep();
+  if (wasRunning) startTick();
+}
+
 function openFeedback() {
   stopTick();
   disarmAutoStart();
   feedbackOpen.value = true;
 }
 
+function indexOfRecommended() {
+  const position = actions.value.findIndex((item) => item.id === recommendedId.value);
+  return position >= 0 ? position : 0;
+}
+
 function resetSequence() {
   stopTick();
-  actionIndex.value = 0;
+  actionIndex.value = indexOfRecommended();
   stepIndex.value = 0;
   feedbackOpen.value = false;
   error.value = "";
@@ -205,6 +215,7 @@ watch(
   () => state.pendingActions,
   () => {
     if (!state.pending?.id) return;
+    recommendedId.value = state.pending.id;
     resetSequence();
     armAutoStart();
   },
@@ -253,15 +264,27 @@ onBeforeUnmount(() => {
   stopTick();
 });
 </script>
+
 <template>
   <div class="activity-panel">
     <m3e-card v-if="action && !feedbackOpen" variant="elevated" class="surface-card">
-      <div class="surface-body plan-body-wrap">
+      <div class="surface-body">
         <div class="step-head">
-          <span class="step-count">{{ counterText }}</span>
-          <m3e-button variant="text" size="small" @click="cameraOpen = !cameraOpen">
-            {{ cameraOpen ? "收起画面" : "打开画面" }}
-          </m3e-button>
+          <m3e-form-field class="picker">
+            <label slot="label" for="action-pick">选择动作</label>
+            <m3e-select id="action-pick" :value.prop="action.id" @change="pickAction">
+              <m3e-option v-for="item in actions" :key="item.id" :value="item.id">
+                {{ item.name }}{{ item.id === recommendedId ? "（推荐）" : "" }}
+              </m3e-option>
+            </m3e-select>
+          </m3e-form-field>
+
+          <div class="head-tools">
+            <m3e-button variant="text" size="small" @click="skipAction">跳过这个动作</m3e-button>
+            <m3e-button variant="text" size="small" @click="cameraOpen = !cameraOpen">
+              {{ cameraOpen ? "收起画面" : "打开画面" }}
+            </m3e-button>
+          </div>
         </div>
 
         <div class="media-row" :class="{ 'no-camera': !cameraOpen }">
@@ -269,7 +292,7 @@ onBeforeUnmount(() => {
 
           <div class="stage">
             <p class="step-text">{{ steps[stepIndex] }}</p>
-            <p v-if="action.caution" class="caution">{{ action.caution }}</p>
+            <p class="step-progress">第 {{ stepIndex + 1 }} / {{ steps.length }} 步</p>
 
             <div class="timer">
               <div class="timer-head">
@@ -278,21 +301,32 @@ onBeforeUnmount(() => {
               </div>
               <m3e-linear-progress-indicator class="progress" :value.prop="progress"></m3e-linear-progress-indicator>
               <div class="timer-actions">
-                <m3e-button v-if="!running" variant="tonal" size="small" @click="startTick">
+                <m3e-button v-if="!running" variant="outlined" size="medium" @click="startTick">
                   {{ remaining === stepTotal ? "开始倒计时" : "继续" }}
                 </m3e-button>
-                <m3e-button v-else variant="text" size="small" @click="stopTick">暂停</m3e-button>
-                <m3e-button variant="text" size="small" :disabled.prop="stepIndex === 0" @click="prevStep">
-                  上一步
-                </m3e-button>
-                <m3e-button variant="text" size="small" @click="nextStep">下一步</m3e-button>
-                <m3e-button variant="text" size="small" @click="skipAction">跳过这个动作</m3e-button>
+                <m3e-button v-else variant="outlined" size="medium" @click="stopTick">暂停</m3e-button>
               </div>
             </div>
           </div>
         </div>
+
+        <div class="step-nav">
+          <m3e-button-group>
+            <m3e-icon-button variant="outlined" aria-label="上一步" :disabled.prop="stepIndex === 0" @click="prevStep">
+              <span class="material-symbols-rounded">chevron_left</span>
+            </m3e-icon-button>
+            <m3e-icon-button variant="outlined" aria-label="下一步" @click="nextStep">
+              <span class="material-symbols-rounded">chevron_right</span>
+            </m3e-icon-button>
+          </m3e-button-group>
+        </div>
       </div>
     </m3e-card>
+
+    <m3e-callout v-if="action && !feedbackOpen && action.caution" variant="error" class="caution-callout">
+      <span slot="label">健康提示</span>
+      {{ action.caution }}
+    </m3e-callout>
 
     <m3e-card v-if="feedbackOpen" variant="elevated" class="surface-card">
       <div class="surface-body">
@@ -371,15 +405,21 @@ onBeforeUnmount(() => {
 
 .step-head {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 0.75rem;
 }
 
-.step-count {
-  color: var(--md-sys-color-outline);
-  font-size: 0.72rem;
-  white-space: nowrap;
+.picker {
+  flex: 1 1 14rem;
+  max-width: 18rem;
+}
+
+.head-tools {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex: none;
 }
 
 .card-head h3 {
@@ -401,7 +441,7 @@ onBeforeUnmount(() => {
 
 .stage {
   display: grid;
-  gap: 0.75rem;
+  gap: 0.55rem;
 }
 
 .step-text {
@@ -412,10 +452,10 @@ onBeforeUnmount(() => {
   letter-spacing: 0.01em;
 }
 
-.caution {
+.step-progress {
   margin: 0;
-  color: var(--md-sys-color-error);
-  font-size: 0.78rem;
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.8125rem;
 }
 
 .timer {
@@ -448,9 +488,17 @@ onBeforeUnmount(() => {
 
 .timer-actions {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.4rem;
+  justify-content: center;
+}
+
+.step-nav {
+  display: flex;
+  justify-content: center;
+  padding-top: 0.25rem;
+}
+
+.caution-callout {
+  display: block;
 }
 
 .feedback-grid {
@@ -491,6 +539,15 @@ onBeforeUnmount(() => {
 @media (max-width: 720px) {
   .media-row {
     grid-template-columns: 1fr;
+  }
+
+  .step-head {
+    flex-direction: column;
+  }
+
+  .picker {
+    max-width: none;
+    width: 100%;
   }
 }
 </style>
