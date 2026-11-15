@@ -10,7 +10,7 @@ from ...schemas.health import (
 
 router = APIRouter(prefix="/health", tags=["health"])
 
-REQUIRED_SERVICES = frozenset({"rds", "redis", "codearts"})
+REQUIRED_SERVICES = frozenset({"rds", "redis"})
 
 
 @router.get("/live", response_model=LiveResponse)

@@ -6,7 +6,7 @@
 ## 1. 现状一句话
 
 接口层已经完整：从注册登录到评估、计时、姿态、干预、反馈、问答、周复盘全部有路由、有 schema、有测试。
-缺的是**云资源本身**（RDS、DCS、ModelArts endpoint、CodeArts 智能体、OBS、KMS），所以现在所有云服务走 `mock` 适配层。
+缺的是**云资源本身**（DCS、RDS、ModelArts endpoint；OBS、KMS 为可选），所以现在所有云服务走 `mock` 适配层。
 `GET /health/capabilities` 是自查入口：返回各依赖的 `provider / configured / reachable` 与限流参数。
 
 ## 2. 路由全表
@@ -18,7 +18,7 @@
 | GET | `/` | 服务名、版本、环境、云厂商模式 | — |
 | GET | `/health/live` | 存活探针（公开） | — |
 | GET | `/health/deps` | 各云依赖连通性（公开） | — |
-| GET | `/health/ready` | 就绪探针，RDS/Redis/CodeArts 任一不可达返回 503（公开） | — |
+| GET | `/health/ready` | 就绪探针，RDS/Redis 任一不可达返回 503（公开） | — |
 | GET | `/health/capabilities` | 能力与限流自查（公开） | — |
 | POST | `/auth/register` | 注册，返回访问令牌 + 刷新令牌（公开） | `email_exists`(409)、`rate_limited`(429) |
 | POST | `/auth/login` | 登录（公开） | `invalid_credentials`(401) |
@@ -82,12 +82,12 @@ access 过期(401 token_expired) → POST /auth/refresh（换新一对，旧的�
 
 | 顺序 | 资源 | 用途 | 开通后要验的接口 |
 |---|---|---|---|
-| 1 | RDS PostgreSQL | 用户、评估、迁移、执行记录、问答日志、安全事件、姿态摘要 | `/health/ready` 转 ready；重启后数据仍在 |
-| 2 | DCS Redis | session 状态、久坐计时、待响应干预 | 同上；断 Redis 时降级为内存且不崩 |
-| 3 | ModelArts 在线服务 | 关键点 → 姿态分类 | `/posture/infer` 200；超时 2.5s 返回 503 并端侧降级 |
-| 4 | CodeArts 智能体（规划 + 执行） | 问答与方案解释 | `/qa/ask` 返回真实答案与 citations |
-| 5 | OBS | 导出物 / 证据材料 | 业务尚未接线，只验连通 |
-| 6 | KMS | 密钥托管 | 同上 |
+| 1 | DCS Redis | session 状态、久坐计时、待响应干预 | `/health/deps` 中 `redis.provider=huawei-dcs`；断 Redis 时降级为内存且不崩 |
+| 2 | RDS PostgreSQL | 用户、评估、迁移、执行记录、问答日志、安全事件、姿态摘要 | `/health/capabilities` 显示 `store_backend=sql`；重启后数据仍在 |
+| 3 | ModelArts 在线服务 | 关键点 → 姿态分类 | `/posture/infer` 返回 `source=huawei`；超时 2.5s 返回 503 并端侧降级 |
+| 4 | OBS | 导出物 / 证据材料 | 业务尚未接线，只验预签名连通 |
+| 5 | KMS | 密钥托管与字段加密 | 同上 |
+| — | AgentArts（可选） | 问答与方案解释的编排替身 | `/qa/ask` 返回真实答案与 citations |
 
 开通后必须补的三项验证：断网、关摄像头、ModelArts 超时回退（见 PROGRESS §5 手测清单）。
 

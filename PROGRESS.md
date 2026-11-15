@@ -7,7 +7,8 @@
 ## 1. 一眼看现状
 
 - 核心闭环（评估 → 久坐计时 → 按状态推送动作 → 反馈 → 迁移）**已实现**，云端与本地两条链路都跑得通。
-- 但**云端资源全是 mock**：ModelArts、RDS、DCS、OBS、KMS、CodeArts 都只有适配层，没有一通到底的真实调用。
+- 但**云端资源尚未开通**：DCS、RDS、ModelArts 只有适配层，没有一通到底的真实调用；OBS、KMS 未接线。
+- 云服务核心（2026-11-15 定）：**DCS for Redis + RDS for PostgreSQL + ModelArts 在线服务**三件为必接项；CodeArts 退为研发工具，不参与运行时；OBS / KMS 为可选加分项；AgentArts 为可选的问答编排替身。
 - 交付物缺口集中在 `docs/assets`、`infra`、`data/seeds`。
 - 最近一次验证（2026-11-15）：
 
@@ -31,7 +32,7 @@
 | BRLI 风险指数 | 🟡 | 规则版 V1 有单测，已接 `/posture/risk`，未校准 |
 | 姿态分类推理（ModelArts） | 🟡 | 调用链、超时、降级都写了，**没有真实 endpoint**，现走 mock + 端侧降级 |
 | 循证知识库 | ✅ | 39 条证据台账（PubMed 36 / WHO 1 / CDC 1 / NIOSH 1，共 40 个主题归属）+ `articles.json` 8 条问答语料，`scripts/validate_evidence.py` 0 error |
-| CodeArts 问答 | 🟡 | 有适配层与 Skill 资产，走 mock |
+| 知识库问答 | ✅ | 本地检索 + citations（`data/knowledge/articles.json` 8 条）；无命中明确回答“资料中没有”。AgentArts 增强为可选，未接入 |
 | 限流 | ✅ | `app/core/ratelimit.py`：按 token 指纹或 IP 滑动窗口，登录类接口单独更严；超限 429 + `Retry-After` |
 | JWT 刷新 / 吊销 | ✅ | `/auth/refresh` 轮换刷新令牌、`/auth/logout` 吊销 jti；黑名单只存 jti 与到期时间，到期自动清理。**客户端续期接入未做**（要 Rust 钥匙串加一个槽位） |
 | 账户删除 | ✅ | `DELETE /auth/account`：内存态与 SQL 态都清用户及其全部数据 |

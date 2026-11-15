@@ -57,7 +57,7 @@ S0 急性缓解 → S1 激活 → S2 强化 → S3 维持
 ### 其他核心能力
 
 - **状态机收口**：迁移逻辑为纯函数，无网络、无数据库；端侧与 API 层均不实现迁移，保证可测试性与可审计性。
-- **云端智能**：华为云 CodeArts 双 Agent + Skill + 3 个 MCP 工具；知识库问答带引用，无命中不编造。
+- **云端智能**：ModelArts 在线服务做姿态分类（真实推理，非规则），状态机与风险融合留在纯函数里；知识库问答带引用，无命中不编造。
 - **周度复盘**：完成率、疼痛趋势、迁移次数、阻碍分布与规则化建议；云端由 API 聚合，本地模式由端侧按同一口径计算。
 - **双模式运行**：本地模式由 `packages/local-engine` 纯端侧运行并持久化到 localStorage，无云资源也能完整跑通。
 - **PC 瘦客户端**：Tauri 2 + Vue 3，调用系统原生通知提醒用户。
@@ -76,14 +76,14 @@ S0 急性缓解 → S1 激活 → S2 强化 → S3 维持
 
 | 组件 | 华为云服务 | 实现状态 |
 | :--- | :--- | :--- |
-| 智能体编排 | CodeArts Agent（双 Agent） | ✅ 已实现 |
-| 技能层 | CodeArts Skill | ✅ 已实现 |
+| AI 推理 | ModelArts 在线服务（姿态四分类） | 🟡 适配层已实现，endpoint 待开通 |
+| 实时状态 | DCS for Redis | 🟡 客户端已实现，待接入 |
+| 事实数据 | RDS for PostgreSQL | 🟡 适配层与迁移脚本已实现，待接入 |
+| 后端网关 | ECS + Docker Compose（FastAPI） | 🟡 镜像与 compose 已就绪，待接入 |
 | 工具调用 | MCP Server（3 个固定工具） | ✅ 已实现 |
-| 知识库 | CodeArts 知识库 | ✅ 已实现 |
-| 后端网关 | FastAPI（鉴权、安全中间件、迁移编排） | ✅ 已实现 |
 | 桌面客户端 | Tauri 2 + Vue 3 | ✅ 已实现 |
-| 容器部署 | 容器镜像 + 云部署清单 | ✅ 已实现 |
-| 数据库 | SQL 迁移脚本 | ✅ 已实现 |
+| 加密与分发 | KMS 字段加密、OBS 预签名 | 🟡 适配层已实现，业务未接线 |
+| 研发工具 | CodeArts（代码补全、流水线） | ✅ 使用中，不参与运行时 |
 
 ---
 
@@ -161,15 +161,16 @@ cd apps/desktop-tauri/src-tauri && cargo test
 
 ### 部署复现
 
-构建容器镜像
+构建并启动（云主机上用 Docker Compose）
 
 ```bash
-docker build -t riseloop-api -f infra/docker/Dockerfile .
+cd infra/docker
+cp env.example .env          # 填 DSN / Redis URL / JWT secret
+docker compose -f docker-compose.cloud.yml up -d
+curl http://127.0.0.1:8000/health/deps
 ```
-部署
-```bash
-kubectl apply -f infra/k8s/
-```
+
+云服务接入与验证步骤见 [`infra/huawei-cloud/README.md`](infra/huawei-cloud/README.md)。
 
 ---
 
@@ -185,8 +186,8 @@ RiseLoop/
 │   └── local-engine/        # 本地模式引擎（端侧运行 + localStorage）
 ├── services/
 │   ├── mcp-servers/         # 两个 MCP Server（合计 3 个工具）
-│   ├── skills/              # CodeArts Skill
-│   └── agent-orchestrator/  # CodeArts 双 Agent 与工作流
+│   ├── skills/              # Skill 能力定义（平台无关）
+│   └── agent-orchestrator/  # 可选：Agent 编排资产（AgentArts / MCP 客户端）
 ├── infra/                   # 容器镜像、云部署清单、SQL 迁移
 ├── data/                    # 动作库、知识库与证据台账
 ├── docs/                    # 技术文档（含证据映射）

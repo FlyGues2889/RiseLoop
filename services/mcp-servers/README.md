@@ -20,7 +20,7 @@ python services/mcp-servers/health-data-mcp/server.py
 python services/mcp-servers/action-library-mcp/server.py
 ```
 
-两个 Server 均以 `stdio` 传输，由 CodeArts 智能体作为 MCP 客户端拉起。容器部署时改为 `streamable-http`。
+两个 Server 均以 `stdio` 传输，由 MCP 客户端（AgentArts、CodeArts 研发侧或本地 MCP 客户端）拉起。容器部署时改为 `streamable-http`。
 
 ## 约束
 

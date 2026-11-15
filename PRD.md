@@ -74,7 +74,8 @@
 
 ## 7. 技术架构约束
 
-- **三层分离**：MCP 工具层（确定性数据访问）→ Skill 能力层（评估/状态机/安全/问答）→ CodeArts Agent 编排层。
+- **三层分离**：MCP 工具层（确定性数据访问）→ Skill 能力层（评估/状态机/安全/问答）→ Agent 编排层（可选，平台无关；决策本身留在纯函数里）。
+- **云服务核心三件**：DCS for Redis（实时状态）、RDS for PostgreSQL（事实数据）、ModelArts 在线服务（姿态推理）。其余服务围绕这三件，能省则省。
 - **MCP 工具恰好 3 个**（平台建议 3–8 个，3 个最优）：
   1. `read_realtime_state`：读 Redis 当前状态、久坐计时、待响应干预。
   2. `get_actions_by_state`：按状态/部位/时长筛选动作库。
@@ -85,10 +86,10 @@
 - **端侧瘦客户端**：Tauri 不做状态迁移、不直连数据库、不存智能体密钥、不硬编码动作库；本期不实现 Web 端。
 - **Tauri 端侧实现**：JWT 存 OS Keychain（不落 localStorage），前端经 `get_session_token` IPC 取短期令牌；计时器运行在 Rust 后端，窗口最小化到托盘不中断；`tauri-plugin-notification` v2 发送原生通知，通知携带动作摘要。
 - **客户端工程**：Tauri 2 + Vue 3 + JavaScript（Composition API），Vite 构建，pnpm 管理；`src-tauri` 仅承载计时、托盘、通知、Keychain，不引入 TypeScript。
-- **云适配层**：所有华为云访问统一收口在 `apps/cloud-api/app/cloud/`（rds / dcs / codearts / obs / kms），业务代码不自行建连接；适配层支持 `cloud_provider=mock|huawei` 双模式，本地无云资源也能跑通全部测试。
-- **健康检查**：`GET /health/live`（存活，不依赖外部）、`/health/deps`（逐项依赖状态）、`/health/ready`（必需项 rds/redis/codearts 任一不可达返回 503）；响应仅含布尔与耗时，不含 DSN、密码、AK/SK、原始健康数据。
+- **云适配层**：所有华为云访问统一收口在 `apps/cloud-api/app/cloud/`（rds / dcs / modelarts / obs / kms / codearts），业务代码不自行建连接；适配层支持 `cloud_provider=mock|huawei` 双模式，本地无云资源也能跑通全部测试。
+- **健康检查**：`GET /health/live`（存活，不依赖外部）、`/health/deps`（逐项依赖状态）、`/health/ready`（必需项 rds/redis 任一不可达返回 503）；响应仅含布尔与耗时，不含 DSN、密码、AK/SK、原始健康数据。
 - **华为云高可用**：RDS PostgreSQL 兼容、多可用区、自动备份、KMS 加密；DCS Redis 主备（1 主 1 备）；`cloud-api` 无状态部署 ECS/CCE，支持水平扩展。
-- **AI 绑定**：核心 AI 使用 CodeArts 智能体与华为 AI 技术，禁止纯第三方大模型套壳。
+- **AI 绑定**：核心 AI 使用华为云 ModelArts 在线推理与华为 AI 技术，禁止纯第三方大模型套壳；CodeArts 仅作研发工具，不参与运行时决策。
 
 ## 8. 云端/本地职责划分
 
@@ -165,9 +166,9 @@
 | 阶段 | 交付物 |
 |---|---|
 | M1 逻辑先行 | `intervention-engine` 状态机 + 单测；数据模型与 API 契约 |
-| M2 云端核心 | `cloud-api` 核心接口；3 个 MCP 工具；CodeArts Skill 配置 |
+| M2 云端核心 | `cloud-api` 核心接口；3 个 MCP 工具；Skill 定义 |
 | M3 客户端接入 | `apps/desktop-tauri` 接入云端；联调通过；演示录屏脚本 |
-| M4 华为云部署 | ECS/CCE、RDS、DCS、公网访问 |
+| M4 华为云部署 | ECS、DCS、RDS、ModelArts、公网访问 |
 | M5 材料与答辩 | 申报书、架构图、演示视频、答辩 PPT、现场手册 |
 
 ## 14. 风险与应对
@@ -175,7 +176,7 @@
 | 风险 | 应对 |
 |---|---|
 | 现场网络不稳 | 提前录制完整闭环视频；会场网络异常直接切录屏 |
-| CodeArts 调用延迟 | Redis 缓存动作库；超时降级为规则引擎直出 |
+| ModelArts 推理延迟 | 2.5 秒超时降级为本地规则并显式提示；动作库可缓存 |
 | Tauri 现场安装权限受限 | 免安装包 + 提前在会场机器预装 + 录屏兜底 |
 | 官方临时要求浏览器可访问 | 提前与组委会确认；必要时用 Tauri WebView 同源只读页应急（非本期交付） |
 | Tauri 托盘计时在部分 Linux 异常 | 仅在 Windows/macOS 演示 |

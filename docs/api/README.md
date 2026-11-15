@@ -67,7 +67,7 @@ curl -s "localhost:8000/review/weekly?days=7" -H "Authorization: Bearer $TOKEN"
 }
 ```
 
-命中后不进入状态机、不查动作库、不调用 CodeArts。
+命中后不进入状态机、不查动作库、不调用任何外部服务。
 
 ## 错误码
 
@@ -88,4 +88,4 @@ uvicorn app.main:app --app-dir apps/cloud-api --reload --port 8000
 python -m pytest -q
 ```
 
-问答走 `data/knowledge/articles.json` 检索；`mock` 模式本地生成答案，`huawei` 模式优先调用 CodeArts 规划 Agent，失败回退本地。知识库无命中时明确返回“资料中没有”，不编造。
+问答走 `data/knowledge/articles.json` 检索，本地生成答案并附 `citations`；接入 AgentArts 后可增强（可选），未接入或调用失败一律回退本地。知识库无命中时明确返回“资料中没有”，不编造。

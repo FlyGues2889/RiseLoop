@@ -32,7 +32,7 @@
 | 端侧与前端 | Tauri、摄像头、关键点提取、隐私开关、姿态引导 UI | spike 已完成；真人关键点/演示机性能待验证 | 演示机摄像头 |
 | 云端与模型 | ModelArts、ECS/FastAPI、APIG、模型部署、性能测试 | `/posture/infer` + ModelArts 适配层已就绪（mock 可跑通）；真实 endpoint 待开通 | ModelArts endpoint/模型/数据集（需付费开通） |
 | 算法与运动健康 | 数据集、姿态分类评价、风险规则、循证 JSON、动作适配 | 证据台账已完成；规则草稿/姿态评价待做 | 运康专业审核 |
-| 集成与交付 | S0–S3 集成、RDS/DCS、CodeArts、自动化测试、文档与演示 | 状态机/动作库已有；真实 RDS/DCS/APIG 与端到端集成未开始 | 云端环境与演示机 |
+| 集成与交付 | S0–S3 集成、DCS/RDS/ModelArts、自动化测试、文档与演示 | 状态机/动作库已有；真实 DCS/RDS/ModelArts 与端到端集成未开始 | 云端环境与演示机 |
 
 **范围冻结口径：**
 
