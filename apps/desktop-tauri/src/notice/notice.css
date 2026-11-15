@@ -134,6 +134,7 @@ body {
 }
 
 .card.expanded .reveal-inner {
+  overflow-x: hidden;
   overflow-y: auto;
   padding: 0 1rem 0.25rem;
 }
@@ -294,11 +295,19 @@ body {
 .run-actions {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 0.5rem;
   margin-top: 0.75rem;
 }
 
+/* 380px 的小窗里，主按钮可缩，步进按钮组按内容固定，放不下就换行而不是溢出去 */
+.run-actions > m3e-button {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
 .run-nav {
+  flex: 0 0 auto;
   margin-left: auto;
 }
 

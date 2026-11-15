@@ -186,15 +186,13 @@ async function switchTo(index, wasRunning) {
   if (wasRunning) startTick();
 }
 
-async function skipAction() {
+// 结束这次运动：不再自动换下一个动作，直接进反馈记录
+async function endWorkout() {
+  if (!action.value) return;
   disarmAutoStart();
-  const wasRunning = true;
   pauseAction();
-  if (actionIndex.value < actions.value.length - 1) {
-    await switchTo(actionIndex.value + 1, wasRunning);
-    return;
-  }
-  openFeedback();
+  feedbackOpen.value = true;
+  await finishAction();
 }
 
 async function pickAction(event) {
@@ -310,9 +308,9 @@ onBeforeUnmount(() => {
           </m3e-form-field>
 
           <div class="head-tools">
-            <m3e-button variant="text" size="small" @click="skipAction">
-              <span slot="icon" class="material-symbols-rounded">skip_next</span>
-              跳过这个动作
+            <m3e-button variant="text" size="small" @click="endWorkout">
+              <span slot="icon" class="material-symbols-rounded">stop_circle</span>
+              结束运动
             </m3e-button>
             <m3e-button variant="text" size="small" @click="cameraOpen = !cameraOpen">
               <span slot="icon" class="material-symbols-rounded">{{ cameraOpen ? "videocam_off" : "videocam" }}</span>

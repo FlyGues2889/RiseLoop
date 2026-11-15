@@ -1,6 +1,5 @@
 <script setup>
 import { computed, ref } from "vue";
-import CameraStatus from "./CameraStatus.vue";
 import WindowControls from "./WindowControls.vue";
 import { clearAllData, logout, modeBadge, state } from "../state/session.js";
 import { monitor, ui as cameraUi } from "../state/postureMonitor.js";
@@ -44,8 +43,6 @@ async function confirmClear() {
     </div>
 
     <div class="side">
-      <CameraStatus v-if="isSignedIn" />
-
       <m3e-icon-button class="profile" variant="standard" size="small" aria-label="个人信息与账号操作">
         <m3e-menu-trigger for="profile-menu">
           <span class="material-symbols-rounded icon">account_circle</span>
