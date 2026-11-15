@@ -285,14 +285,6 @@ body {
   margin: 0.5rem 0 0.5rem 0.625rem;
 }
 
-/* 展开态的三段内容用 segmented 列表，和主窗口的计时条是同一套观感。
-   这两条变量也写在标签的行内样式上：某些编辑器的缓冲区会把它们覆盖掉。 */
-.run-list {
-  display: block;
-  --m3e-list-item-padding-inline: 0.75rem;
-  --m3e-list-item-between-space: 0.5rem;
-}
-
 .run-top {
   display: flex;
   align-items: center;
