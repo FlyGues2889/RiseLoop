@@ -39,18 +39,11 @@ watch(
   <m3e-card variant="elevated" class="insight-card">
     <div class="surface-body">
       <header class="page-head">
-        <h2>这 7 天的变化</h2>
-        <p class="lead">汇总最近 7 天的记录，趋势一眼看清。</p>
-        <p class="hint" v-if="!aiEnabled">本地模式下，智能问答不可用。</p>
+        <h2>近 7 天</h2>
+        <p class="hint" v-if="!aiEnabled">本地模式不支持智能问答。</p>
       </header>
 
       <m3e-list variant="segmented">
-        <m3e-list-item>
-          <span class="material-symbols-rounded" slot="leading">timeline</span>
-          追踪数据
-          <span class="label" slot="trailing">最近 7 天</span>
-        </m3e-list-item>
-
         <m3e-list-item>
           <div class="stats" v-if="state.weekly">
             <div>

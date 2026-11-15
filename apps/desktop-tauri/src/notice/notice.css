@@ -36,11 +36,20 @@ body {
   background: var(--md-sys-color-surface-container-high);
   box-shadow: 0 0.625rem 1.75rem rgba(0, 0, 0, 0.18);
   overflow: hidden;
+  opacity: 0;
+  transform: translateY(2.5rem);
+  transition:
+    transform 280ms cubic-bezier(0.2, 0, 0, 1),
+    opacity 220ms ease-out;
+}
+
+/* 出现在窗口里之前先沉到下面，窗口本身贴在底边，看起来就是从底部升起 */
+.card.visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .card.expanded {
-  /* 按内容长高，不铺满整窗：多出来的透明区留给阴影，底边始终贴住工作区 */
-  max-height: 100%;
   display: flex;
   flex-direction: column;
 }

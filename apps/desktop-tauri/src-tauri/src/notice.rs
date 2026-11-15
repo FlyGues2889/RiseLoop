@@ -20,7 +20,8 @@ pub const NOTICE_START_EVENT: &str = "riseloop://notice-start";
 
 const WIDTH: f64 = 380.0;
 const COLLAPSED_HEIGHT: f64 = 168.0;
-const EXPANDED_HEIGHT: f64 = 520.0;
+const MIN_HEIGHT: f64 = 120.0;
+const MAX_HEIGHT: f64 = 640.0;
 /// 距屏幕工作区右下角的留白
 const MARGIN: f64 = 16.0;
 
@@ -123,21 +124,22 @@ pub fn notice_current(state: State<'_, NoticeState>) -> Option<NoticePayload> {
     state.payload.lock().ok().and_then(|current| current.clone())
 }
 
-/// 展开/收起：窗口尺寸先一步跳到位（多出来的是透明区），卡片动画在页面里跑。
+/// 按页面量出来的卡片高度调整窗口，避免内容被裁掉。
+/// 尺寸来自实测而不是写死常量：换行、125% 缩放、字号差异都能自适应。
 #[tauri::command]
-pub fn notice_set_expanded(app: AppHandle<Wry>, expanded: bool) -> Result<(), String> {
+pub fn notice_resize(
+    app: AppHandle<Wry>,
+    height: f64,
+    focusable: Option<bool>,
+) -> Result<(), String> {
     let window = app
         .get_webview_window(NOTICE_LABEL)
         .ok_or_else(|| "notice window is not ready".to_string())?;
-    if expanded {
-        let _ = window.set_focusable(true);
+    if let Some(focusable) = focusable {
+        let _ = window.set_focusable(focusable);
     }
-    let height = if expanded { EXPANDED_HEIGHT } else { COLLAPSED_HEIGHT };
-    place(&app, &window, height).map_err(|error| error.to_string())?;
-    if !expanded {
-        let _ = window.set_focusable(false);
-    }
-    Ok(())
+    let height = height.clamp(MIN_HEIGHT, MAX_HEIGHT);
+    place(&app, &window, height).map_err(|error| error.to_string())
 }
 
 #[tauri::command]

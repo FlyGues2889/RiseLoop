@@ -255,16 +255,10 @@ onBeforeUnmount(() => {
         </m3e-tabs>
 
         <div class="plan-body">
-          <div class="guide-media" aria-hidden="true">
-            <span class="material-symbols-rounded">image</span>
-            <span>动作示意图</span>
-          </div>
-          <div class="plan-text">
-            <ol class="steps">
-              <li v-for="(step, stepIndex) in action.steps || []" :key="stepIndex">{{ step }}</li>
-            </ol>
-            <p v-if="action.caution" class="caution">{{ action.caution }}</p>
-          </div>
+          <ol class="steps">
+            <li v-for="(step, stepIndex) in action.steps || []" :key="stepIndex">{{ step }}</li>
+          </ol>
+          <p v-if="action.caution" class="caution">{{ action.caution }}</p>
         </div>
 
         <div class="media-row">
@@ -405,32 +399,7 @@ onBeforeUnmount(() => {
 }
 
 .plan-body {
-  display: grid;
-  grid-template-columns: 9rem minmax(0, 1fr);
-  gap: 1rem;
-  align-items: start;
-}
-
-.guide-media {
-  display: grid;
-  place-content: center;
-  justify-items: center;
-  gap: 0.4rem;
-  width: 9rem;
-  aspect-ratio: 3 / 4;
-  border: 1px dashed var(--md-sys-color-outline-variant);
-  border-radius: 0.9rem;
-  background: var(--md-sys-color-surface-1);
-  color: var(--md-sys-color-outline);
-  font-size: 0.7rem;
-}
-
-.guide-media .material-symbols-rounded {
-  font-size: 1.8rem;
-}
-
-.plan-text {
-  min-width: 0;
+  display: block;
 }
 
 .steps {
@@ -446,7 +415,6 @@ onBeforeUnmount(() => {
   font-size: 0.78rem;
 }
 
-/* 摄像头与倒计时同一行：宽度对齐示意图，高度跟随计时器 */
 .media-row {
   display: grid;
   grid-template-columns: 9rem minmax(0, 1fr);
@@ -559,12 +527,10 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 720px) {
-  .plan-body,
   .media-row {
     grid-template-columns: 1fr;
   }
 
-  .guide-media,
   .camera {
     width: 100%;
   }

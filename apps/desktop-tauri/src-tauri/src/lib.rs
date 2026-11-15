@@ -233,7 +233,7 @@ pub fn run() {
             commands::load_session_token,
             commands::clear_session_token,
             notice::notice_current,
-            notice::notice_set_expanded,
+            notice::notice_resize,
             notice::notice_dismiss,
             notice::notice_set_action,
             notice::notice_start,

@@ -1,26 +1,52 @@
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from "vue";
+import { nextTick, onBeforeUnmount, onMounted, ref } from "vue";
 
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 
 const AUTO_DISMISS_SECONDS = 15;
 const TICK_MS = 200;
+const STAGE_PADDING = 20;
+const MAX_HEIGHT = 640;
 
 const payload = ref(null);
 const action = ref(null);
 const expanded = ref(false);
 const hovering = ref(false);
 const remaining = ref(AUTO_DISMISS_SECONDS);
+const visible = ref(false);
+const cardEl = ref(null);
 
 const unlisteners = [];
 let stopwatch = null;
+let hideTimer = null;
 
-const steps = computed(() => (action.value?.steps ?? []).slice(0, 3));
-const progress = computed(() =>
-  Math.max(0, Math.min(100, (remaining.value / AUTO_DISMISS_SECONDS) * 100))
-);
-const secondsLeft = computed(() => Math.max(1, Math.ceil(remaining.value)));
+function secondsLeft() {
+  return Math.max(1, Math.ceil(remaining.value));
+}
+
+function progress() {
+  return Math.max(0, Math.min(100, (remaining.value / AUTO_DISMISS_SECONDS) * 100));
+}
+
+function steps() {
+  return (action.value?.steps ?? []).slice(0, 3);
+}
+
+async function syncHeight() {
+  await nextTick();
+  const card = cardEl.value;
+  if (!card) return;
+  const height = Math.ceil(card.scrollHeight) + STAGE_PADDING;
+  invoke("notice_resize", { height, focusable: expanded.value }).catch(() => { });
+}
+
+function playIn() {
+  visible.value = false;
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    visible.value = true;
+  }));
+}
 
 function applyPayload(next) {
   if (!next) return;
@@ -28,7 +54,8 @@ function applyPayload(next) {
   action.value = next.action ?? null;
   expanded.value = false;
   remaining.value = AUTO_DISMISS_SECONDS;
-  invoke("notice_set_expanded", { expanded: false }).catch(() => { });
+  playIn();
+  syncHeight();
 }
 
 function tick() {
@@ -39,23 +66,28 @@ function tick() {
 
 async function expand() {
   if (expanded.value || !payload.value) return;
-  await invoke("notice_set_expanded", { expanded: true }).catch(() => { });
   expanded.value = true;
+  // 先把窗口撑到上限（多出来是透明的），卡片在更大的画布上展开，不会被裁
+  invoke("notice_resize", { height: MAX_HEIGHT, focusable: true }).catch(() => { });
+  window.setTimeout(syncHeight, 360);
 }
 
 function collapse() {
   if (!expanded.value) return;
   expanded.value = false;
   remaining.value = AUTO_DISMISS_SECONDS;
-  // 等卡片收完再缩窗口，避免内容被裁掉半截
-  window.setTimeout(() => {
-    invoke("notice_set_expanded", { expanded: false }).catch(() => { });
-  }, 320);
+  syncHeight();
+  window.setTimeout(syncHeight, 340);
 }
 
 async function dismiss() {
+  if (hideTimer) return;
+  visible.value = false;
   remaining.value = AUTO_DISMISS_SECONDS;
-  await invoke("notice_dismiss").catch(() => { });
+  hideTimer = window.setTimeout(() => {
+    hideTimer = null;
+    invoke("notice_dismiss").catch(() => { });
+  }, 240);
 }
 
 async function start() {
@@ -81,15 +113,16 @@ onMounted(async () => {
   }
   stopwatch = window.setInterval(tick, TICK_MS);
   window.addEventListener("keydown", onKeydown);
+  document.fonts?.ready.then(syncHeight);
   unlisteners.push(
     await listen("riseloop://notice", (event) => applyPayload(event.payload))
   );
   unlisteners.push(
     await listen("riseloop://notice-action", (event) => {
       action.value = event.payload ?? null;
+      syncHeight();
     })
   );
-  // 调试：RISELOOP_NOTICE_DEMO 会推这个事件，用来自动展开验收动画
   unlisteners.push(
     await listen("riseloop://notice-expand", () => {
       expand();
@@ -99,18 +132,20 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   if (stopwatch) window.clearInterval(stopwatch);
+  if (hideTimer) window.clearTimeout(hideTimer);
   window.removeEventListener("keydown", onKeydown);
   unlisteners.forEach((off) => off());
 });
 </script>
 
 <template>
-  <div
-    class="stage"
-    @mouseenter="hovering = true"
-    @mouseleave="hovering = false"
-  >
-    <article v-if="payload" class="card" :class="{ expanded }">
+  <div class="stage" @mouseenter="hovering = true" @mouseleave="hovering = false">
+    <article
+      v-if="payload"
+      ref="cardEl"
+      class="card"
+      :class="{ expanded, visible }"
+    >
       <header class="head">
         <span class="mark material-symbols-rounded">self_improvement</span>
         <div class="titles">
@@ -130,7 +165,7 @@ onBeforeUnmount(() => {
               <span class="mono">{{ action.duration_minutes }} 分钟</span>
             </div>
             <ol class="steps">
-              <li v-for="(step, index) in steps" :key="index">{{ step }}</li>
+              <li v-for="(step, index) in steps()" :key="index">{{ step }}</li>
             </ol>
             <p v-if="action.source" class="source">{{ action.source }}</p>
           </template>
@@ -149,11 +184,11 @@ onBeforeUnmount(() => {
           <span class="material-symbols-rounded" slot="icon">expand_less</span>
           看看动作
         </m3e-button>
-        <span class="countdown">{{ secondsLeft }} 秒后收起</span>
+        <span class="countdown">{{ secondsLeft() }} 秒后收起</span>
       </footer>
 
       <div v-if="!expanded" class="bar">
-        <i :style="{ width: progress + '%' }"></i>
+        <i :style="{ width: progress() + '%' }"></i>
       </div>
     </article>
   </div>

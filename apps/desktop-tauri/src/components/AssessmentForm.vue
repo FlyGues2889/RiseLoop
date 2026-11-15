@@ -43,10 +43,7 @@ function onPainChange(event) {
 <template>
   <m3e-card variant="elevated" class="surface-card">
     <div class="surface-body">
-      <header class="page-head">
-        <h1>先了解你的情况</h1>
-        <p>只需一分钟，填几项基本信息。填得越具体，建议越贴合你。</p>
-      </header>
+      <h1 class="title">你的情况</h1>
 
       <MedicalNote />
 
@@ -57,7 +54,6 @@ function onPainChange(event) {
         </m3e-list-item>
         <m3e-list-item>
           每日久坐时长
-          <span slot="supporting-text">按一天平时大致估算</span>
           <m3e-form-field variant="filled" class="field" slot="trailing">
             <input id="sedentary-minutes" v-model.number="form.sedentary_minutes" type="number" min="0" max="1440" />
             <span slot="suffix-text">分钟</span>
@@ -65,7 +61,6 @@ function onPainChange(event) {
         </m3e-list-item>
         <m3e-list-item>
           每次休息可用时长
-          <span slot="supporting-text">一次休息通常能腾出多久</span>
           <m3e-form-field variant="filled" class="field" slot="trailing">
             <input id="available-minutes" v-model.number="form.available_minutes" type="number" min="1" max="120" />
             <span slot="suffix-text">分钟</span>
@@ -80,7 +75,7 @@ function onPainChange(event) {
         </m3e-list-item>
 
         <m3e-list-item>
-          哪些部位不太舒服？可以多选。<br><br>
+          不适部位
           <m3e-chip-set class="chips">
             <m3e-filter-chip v-for="option in bodyPartOptions" :key="option.value" :value="option.value"
               :selected.prop="form.body_parts.includes(option.value)" @change="togglePart(option.value)">
@@ -89,20 +84,22 @@ function onPainChange(event) {
           </m3e-chip-set>
         </m3e-list-item>
         <m3e-list-item>
-          最难受的部位现在有多痛？<br>0分表示无疼痛，10分表示无法忍受。<br>
-          <m3e-slider class="slider" max="10" step="1" @input="onPainChange" @change="onPainChange">
-            <m3e-slider-thumb :value.prop="form.pain_score"></m3e-slider-thumb>
-          </m3e-slider>
-
-          <div class="slider-head">
-            <span class="field-label"></span>
-            <span class="value mono">{{ form.pain_score }}<small> / 10</small></span>
+          疼痛程度
+          <div class="pain">
+            <m3e-slider class="slider" max="10" step="1" @input="onPainChange" @change="onPainChange">
+              <m3e-slider-thumb :value.prop="form.pain_score"></m3e-slider-thumb>
+            </m3e-slider>
+            <div class="scale">
+              <span>无痛</span>
+              <span class="value mono">{{ form.pain_score }}<small> / 10</small></span>
+              <span>无法忍受</span>
+            </div>
           </div>
         </m3e-list-item>
         <m3e-list-item>
           <m3e-checkbox :checked.prop="form.acute_discomfort" @change="form.acute_discomfort = $event.target.checked"
             slot="leading"></m3e-checkbox>
-          我现在就有明显的酸痛等不适症状
+          现在就有明显不适
         </m3e-list-item>
       </m3e-list>
 
@@ -110,7 +107,7 @@ function onPainChange(event) {
 
       <m3e-button class="primary-action" variant="filled" size="medium" :disabled.prop="state.busy"
         @click="submitAssessment(form)">
-        {{ state.busy ? "提交中…" : "生成我的方案" }}
+        {{ state.busy ? "提交中…" : "生成方案" }}
       </m3e-button>
     </div>
     <LoadingOverlay v-if="state.busy" label="正在生成方案…" />
@@ -129,17 +126,23 @@ m3e-list.assessForm {
   margin-top: 1.4rem;
 }
 
-.field-label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-size: 0.813rem;
-  color: var(--md-sys-color-on-surface-variant);
+.title {
+  margin: 0 0 1rem;
+  font-size: 1.6rem;
 }
 
-.slider-head {
+.pain {
+  display: block;
+  margin-top: 0.75rem;
+}
+
+.scale {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
+  gap: 0.75rem;
+  color: var(--md-sys-color-outline);
+  font-size: 0.7rem;
 }
 
 .value {

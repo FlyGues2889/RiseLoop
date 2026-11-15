@@ -65,11 +65,7 @@ function formatTime(value) {
 <template>
   <section class="risk-report">
     <header class="page-head">
-      <h2>风险与姿势报告</h2>
-      <p class="lead">
-        摄像头默认只在本地提取关键点并分析记录，不会主动打扰你。<br>
-        点击下方按钮即可马上检查姿势。
-      </p>
+      <h2>姿势与风险</h2>
     </header>
 
     <div v-if="report" class="status">

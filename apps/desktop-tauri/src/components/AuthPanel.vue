@@ -8,10 +8,6 @@ import { enterDemo, login, register, state } from "../state/session.js";
 <template>
   <m3e-card variant="elevated" class="surface-card">
     <div class="surface-body">
-      <header class="page-head">
-        <h1>今天，从一次起身开始</h1>
-      </header>
-
       <form @submit.prevent="login">
         <m3e-form-field variant="filled" class="field">
           <span class="material-symbols-rounded" slot="prefix">email</span>

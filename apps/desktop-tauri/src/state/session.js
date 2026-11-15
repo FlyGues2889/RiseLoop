@@ -11,7 +11,8 @@ import {
 import { sourceForAction } from "../data/actionSources.js";
 import { clearLocalLogs, loadLocalLogs, localApi, localEngine, saveLocalLogs } from "./local.js";
 
-const PLAN_KEY = "riseloop.plan.v1";
+// v2：默认节奏改为「快速」，旧的选择不再沿用
+const PLAN_KEY = "riseloop.plan.v2";
 const POSTURE_EVENTS_KEY = "riseloop.posture.events.v1";
 
 let activeBaseUrl = MODES.cloud.baseUrl;

@@ -20,6 +20,9 @@ function format(total) {
 
 const timeText = computed(() => format(state.timer.sitting_seconds));
 const remainingText = computed(() => format(state.timer.remaining_seconds));
+const remainingLabel = computed(() =>
+  state.timer.overdue ? "该起身了" : `${remainingText.value} 后提醒`
+);
 
 const progress = computed(() => {
   const total = state.timer.threshold_seconds || 1;
@@ -67,14 +70,10 @@ async function demoFastForward() {
 <template>
   <m3e-list variant="segmented" class="timer-bar" :class="{ paused: !running, overdue }">
     <m3e-list-item>
-      <span slot="overline">连续久坐</span>
       <div class="time-row">
         <span class="material-symbols-rounded lead-icon">{{ leadIcon }}</span>
         <span class="time mono">{{ timeText }}</span>
-        <span class="remaining">
-          {{ overdue ? "已到提醒时间" : "距提醒" }}
-          <b v-if="!overdue" class="mono">{{ remainingText }}</b>
-        </span>
+        <span class="remaining">{{ remainingLabel }}</span>
       </div>
       <div class="progress-row">
         <m3e-linear-progress-indicator variant="wavy" class="track" :value.prop="progress"
@@ -106,7 +105,7 @@ async function demoFastForward() {
         </m3e-button>
         <m3e-button variant="text" size="small" @click="demoFastForward">
           <span class="material-symbols-rounded" slot="icon">keyboard_double_arrow_right</span>
-          立即开始活动
+          现在开始
         </m3e-button>
       </div>
     </m3e-list-item>
@@ -155,11 +154,6 @@ async function demoFastForward() {
   color: var(--md-sys-color-on-surface-variant);
   font-size: 0.75rem;
   white-space: nowrap;
-}
-
-.remaining b {
-  color: var(--md-sys-color-on-surface);
-  font-weight: 600;
 }
 
 .paused .time,
