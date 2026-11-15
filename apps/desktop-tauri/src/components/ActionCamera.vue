@@ -84,14 +84,16 @@ let rafId = 0;
 let landmarker = null;
 let lastDetectAt = 0;
 let lastVideoTime = -1;
+let lastPoints = null;
+let lastVisible = [];
 
 function resizeCanvas() {
   const canvas = canvasEl.value;
-  const video = videoEl.value;
-  if (!canvas || !video) return;
+  if (!canvas) return;
   const rect = canvas.getBoundingClientRect();
-  canvas.width = Math.max(1, Math.round(rect.width));
-  canvas.height = Math.max(1, Math.round(rect.height));
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = Math.max(1, Math.round(rect.width * dpr));
+  canvas.height = Math.max(1, Math.round(rect.height * dpr));
 }
 
 function isVisible(point) {
@@ -115,11 +117,36 @@ function project(points) {
   }));
 }
 
-function draw(points, visible) {
+// 画面交给 canvas 自己画：视频层只负责解码。WebView2 里 <video> 与 canvas 叠加时
+// 视频层会整块泛绿或变黑，改成单画布绘制既避开合成问题，「只看骨架」也有底色可用。
+function readSurface() {
+  const styles = getComputedStyle(document.documentElement);
+  return styles.getPropertyValue("--md-sys-color-surface-1").trim() || "#1d2521";
+}
+
+function paintBase() {
   const canvas = canvasEl.value;
+  const video = videoEl.value;
+  if (!canvas) return null;
   const ctx = canvas.getContext("2d");
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  if (!points) return;
+  if (skeletonOnly.value || status.value !== "ready") {
+    ctx.fillStyle = readSurface();
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    return ctx;
+  }
+  const vw = video?.videoWidth ?? 0;
+  const vh = video?.videoHeight ?? 0;
+  if (!vw || !vh) return ctx;
+  const scale = Math.max(canvas.width / vw, canvas.height / vh);
+  const dw = vw * scale;
+  const dh = vh * scale;
+  ctx.drawImage(video, (canvas.width - dw) / 2, (canvas.height - dh) / 2, dw, dh);
+  return ctx;
+}
+
+function draw(ctx, points, visible) {
+  if (!ctx || !points) return;
   ctx.strokeStyle = aligned.value ? "#88f8c8" : "rgba(255,255,255,0.72)";
   ctx.lineWidth = 2;
   ctx.lineCap = "round";
@@ -159,6 +186,8 @@ function checkAligned(points, visible) {
 
 function tick() {
   rafId = requestAnimationFrame(tick);
+  const ctx = paintBase();
+  draw(ctx, lastPoints, lastVisible);
   const video = videoEl.value;
   if (!video || !landmarker || video.readyState < 2) return;
   const now = performance.now();
@@ -168,13 +197,13 @@ function tick() {
   const landmarks = landmarker.detectForVideo(video, now)?.landmarks?.[0];
   if (!landmarks) {
     aligned.value = false;
-    draw(null, []);
+    lastPoints = null;
+    lastVisible = [];
     return;
   }
-  const points = project(landmarks);
-  const visible = landmarks.map(isVisible);
-  aligned.value = checkAligned(points, visible);
-  draw(points, visible);
+  lastPoints = project(landmarks);
+  lastVisible = landmarks.map((point) => isVisible(point));
+  aligned.value = checkAligned(lastPoints, lastVisible);
 }
 
 async function start() {
@@ -249,9 +278,8 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="action-camera" :class="{ aligned, skeleton: skeletonOnly }">
-    <video ref="videoEl" class="feed" autoplay muted playsinline
-      v-show="status === 'ready' && !skeletonOnly"></video>
-    <canvas ref="canvasEl" class="skeleton-layer" v-show="status === 'ready'"></canvas>
+    <video ref="videoEl" class="feed" autoplay muted playsinline v-show="status === 'ready'"></video>
+    <canvas ref="canvasEl" class="skeleton-layer"></canvas>
 
     <div v-if="needAlign && status === 'ready'" class="guide" :style="guideStyle" aria-hidden="true">
       <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
@@ -292,6 +320,11 @@ onBeforeUnmount(() => {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+/* 视频只用来取帧，真正上屏的是 canvas，避免选中相机画面被合成层染色 */
+.feed {
+  opacity: 0;
 }
 
 .skeleton-layer {
