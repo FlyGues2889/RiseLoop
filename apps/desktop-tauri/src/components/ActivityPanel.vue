@@ -224,15 +224,12 @@ function openFeedback() {
   feedbackOpen.value = true;
 }
 
-// 一组动作跑完：还有候选动作就接着做，否则进反馈并把主窗唤到前台
+// 一个推荐动作做完就结束这次干预：不再自动接下一组动作，直接进反馈
+// （候选列表里的其它动作仍然可以在下拉框里手动切换）
 watch(
   () => actionSession.done,
   (done) => {
     if (!done || feedbackOpen.value) return;
-    if (actionIndex.value < actions.value.length - 1) {
-      switchTo(actionIndex.value + 1, true);
-      return;
-    }
     openFeedback();
     finishAction();
   }
