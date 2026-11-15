@@ -46,19 +46,51 @@ const obstacleOptions = [
   { value: "forgot", label: "忘了" },
 ];
 
-// 动作总时长均分到每一步，最后一步吃掉余数，保证总和不变
-function splitSeconds(total, count) {
-  const size = Math.max(1, count);
-  const base = Math.floor(total / size);
-  const list = Array.from({ length: size }, () => base);
-  list[size - 1] = total - base * (size - 1);
-  return list;
+// 步骤时长按文字里的「秒 / 次 / 组」推算：均分会让「弹力带固定于胸前高度」
+// 这种准备动作也占上两分钟，实际做下来只要十几秒。
+const REP_SECONDS = 3;
+const DEFAULT_STEP_SECONDS = 20;
+const MIN_STEP_SECONDS = 10;
+const MAX_STEP_SECONDS = 75;
+
+function parseStepSeconds(text) {
+  const source = String(text || "");
+  const secs = [...source.matchAll(/(\d+)\s*秒/g)].map((match) => Number(match[1]));
+  const reps = [...source.matchAll(/(\d+)\s*次/g)].map((match) => Number(match[1]));
+  const rounds = /重复\s*(\d+)\s*[轮次]/.exec(source);
+  const groups = /共\s*(\d+)\s*组/.exec(source);
+  const sides = /左右各|各侧|两侧/.test(source) ? 2 : 1;
+  const sum = (list) => list.reduce((acc, item) => acc + item, 0);
+  if (secs.length && reps.length) return sum(secs) * sum(reps);
+  if (secs.length) return sum(secs) * sides * (rounds ? Number(rounds[1]) : 1);
+  if (reps.length) {
+    return sum(reps) * sides * (groups ? Number(groups[1]) : 1) * REP_SECONDS
+      * (rounds && !groups ? Number(rounds[1]) : 1);
+  }
+  if (rounds) return DEFAULT_STEP_SECONDS * Number(rounds[1]);
+  return null;
+}
+
+// 推算值只做参考：压进 [10, 75] 秒，超出动作总时长时整体等比缩，不放大
+function planStepSeconds(list, total) {
+  const guessed = list.map((text) => parseStepSeconds(text));
+  const raw = guessed.map((value) => Math.min(MAX_STEP_SECONDS, Math.max(MIN_STEP_SECONDS, value ?? DEFAULT_STEP_SECONDS)));
+  // 「换侧，各做 2 组」这类步骤本身没有数字，按上一步的时长乘以组数
+  for (let index = 1; index < list.length; index += 1) {
+    if (guessed[index] !== null || !/换(侧|边)|另一(侧|边)|各做/.test(String(list[index] || ""))) continue;
+    const groups = /(\d+)\s*(组|轮|次)/.exec(String(list[index]));
+    raw[index] = Math.min(MAX_STEP_SECONDS, raw[index - 1] * (groups ? Number(groups[1]) : 1));
+  }
+  const sum = raw.reduce((acc, item) => acc + item, 0);
+  if (!total || sum <= total) return raw;
+  const ratio = total / sum;
+  return raw.map((value) => Math.max(MIN_STEP_SECONDS, Math.floor(value * ratio)));
 }
 
 const stepSeconds = computed(() =>
-  splitSeconds((action.value?.duration_minutes ?? 1) * 60, steps.value.length)
+  planStepSeconds(steps.value, (action.value?.duration_minutes ?? 1) * 60)
 );
-const stepTotal = computed(() => stepSeconds.value[stepIndex.value] ?? 60);
+const stepTotal = computed(() => stepSeconds.value[stepIndex.value] ?? DEFAULT_STEP_SECONDS);
 const remaining = ref(stepTotal.value);
 const running = ref(false);
 
@@ -115,7 +147,7 @@ function startTick() {
 }
 
 function resetStep() {
-  remaining.value = stepSeconds.value[stepIndex.value] ?? 60;
+  remaining.value = stepSeconds.value[stepIndex.value] ?? DEFAULT_STEP_SECONDS;
 }
 
 function onStepDone() {
