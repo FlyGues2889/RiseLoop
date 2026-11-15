@@ -97,7 +97,7 @@ function formatTime(value) {
       </ul>
     </div>
 
-    <m3e-button variant="filled" size="small" @click="openPosture">
+    <m3e-button variant="outlined" size="small" @click="openPosture">
       <span class="material-symbols-rounded" slot="icon">videocam</span>
       检查我的姿势
     </m3e-button>

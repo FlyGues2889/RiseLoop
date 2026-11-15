@@ -21,7 +21,7 @@ function format(total) {
 const timeText = computed(() => format(state.timer.sitting_seconds));
 const remainingText = computed(() => format(state.timer.remaining_seconds));
 const remainingLabel = computed(() =>
-  state.timer.overdue ? "该起身了" : `${remainingText.value} 后提醒`
+  state.timer.overdue ? "该活动一下了" : `${remainingText.value} 后提醒`
 );
 
 const progress = computed(() => {

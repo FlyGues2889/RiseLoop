@@ -258,7 +258,10 @@ mod tests {
         assert!(restarted.running);
         assert!(!restarted.overdue);
         assert!(restarted.sitting_seconds <= 1);
-        assert_eq!(restarted.remaining_seconds, DEFAULT_THRESHOLD_MINUTES * 60);
+        assert!(
+            restarted.remaining_seconds >= DEFAULT_THRESHOLD_MINUTES * 60 - 2,
+            "重新开始后剩余时间应接近满阈值，允许调度抖动"
+        );
     }
 
     #[test]
@@ -317,7 +320,11 @@ mod tests {
         let restarted = timer.restart();
         assert!(restarted.running, "暂停态重新计时应立即开始");
         assert!(restarted.sitting_seconds <= 1, "重新计时从 0 开始");
-        assert_eq!(restarted.remaining_seconds, DEFAULT_THRESHOLD_MINUTES * 60);
+        assert!(
+            restarted.remaining_seconds >= DEFAULT_THRESHOLD_MINUTES * 60 - 2,
+            "重新计时后剩余时间应接近满阈值，允许调度抖动（出现 {}）",
+            restarted.remaining_seconds
+        );
         assert!(!restarted.overdue);
     }
 

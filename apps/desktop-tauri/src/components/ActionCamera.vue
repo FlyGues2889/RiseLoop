@@ -308,7 +308,7 @@ onBeforeUnmount(() => {
   aspect-ratio: 4 / 3;
   box-sizing: border-box;
   overflow: hidden;
-  border: 0.0625rem solid var(--md-sys-color-secondary);
+  border: 0.2rem solid var(--md-sys-color-secondary);
   border-radius: 0.9rem;
   background: var(--md-sys-color-surface-1);
 }
