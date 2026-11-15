@@ -272,7 +272,7 @@ onBeforeUnmount(() => {
         <div class="step-head">
           <m3e-form-field class="picker">
             <label slot="label" for="action-pick">选择动作</label>
-            <m3e-select id="action-pick" :value.prop="action.id" @change="pickAction">
+            <m3e-select id="action-pick" :value.prop="action.id" @change="pickAction" variant="tonal">
               <m3e-option v-for="item in actions" :key="item.id" :value="item.id">
                 {{ item.name }}{{ item.id === recommendedId ? "（推荐）" : "" }}
               </m3e-option>
@@ -280,8 +280,12 @@ onBeforeUnmount(() => {
           </m3e-form-field>
 
           <div class="head-tools">
-            <m3e-button variant="text" size="small" @click="skipAction">跳过这个动作</m3e-button>
+            <m3e-button variant="text" size="small" @click="skipAction">
+              <span slot="icon" class="material-symbols-rounded">skip_next</span>
+              跳过这个动作
+            </m3e-button>
             <m3e-button variant="text" size="small" @click="cameraOpen = !cameraOpen">
+              <span slot="icon" class="material-symbols-rounded">{{ cameraOpen ? "videocam_off" : "videocam" }}</span>
               {{ cameraOpen ? "收起画面" : "打开画面" }}
             </m3e-button>
           </div>
@@ -301,10 +305,14 @@ onBeforeUnmount(() => {
               </div>
               <m3e-linear-progress-indicator class="progress" :value.prop="progress"></m3e-linear-progress-indicator>
               <div class="timer-actions">
-                <m3e-button v-if="!running" variant="outlined" size="medium" @click="startTick">
+                <m3e-button v-if="!running" variant="filled" size="medium" @click="startTick">
+                  <span slot="icon" class="material-symbols-rounded">play_arrow</span>
                   {{ remaining === stepTotal ? "开始倒计时" : "继续" }}
                 </m3e-button>
-                <m3e-button v-else variant="outlined" size="medium" @click="stopTick">暂停</m3e-button>
+                <m3e-button v-else variant="filled" size="medium" @click="stopTick">
+                  <span slot="icon" class="material-symbols-rounded">pause</span>
+                  暂停
+                </m3e-button>
               </div>
             </div>
           </div>
@@ -312,18 +320,22 @@ onBeforeUnmount(() => {
 
         <div class="step-nav">
           <m3e-button-group>
-            <m3e-icon-button variant="outlined" aria-label="上一步" :disabled.prop="stepIndex === 0" @click="prevStep">
-              <span class="material-symbols-rounded">chevron_left</span>
+            <m3e-icon-button id="step-prev" variant="outlined" aria-label="上一步" :disabled.prop="stepIndex === 0"
+              @click="prevStep">
+              <span class="material-symbols-rounded">arrow_back</span>
             </m3e-icon-button>
-            <m3e-icon-button variant="outlined" aria-label="下一步" @click="nextStep">
-              <span class="material-symbols-rounded">chevron_right</span>
+            <m3e-icon-button id="step-next" variant="filled" aria-label="下一步" @click="nextStep">
+              <span class="material-symbols-rounded">arrow_forward</span>
             </m3e-icon-button>
           </m3e-button-group>
+          <m3e-tooltip for="step-prev">上一步</m3e-tooltip>
+          <m3e-tooltip for="step-next">{{ stepIndex === steps.length - 1 ? "完成这个动作" : "下一步" }}</m3e-tooltip>
         </div>
       </div>
     </m3e-card>
 
     <m3e-callout v-if="action && !feedbackOpen && action.caution" variant="error" class="caution-callout">
+      <span slot="icon" class="material-symbols-rounded">health_and_safety</span>
       <span slot="label">健康提示</span>
       {{ action.caution }}
     </m3e-callout>
@@ -368,12 +380,15 @@ onBeforeUnmount(() => {
 
         <div class="feedback-actions">
           <m3e-button variant="filled" size="medium" :disabled.prop="submitting" @click="submit('completed')">
+            <span slot="icon" class="material-symbols-rounded">check</span>
             完成
           </m3e-button>
           <m3e-button variant="outlined" size="medium" :disabled.prop="submitting" @click="submit('partial')">
+            <span slot="icon" class="material-symbols-rounded">adjust</span>
             部分完成
           </m3e-button>
           <m3e-button variant="text" size="medium" :disabled.prop="submitting" @click="submit('skipped')">
+            <span slot="icon" class="material-symbols-rounded">skip_next</span>
             跳过
           </m3e-button>
         </div>
@@ -499,6 +514,12 @@ onBeforeUnmount(() => {
 
 .caution-callout {
   display: block;
+  /* 主题里的 error-container 是纯红，整块铺满太刺眼，这里压成浅底 + 红字 */
+  --m3e-error-container-callout-container-color: color-mix(in srgb, var(--md-sys-color-error) 10%, var(--md-sys-color-surface));
+  --m3e-error-container-callout-label-text-color: var(--md-sys-color-error);
+  --m3e-error-container-callout-content-color: var(--md-sys-color-on-surface);
+  --m3e-error-container-callout-icon-color: var(--md-sys-color-error);
+  --m3e-error-container-callout-leading-accent-color: var(--md-sys-color-error);
 }
 
 .feedback-grid {
