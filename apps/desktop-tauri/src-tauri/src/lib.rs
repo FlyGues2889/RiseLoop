@@ -89,6 +89,37 @@ pub fn run() {
                 eprintln!("notice window unavailable, fallback to system toast: {error}");
             }
 
+            // 调试用：RISELOOP_NOTICE_DEMO=1 启动，3 秒后弹一条样例通知，
+            // 不必真的坐满 45 分钟也能验收通知窗口。
+            #[cfg(debug_assertions)]
+            if std::env::var_os("RISELOOP_NOTICE_DEMO").is_some() {
+                let demo = app.handle().clone();
+                thread::spawn(move || {
+                    thread::sleep(Duration::from_secs(3));
+                    notice::show(
+                        &demo,
+                        notice::NoticePayload {
+                            title: "该起身了".to_string(),
+                            body: "已经连续久坐 46 分钟。".to_string(),
+                            sitting_minutes: 46,
+                            action: Some(notice::NoticeAction {
+                                name: "起身站立微活动".to_string(),
+                                duration_minutes: 3,
+                                steps: vec![
+                                    "起身离开座位".to_string(),
+                                    "原地抬膝 10 次".to_string(),
+                                    "颈肩绕环 30 秒".to_string(),
+                                ],
+                                source: Some("动作依据 · 主动休息".to_string()),
+                            }),
+                        },
+                    );
+                    // 再等 6 秒自动展开，验收“原地变形”的动画与布局
+                    thread::sleep(Duration::from_secs(6));
+                    let _ = demo.emit_to("notice", "riseloop://notice-expand", ());
+                });
+            }
+
             // 点击系统通知（tap）时把主窗口唤回前台；插件只在通知仍在屏幕时上报点击。
             let notification_handle = app.handle().clone();
             app.notification().on_action(move |_action| {

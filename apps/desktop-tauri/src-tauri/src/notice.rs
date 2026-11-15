@@ -69,21 +69,37 @@ pub fn create_window(app: &AppHandle<Wry>) -> tauri::Result<WebviewWindow<Wry>> 
 
 /// 弹出一条通知；窗口不可用时返回 false，调用方回退到系统通知。
 pub fn show(app: &AppHandle<Wry>, payload: NoticePayload) -> bool {
+    if let Some(state) = app.try_state::<NoticeState>() {
+        if let Ok(mut current) = state.payload.lock() {
+            *current = Some(payload);
+        }
+    }
+    reveal(app)
+}
+
+/// 按当前缓存的内容把窗口展示出来（内容已存在时复用，不重置业务数据）。
+fn reveal(app: &AppHandle<Wry>) -> bool {
     let Some(window) = app.get_webview_window(NOTICE_LABEL) else {
         return false;
     };
-    if let Some(state) = app.try_state::<NoticeState>() {
-        if let Ok(mut current) = state.payload.lock() {
-            *current = Some(payload.clone());
+    let Some(payload) = app
+        .try_state::<NoticeState>()
+        .and_then(|state| state.payload.lock().ok().and_then(|current| current.clone()))
+    else {
+        return false;
+    };
+    let _ = window.set_focusable(false);
+    if let Err(error) = place(app, &window, COLLAPSED_HEIGHT) {
+        eprintln!("notice: 定位失败，沿用默认位置: {error}");
+    }
+    let _ = app.emit_to(NOTICE_LABEL, NOTICE_EVENT, &payload);
+    match window.show() {
+        Ok(()) => true,
+        Err(error) => {
+            eprintln!("notice: 展示失败: {error}");
+            false
         }
     }
-    let _ = window.set_focusable(false);
-    let _ = place(app, &window, COLLAPSED_HEIGHT);
-    let _ = app.emit_to(NOTICE_LABEL, NOTICE_EVENT, &payload);
-    if window.show().is_err() {
-        return false;
-    }
-    true
 }
 
 /// 锚定在工作区右下角，向上生长：展开时底边不动，视觉上从卡片往上长。
@@ -133,16 +149,42 @@ pub fn notice_dismiss(app: AppHandle<Wry>) -> Result<(), String> {
 }
 
 /// 主窗口算完动作后把摘要补进通知卡片，通知窗口不再自己请求业务接口。
+///
+/// 手动触发的干预（点「立即开始活动」）不会经过计时阈值，所以这里发现窗口
+/// 还没展示时顺手补一次，和到点提醒走同一套视觉。
 #[tauri::command]
-pub fn notice_set_action(app: AppHandle<Wry>, action: NoticeAction) -> Result<(), String> {
+pub fn notice_set_action(
+    app: AppHandle<Wry>,
+    action: NoticeAction,
+    minutes: Option<u64>,
+) -> Result<(), String> {
+    let mut stored = false;
     if let Some(state) = app.try_state::<NoticeState>() {
         if let Ok(mut current) = state.payload.lock() {
-            if let Some(payload) = current.as_mut() {
+            if current.is_none() {
+                let sitting = minutes.unwrap_or(0);
+                *current = Some(NoticePayload {
+                    title: "该起身了".to_string(),
+                    body: format!("已经连续久坐 {sitting} 分钟。"),
+                    sitting_minutes: sitting,
+                    action: Some(action.clone()),
+                });
+            } else if let Some(payload) = current.as_mut() {
                 payload.action = Some(action.clone());
             }
+            stored = current.is_some();
         }
     }
     let _ = app.emit_to(NOTICE_LABEL, NOTICE_ACTION_EVENT, &action);
+    if stored {
+        let visible = app
+            .get_webview_window(NOTICE_LABEL)
+            .and_then(|window| window.is_visible().ok())
+            .unwrap_or(false);
+        if !visible {
+            reveal(&app);
+        }
+    }
     Ok(())
 }
 

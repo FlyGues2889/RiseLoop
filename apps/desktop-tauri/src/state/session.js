@@ -367,6 +367,7 @@ async function pushNoticeAction(action) {
   const entry = sourceForAction(action.id);
   try {
     await invoke("notice_set_action", {
+      minutes: sittingMinutes.value,
       action: {
         name: action.name,
         duration_minutes: action.duration_minutes ?? 0,

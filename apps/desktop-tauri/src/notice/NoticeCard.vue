@@ -47,7 +47,10 @@ function collapse() {
   if (!expanded.value) return;
   expanded.value = false;
   remaining.value = AUTO_DISMISS_SECONDS;
-  invoke("notice_set_expanded", { expanded: false }).catch(() => { });
+  // 等卡片收完再缩窗口，避免内容被裁掉半截
+  window.setTimeout(() => {
+    invoke("notice_set_expanded", { expanded: false }).catch(() => { });
+  }, 320);
 }
 
 async function dismiss() {
@@ -84,6 +87,12 @@ onMounted(async () => {
   unlisteners.push(
     await listen("riseloop://notice-action", (event) => {
       action.value = event.payload ?? null;
+    })
+  );
+  // 调试：RISELOOP_NOTICE_DEMO 会推这个事件，用来自动展开验收动画
+  unlisteners.push(
+    await listen("riseloop://notice-expand", () => {
+      expand();
     })
   );
 });
