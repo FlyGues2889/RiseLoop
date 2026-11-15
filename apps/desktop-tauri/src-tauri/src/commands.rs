@@ -1,5 +1,8 @@
+use std::io::Write;
+use std::path::PathBuf;
 use std::sync::Arc;
 
+use tauri::Manager;
 use tauri::State;
 
 use crate::timer::{SittingTimer, TimerSnapshot};
@@ -65,5 +68,52 @@ pub fn clear_session_token() -> Result<(), String> {
         Ok(()) => Ok(()),
         Err(keyring::Error::NoEntry) => Ok(()),
         Err(error) => Err(error.to_string()),
+    }
+}
+
+fn camera_log_path_of(app: &tauri::AppHandle) -> Result<PathBuf, String> {
+    let dir = app.path().app_log_dir().map_err(|error| error.to_string())?;
+    Ok(dir.join("camera.log"))
+}
+
+fn append_camera_log(path: &std::path::Path, line: &str) -> Result<(), String> {
+    if let Some(dir) = path.parent() {
+        std::fs::create_dir_all(dir).map_err(|error| error.to_string())?;
+    }
+    let mut file = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(path)
+        .map_err(|error| error.to_string())?;
+    writeln!(file, "{line}").map_err(|error| error.to_string())
+}
+
+/// 追加一行摄像头记录：时间、类型、说明由前端拼好，这里只负责落盘。
+#[tauri::command]
+pub fn camera_log(app: tauri::AppHandle, line: String) -> Result<(), String> {
+    let path = camera_log_path_of(&app)?;
+    append_camera_log(&path, &line)
+}
+
+#[tauri::command]
+pub fn camera_log_path(app: tauri::AppHandle) -> Result<String, String> {
+    Ok(camera_log_path_of(&app)?.display().to_string())
+}
+#[cfg(test)]
+mod tests {
+    use super::append_camera_log;
+
+    #[test]
+    fn camera_log_appends_instead_of_truncating() {
+        let dir = std::env::temp_dir().join(format!("riseloop-camera-log-{}", std::process::id()));
+        let path = dir.join("nested").join("camera.log");
+        let _ = std::fs::remove_dir_all(&dir);
+        append_camera_log(&path, "open\t打开摄像头采样").unwrap();
+        append_camera_log(&path, "close\t摄像头已关闭").unwrap();
+        let text = std::fs::read_to_string(&path).unwrap();
+        assert_eq!(text.lines().count(), 2);
+        assert!(text.contains("打开摄像头采样"));
+        assert!(text.contains("摄像头已关闭"));
+        let _ = std::fs::remove_dir_all(&dir);
     }
 }

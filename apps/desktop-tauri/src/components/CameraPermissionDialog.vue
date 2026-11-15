@@ -1,6 +1,7 @@
 <script setup>
 import { computed, nextTick, ref, watch } from "vue";
 
+import { record } from "../state/cameraLog.js";
 import {
   cameraErrorMessage,
   markAsked,
@@ -37,6 +38,7 @@ function stopPreview() {
   if (previewStream.value) {
     previewStream.value.getTracks().forEach((track) => track.stop());
     previewStream.value = null;
+    record("close", "设置页关闭预览", "off");
   }
   if (videoEl.value) videoEl.value.srcObject = null;
 }
@@ -52,6 +54,7 @@ async function openPreview(deviceId) {
       audio: false,
     });
     if (!videoEl.value) return;
+    record("open", "设置页打开预览", "preview");
     videoEl.value.srcObject = previewStream.value;
     await videoEl.value.play().catch(() => { });
     await refreshDevices();

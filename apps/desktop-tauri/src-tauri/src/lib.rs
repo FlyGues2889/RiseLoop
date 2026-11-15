@@ -232,6 +232,8 @@ pub fn run() {
             commands::store_session_token,
             commands::load_session_token,
             commands::clear_session_token,
+            commands::camera_log,
+            commands::camera_log_path,
             notice::notice_current,
             notice::notice_resize,
             notice::notice_dismiss,

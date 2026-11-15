@@ -1,9 +1,10 @@
-// 常驻姿势监测：摄像头生命周期、关键点采样、分钟级窗口汇总与云端上报。
+// 常驻姿势监测：到点才打开摄像头，采一帧、算关键点，然后立刻关掉。
 // 画面只在本机处理，出网的只有 33 个归一化关键点。
 import { reactive } from "vue";
 import { describeError } from "@riseloop/api-client";
 
 import { toContractKeypoints } from "../data/keypoints.js";
+import { liveCameraBusy, record } from "./cameraLog.js";
 import { evaluatePostureInfer, state } from "./session.js";
 
 const PREFS_KEY = "riseloop.posture.prefs.v1";
@@ -30,12 +31,12 @@ export const monitor = reactive({
 });
 
 let landmarker = null;
-let stream = null;
-let video = null;
 let timer = null;
+let sampling = false;
 let windowStart = 0;
 let windowSamples = [];
 let bestSample = null;
+let lastSkip = "";
 
 function loadPrefs() {
   try {
@@ -83,10 +84,17 @@ export async function refreshDevices() {
 }
 
 export async function requestPermission() {
-  const probe = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-  probe.getTracks().forEach((track) => track.stop());
-  await refreshDevices();
-  return true;
+  record("open", "申请摄像头权限", "sampling");
+  try {
+    const probe = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+    probe.getTracks().forEach((track) => track.stop());
+    await refreshDevices();
+    record("close", "权限申请完成，摄像头已关闭", "off");
+    return true;
+  } catch (err) {
+    record("error", cameraErrorMessage(err), "off");
+    throw err;
+  }
 }
 
 async function buildLandmarker() {
@@ -136,24 +144,7 @@ function resetWindow(now) {
   bestSample = null;
 }
 
-function sample() {
-  if (monitor.status !== "running") return;
-  const now = performance.now();
-
-  // 窗口被系统节流打断时丢弃半截数据，不拿不完整窗口下结论
-  if (monitor.lastSampleAt && now - monitor.lastSampleAt > SAMPLE_INTERVAL_MS * GAP_FACTOR) {
-    monitor.gaps += 1;
-    resetWindow(now);
-  }
-  monitor.lastSampleAt = now;
-
-  if (!video || !landmarker || video.readyState < 2) return;
-  let landmarks = null;
-  try {
-    landmarks = landmarker.detectForVideo(video, now)?.landmarks?.[0] ?? null;
-  } catch {
-    return;
-  }
+function ingest(landmarks, now) {
   monitor.points = landmarks?.length ?? 0;
   if (!landmarks || landmarks.length !== 33) return;
 
@@ -235,61 +226,149 @@ async function flushWindow() {
   }
 }
 
+function waitFrame(el) {
+  return new Promise((resolve) => {
+    if (el.readyState >= 2 && el.videoWidth) return resolve();
+    const done = () => {
+      clearTimeout(timeout);
+      resolve();
+    };
+    const timeout = setTimeout(done, 1500);
+    el.addEventListener("loadeddata", done, { once: true });
+  });
+}
+
+// 一次采样：开摄像头 → 取一帧 → 关摄像头。任何分支都必须把轨道停掉。
+async function capture(deviceId) {
+  const constraints = deviceId
+    ? {
+        deviceId: { exact: deviceId },
+        width: { ideal: 320 },
+        height: { ideal: 240 },
+        frameRate: { ideal: 10, max: 15 },
+      }
+    : {
+        width: { ideal: 320 },
+        height: { ideal: 240 },
+        frameRate: { ideal: 10, max: 15 },
+        facingMode: "user",
+      };
+
+  const stream = await navigator.mediaDevices.getUserMedia({ video: constraints, audio: false });
+  const el = document.createElement("video");
+  try {
+    el.autoplay = true;
+    el.muted = true;
+    el.playsInline = true;
+    el.srcObject = stream;
+    await el.play().catch(() => {});
+    await waitFrame(el);
+
+    const settings = stream.getVideoTracks()[0]?.getSettings?.() ?? {};
+    let landmarks = null;
+    try {
+      landmarks = landmarker?.detectForVideo(el, performance.now())?.landmarks?.[0] ?? null;
+    } catch {
+      landmarks = null;
+    }
+    return { landmarks, deviceId: settings.deviceId ?? null };
+  } finally {
+    stream.getTracks().forEach((track) => track.stop());
+    el.srcObject = null;
+  }
+}
+
+async function sample() {
+  if (monitor.status !== "running" || sampling) return;
+
+  // 动作页要独占摄像头；窗口在后台也没必要开摄像头。
+  // 跳过只记一次，避免日志被每 10 秒一条的重复记录刷满。
+  if (liveCameraBusy()) {
+    if (lastSkip !== "busy") {
+      lastSkip = "busy";
+      record("skip", "动作页正在用摄像头，暂停采样");
+    }
+    return;
+  }
+  if (document.hidden) {
+    if (lastSkip !== "hidden") {
+      lastSkip = "hidden";
+      record("skip", "窗口在后台，暂停采样");
+    }
+    return;
+  }
+  try {
+    await ensureLandmarker();
+  } catch (err) {
+    monitor.status = "error";
+    monitor.error = "姿势模型没能加载，稍后再试。";
+    record("error", `姿势模型加载失败（${err?.name ?? "unknown"}）`, "off");
+    await release();
+    return;
+  }
+
+  const before = performance.now();
+  // 窗口被系统节流打断时丢弃半截数据，不拿不完整窗口下结论
+  if (monitor.lastSampleAt && before - monitor.lastSampleAt > SAMPLE_INTERVAL_MS * GAP_FACTOR) {
+    monitor.gaps += 1;
+    resetWindow(before);
+  }
+  monitor.lastSampleAt = before;
+
+  sampling = true;
+  const startedAt = performance.now();
+  record("open", "打开摄像头采样", "sampling");
+  try {
+    const { landmarks, deviceId } = await capture(prefs.deviceId);
+    if (monitor.status !== "running") return;
+
+    if (deviceId && deviceId !== prefs.deviceId) {
+      prefs.deviceId = deviceId;
+      monitor.deviceId = deviceId;
+      savePrefs();
+    }
+    const now = performance.now();
+    ingest(landmarks, now);
+    monitor.error = "";
+    lastSkip = "";
+    record("close", `摄像头已关闭（${Math.round(performance.now() - startedAt)} ms）`, "off");
+  } catch (err) {
+    const name = err?.name ?? "";
+    record("error", cameraErrorMessage(err), "off");
+    // 设备被拔掉时退回默认摄像头，下次采样就能恢复
+    if (name === "OverconstrainedError" || name === "NotFoundError") {
+      prefs.deviceId = null;
+      savePrefs();
+      monitor.error = "";
+    } else if (name === "NotAllowedError" || name === "SecurityError") {
+      monitor.status = "error";
+      monitor.error = cameraErrorMessage(err);
+      await release();
+    }
+  } finally {
+    sampling = false;
+  }
+}
+
 export async function start(deviceId = prefs.deviceId) {
   if (monitor.status === "running" || monitor.status === "starting") return;
   monitor.status = "starting";
   monitor.error = "";
   try {
-    const constraints = deviceId
-      ? {
-          deviceId: { exact: deviceId },
-          width: { ideal: 320 },
-          height: { ideal: 240 },
-          frameRate: { ideal: 10, max: 15 },
-        }
-      : {
-          width: { ideal: 320 },
-          height: { ideal: 240 },
-          frameRate: { ideal: 10, max: 15 },
-          facingMode: "user",
-        };
-    try {
-      stream = await navigator.mediaDevices.getUserMedia({ video: constraints, audio: false });
-    } catch (err) {
-      // 设备被拔掉时退回默认摄像头
-      if (deviceId && (err?.name === "OverconstrainedError" || err?.name === "NotFoundError")) {
-        prefs.deviceId = null;
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: { width: { ideal: 320 }, height: { ideal: 240 } },
-          audio: false,
-        });
-      } else {
-        throw err;
-      }
-    }
-
     await ensureLandmarker();
-    video = document.createElement("video");
-    video.autoplay = true;
-    video.muted = true;
-    video.playsInline = true;
-    video.srcObject = stream;
-    await video.play().catch(() => {});
+    await refreshDevices();
 
-    const track = stream.getVideoTracks()[0];
-    const settings = track?.getSettings?.() ?? {};
-    prefs.deviceId = settings.deviceId ?? deviceId ?? null;
+    prefs.deviceId = deviceId ?? null;
     prefs.enabled = true;
     savePrefs();
     monitor.deviceId = prefs.deviceId;
-    await refreshDevices();
 
     monitor.status = "running";
     monitor.points = 0;
     configureWindow();
     if (timer) clearInterval(timer);
     timer = setInterval(sample, SAMPLE_INTERVAL_MS);
-    sample();
+    void sample();
   } catch (err) {
     monitor.status = "error";
     monitor.error = cameraErrorMessage(err);
@@ -308,14 +387,7 @@ async function release() {
     clearInterval(timer);
     timer = null;
   }
-  if (stream) {
-    stream.getTracks().forEach((track) => track.stop());
-    stream = null;
-  }
-  if (video) {
-    video.srcObject = null;
-    video = null;
-  }
+  sampling = false;
 }
 
 export async function pause() {

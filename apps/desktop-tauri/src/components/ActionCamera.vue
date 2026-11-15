@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 
+import { record, setLiveCamera } from "../state/cameraLog.js";
 import { createPoseLandmarker, prefs as cameraPrefs } from "../state/postureMonitor.js";
 
 const props = defineProps({
@@ -139,6 +140,8 @@ async function start() {
     video.srcObject = stream;
     await video.play().catch(() => { });
     status.value = "ready";
+    setLiveCamera(true);
+    record("open", "动作页打开摄像头", "live");
     resizeCanvas();
     landmarker = await createPoseLandmarker().catch(() => null);
     tick();
@@ -154,6 +157,8 @@ function release() {
   if (stream) {
     stream.getTracks().forEach((track) => track.stop());
     stream = null;
+    setLiveCamera(false);
+    record("close", "动作页关闭摄像头", "off");
   }
   if (videoEl.value) videoEl.value.srcObject = null;
   if (landmarker) {
@@ -162,13 +167,26 @@ function release() {
   }
 }
 
+// 窗口在后台时不占着摄像头：回来再重新打开
+function onVisibility() {
+  if (document.hidden) {
+    if (!stream) return;
+    release();
+    status.value = "idle";
+    return;
+  }
+  if (status.value === "idle") start();
+}
+
 onMounted(() => {
   start();
   window.addEventListener("resize", resizeCanvas);
+  document.addEventListener("visibilitychange", onVisibility);
 });
 
 onBeforeUnmount(() => {
   window.removeEventListener("resize", resizeCanvas);
+  document.removeEventListener("visibilitychange", onVisibility);
   release();
 });
 </script>
