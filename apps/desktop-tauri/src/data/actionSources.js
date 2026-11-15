@@ -53,6 +53,42 @@ export const ACTION_SOURCES = {
     url: "https://pubmed.ncbi.nlm.nih.gov/35147898/",
     evidenceId: "pmid-35147898",
   },
+  "s0-chin-tuck": {
+    title: "动作依据 · 颈肩拉伸",
+    source: "办公人群颈肩拉伸随机对照试验显示规律练习可改善慢性颈肩痛与功能；收下巴是颈深屈肌激活的入门动作。",
+    url: "https://pubmed.ncbi.nlm.nih.gov/25780258/",
+    evidenceId: "pmid-25780258",
+  },
+  "s0-thoracic-rotation": {
+    title: "动作依据 · 颈肩拉伸",
+    source: "胸椎旋转属于颈肩与上背活动度练习；证据来自办公人群颈肩拉伸随机对照试验。",
+    url: "https://pubmed.ncbi.nlm.nih.gov/25780258/",
+    evidenceId: "pmid-25780258",
+  },
+  "s1-wall-pushup": {
+    title: "动作依据 · 肌力训练",
+    source: "颈肩胛肌力训练可减轻办公人群慢性颈痛与失能（系统综述/Meta 分析，证据确定性低）；靠墙俯卧撑是低负荷入门版本。",
+    url: "https://pubmed.ncbi.nlm.nih.gov/38219373/",
+    evidenceId: "pmid-38219373",
+  },
+  "s1-calf-pump": {
+    title: "动作依据 · 主动休息",
+    source: "主动休息或姿势变换可降低高风险办公人群 6 个月内颈痛与腰痛新发；小腿泵是坐姿可做的下肢激活版本。",
+    url: "https://pubmed.ncbi.nlm.nih.gov/33906239/",
+    evidenceId: "pmid-33906239",
+  },
+  "s2-wall-sit": {
+    title: "动作依据 · 拉伸训练",
+    source: "拉伸与规律运动训练在 6 个月内改善办公人群颈肩腰疼痛，效果优于单纯工位改造（随机对照试验）；静蹲为下肢等长负荷版本。",
+    url: "https://pubmed.ncbi.nlm.nih.gov/28939263/",
+    evidenceId: "pmid-28939263",
+  },
+  "s3-seated-hip-circle": {
+    title: "动作依据 · 姿势行为",
+    source: "办公人群久坐时间、姿势与行为均与下背痛相关，其中久坐行为证据最强（范围综述）；髋绕环用于打断固定坐姿。",
+    url: "https://pubmed.ncbi.nlm.nih.gov/40111906/",
+    evidenceId: "pmid-40111906",
+  },
 };
 
 const DEFAULT_ACTION_SOURCE = {

@@ -34,6 +34,12 @@ const TABLE = {
   "s2-band-row": { framing: "upper", scene: "seated", focus: ARMS, hint: "让肩膀到手腕都在画面里" },
   "s3-posture-reset": { framing: "full", scene: "standing", focus: [JOINT.left_ear, JOINT.right_ear, ...STANDING], hint: "靠墙站好后，让头和髋都在画面里" },
   "s3-breathe": { framing: "none", scene: "seated", focus: [], hint: "边做边看，不要求对齐" },
+  "s0-chin-tuck": { framing: "upper", scene: "seated", focus: UPPER, hint: "坐直，侧面对着镜头，让头和双肩在画面里" },
+  "s0-thoracic-rotation": { framing: "upper", scene: "seated", focus: ARMS, hint: "让两侧肩膀和肘部都在画面里" },
+  "s1-wall-pushup": { framing: "upper", scene: "standing", focus: ARMS, hint: "侧身站，让肩膀到手腕都在画面里" },
+  "s1-calf-pump": { framing: "none", scene: "seated", focus: [], hint: "腿在桌下，边做边看，不要求对齐" },
+  "s2-wall-sit": { framing: "full", scene: "standing", focus: STANDING, hint: "靠墙时往后退，让髋和膝盖进画面" },
+  "s3-seated-hip-circle": { framing: "none", scene: "seated", focus: [], hint: "边做边看，不要求对齐" },
 };
 
 const STANDING_HINT = /起身|站立|弓步|抬膝|深蹲|靠墙/;

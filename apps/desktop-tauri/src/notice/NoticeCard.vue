@@ -13,6 +13,7 @@ import {
   restartAction,
   toggleAction,
 } from "../state/actionSession.js";
+import { actionImage } from "../data/actionImages.js";
 
 const AUTO_DISMISS_SECONDS = 15;
 const TICK_MS = 200;
@@ -53,6 +54,8 @@ function steps() {
 /* ---------- 动作卡：和主界面共用一份会话，两个窗口操作同步 ---------- */
 
 const stepText = computed(() => actionSession.steps[actionSession.index]?.text ?? "");
+// 示意图跟着共享会话的动作走，主窗切换动作时这里同步换图
+const refImage = computed(() => actionImage(actionSession.id || action.value?.id || ""));
 const stepTotal = computed(() => actionSession.steps[actionSession.index]?.seconds ?? 0);
 const stepProgress = computed(() => {
   if (stepTotal.value <= 0) return 0;
@@ -258,11 +261,16 @@ onBeforeUnmount(() => {
       <div class="reveal">
         <div class="reveal-inner">
           <template v-if="action && actionSession.loaded">
-            <p class="run-step">{{ done ? "这一组做完了" : stepText }}</p>
-            <p class="run-meta">
-              {{ actionSession.name || action.name }}
-              <template v-if="!done"> · 第 {{ actionSession.index + 1 }} / {{ actionSession.steps.length }} 步</template>
-            </p>
+            <div class="run-top">
+              <img v-if="refImage" class="run-ref" :src="refImage" alt="" @load="scheduleHeight(true)" />
+              <div class="run-copy">
+                <p class="run-step">{{ done ? "这一组做完了" : stepText }}</p>
+                <p class="run-meta">
+                  {{ actionSession.name || action.name }}
+                  <template v-if="!done"> · 第 {{ actionSession.index + 1 }} / {{ actionSession.steps.length }} 步</template>
+                </p>
+              </div>
+            </div>
 
             <div v-if="!done" class="run-timer">
               <span class="run-time">{{ timeText }}</span>
@@ -316,6 +324,7 @@ onBeforeUnmount(() => {
           </template>
 
           <template v-else-if="action">
+            <img v-if="refImage" class="action-ref" :src="refImage" alt="" @load="scheduleHeight(true)" />
             <div class="action-head">
               <strong>
                 {{ action.name }}<span class="tag">推荐</span>

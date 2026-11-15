@@ -15,6 +15,7 @@ export const ACTION_EVENT = "riseloop://action";
 
 export const actionSession = reactive({
   loaded: false,
+  id: "",
   name: "",
   steps: [],
   index: 0,
@@ -36,6 +37,7 @@ function stepSeconds(list = actionSession.steps, index = actionSession.index) {
 function apply(snapshot) {
   if (!snapshot) return;
   actionSession.loaded = Boolean(snapshot.loaded);
+  actionSession.id = snapshot.id ?? "";
   actionSession.name = snapshot.name ?? "";
   actionSession.steps = (snapshot.steps ?? []).map((item) => ({
     text: item?.text ?? "",
@@ -50,6 +52,7 @@ function apply(snapshot) {
 function snapshot() {
   return {
     loaded: actionSession.loaded,
+    id: actionSession.id,
     name: actionSession.name,
     steps: actionSession.steps,
     index: actionSession.index,
@@ -101,9 +104,10 @@ export async function initActionSession() {
 }
 
 /** 载入一组动作；steps 为 [{ text, seconds }]，单位秒。 */
-function applyLocal(name, steps) {
+function applyLocal(id, name, steps) {
   apply({
     loaded: steps.length > 0,
+    id,
     name,
     steps,
     index: 0,
@@ -113,17 +117,17 @@ function applyLocal(name, steps) {
   });
 }
 
-export async function loadAction(name, steps) {
+export async function loadAction(id, name, steps) {
   localStop();
   if (fallbackLocal) {
-    applyLocal(name, steps);
+    applyLocal(id, name, steps);
     return snapshot();
   }
   try {
-    apply(await invoke("action_load", { name, steps }));
+    apply(await invoke("action_load", { id, name, steps }));
   } catch {
     fallbackLocal = true;
-    applyLocal(name, steps);
+    applyLocal(id, name, steps);
   }
   return snapshot();
 }

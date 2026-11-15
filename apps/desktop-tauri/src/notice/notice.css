@@ -264,6 +264,35 @@ body {
   transition: width 200ms linear;
 }
 
+/* 示意图：小窗里当缩略图用，和当前步骤并排，不抢正文 */
+.action-ref {
+  float: right;
+  width: 6.5rem;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 0.625rem;
+  margin: 0.5rem 0 0.5rem 0.625rem;
+}
+
+.run-top {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.run-ref {
+  flex: 0 0 5.25rem;
+  width: 5.25rem;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 0.625rem;
+}
+
+.run-copy {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
 /* 展开态：和主界面同一张动作卡，只是压到 380px 宽 */
 .run-step {
   margin: 0.5rem 0 0;
@@ -319,7 +348,13 @@ body {
 
 .run-nav {
   flex: 0 0 auto;
+  width: max-content;
+  max-width: 100%;
   margin-left: auto;
+}
+
+.run-nav m3e-icon-button {
+  flex: 0 0 auto;
 }
 
 .run-hint {

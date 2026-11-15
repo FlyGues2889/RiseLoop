@@ -27,6 +27,9 @@ const MARGIN: f64 = 16.0;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NoticeAction {
+    /// 动作 id，通知窗口据此取示意图
+    #[serde(default)]
+    pub id: Option<String>,
     pub name: String,
     pub duration_minutes: u64,
     pub steps: Vec<String>,
@@ -207,7 +210,7 @@ pub fn notice_set_action(
             if current.is_none() {
                 let sitting = minutes.unwrap_or(0);
                 *current = Some(NoticePayload {
-                    title: "该起身了".to_string(),
+                    title: "该活动一下了".to_string(),
                     body: format!("已经连续久坐 {sitting} 分钟。"),
                     sitting_minutes: sitting,
                     action: Some(action.clone()),

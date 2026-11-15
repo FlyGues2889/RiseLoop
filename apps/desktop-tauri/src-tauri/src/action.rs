@@ -22,6 +22,9 @@ pub struct ActionStep {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub struct ActionSnapshot {
     pub loaded: bool,
+    /// 动作 id，两个窗口据此取示意图
+    #[serde(default)]
+    pub id: String,
     pub name: String,
     pub steps: Vec<ActionStep>,
     pub index: usize,
@@ -48,7 +51,7 @@ impl ActionSession {
     }
 
     /// 换一组动作：先停在第一步、不自动开跑（自动开始由页面按交互时机决定）。
-    pub fn load(&self, name: String, steps: Vec<ActionStep>) -> ActionSnapshot {
+    pub fn load(&self, id: String, name: String, steps: Vec<ActionStep>) -> ActionSnapshot {
         let mut current = self.inner.lock().expect("action session poisoned");
         if steps.is_empty() {
             *current = ActionSnapshot::default();
@@ -57,6 +60,7 @@ impl ActionSession {
         let seconds = step_seconds(steps.first());
         *current = ActionSnapshot {
             loaded: true,
+            id,
             name,
             steps,
             index: 0,
@@ -188,11 +192,12 @@ pub fn action_state(session: State<'_, Arc<ActionSession>>) -> ActionSnapshot {
 #[tauri::command]
 pub fn action_load(
     app: AppHandle<Wry>,
+    id: String,
     name: String,
     steps: Vec<ActionStep>,
     session: State<'_, Arc<ActionSession>>,
 ) -> ActionSnapshot {
-    let snapshot = session.load(name, steps);
+    let snapshot = session.load(id, name, steps);
     publish(&app, &snapshot);
     snapshot
 }
@@ -268,7 +273,7 @@ mod tests {
     #[test]
     fn load_arms_first_step_without_starting() {
         let session = ActionSession::default();
-        let snapshot = session.load("起身站立".to_string(), steps());
+        let snapshot = session.load("s1-stand-break".to_string(), "起身站立".to_string(), steps());
         assert!(snapshot.loaded);
         assert_eq!(snapshot.index, 0);
         assert_eq!(snapshot.remaining, 2);
@@ -279,7 +284,7 @@ mod tests {
     #[test]
     fn tick_advances_into_next_step_and_finishes_at_the_end() {
         let session = ActionSession::default();
-        session.load("起身站立".to_string(), steps());
+        session.load("s1-stand-break".to_string(), "起身站立".to_string(), steps());
         session.play();
         assert_eq!(session.tick().map(|item| (item.index, item.remaining)), Some((0, 1)));
         // 第一步走到 0 立刻切到第二步
@@ -297,7 +302,7 @@ mod tests {
     #[test]
     fn paused_session_does_not_tick() {
         let session = ActionSession::default();
-        session.load("起身站立".to_string(), steps());
+        session.load("s1-stand-break".to_string(), "起身站立".to_string(), steps());
         assert!(session.tick().is_none());
         session.play();
         session.pause();
@@ -307,7 +312,7 @@ mod tests {
     #[test]
     fn toggle_restarts_after_finish() {
         let session = ActionSession::default();
-        session.load("起身站立".to_string(), steps());
+        session.load("s1-stand-break".to_string(), "起身站立".to_string(), steps());
         session.play();
         session.next();
         session.next();
@@ -322,7 +327,7 @@ mod tests {
     #[test]
     fn prev_from_done_returns_to_last_step_paused() {
         let session = ActionSession::default();
-        session.load("起身站立".to_string(), steps());
+        session.load("s1-stand-break".to_string(), "起身站立".to_string(), steps());
         session.play();
         session.next();
         let snapshot = session.next();
@@ -337,7 +342,7 @@ mod tests {
     #[test]
     fn next_keeps_running_state_and_wraps_into_done() {
         let session = ActionSession::default();
-        session.load("起身站立".to_string(), steps());
+        session.load("s1-stand-break".to_string(), "起身站立".to_string(), steps());
         session.play();
         let second = session.next();
         assert!(second.running);
@@ -349,8 +354,8 @@ mod tests {
     #[test]
     fn empty_steps_clears_the_session() {
         let session = ActionSession::default();
-        session.load("起身站立".to_string(), steps());
-        let cleared = session.load("空动作".to_string(), Vec::new());
+        session.load("s1-stand-break".to_string(), "起身站立".to_string(), steps());
+        let cleared = session.load("x".to_string(), "空动作".to_string(), Vec::new());
         assert!(!cleared.loaded);
         assert_eq!(cleared.remaining, 0);
     }

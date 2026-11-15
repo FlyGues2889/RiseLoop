@@ -370,9 +370,10 @@ async function pushNoticeAction(action) {
     await invoke("notice_set_action", {
       minutes: sittingMinutes.value,
       action: {
+        id: action.id,
         name: action.name,
         duration_minutes: action.duration_minutes ?? 0,
-        steps: (action.steps ?? []).slice(0, 3),
+        steps: action.steps ?? [],
         source: entry?.title ?? null,
         caution: action.caution ?? null,
       },

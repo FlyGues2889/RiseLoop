@@ -134,8 +134,9 @@ def test_heartbeat_returns_multiple_matched_actions(client, auth_headers):
     assert body["triggered"] is True
     ids = [action["id"] for action in body["actions"]]
     assert len(ids) == 3, ids
-    # 当前状态优先；S1 里先挑不起身的工位动作，再按时长排，最后一个留更低一级的温和备选
-    assert ids == ["s1-seated-knee", "s1-hip-flexor", "s0-neck-release"]
+    # 当前状态优先，同状态里工位可做的排前、再按时长排，且同状态最多取 2 条；
+    # 第 3 位由更低一级的温和备选补上（S0 工位动作里最短的收下巴）
+    assert ids == ["s1-calf-pump", "s1-seated-knee", "s0-chin-tuck"]
     assert "更温和的备选" in body["actions"][2]["match_reason"]
     assert body["action"]["id"] == ids[0]
     assert all(action["match_reason"] for action in body["actions"])

@@ -4,6 +4,7 @@ import ActionCamera from "./ActionCamera.vue";
 import ErrorBanner from "./ErrorBanner.vue";
 import LoadingOverlay from "./LoadingOverlay.vue";
 import { resolveFraming } from "../data/actionFraming.js";
+import { actionImage } from "../data/actionImages.js";
 import {
   actionSession,
   finishAction,
@@ -32,6 +33,9 @@ const steps = computed(() => {
 const cameraOpen = ref(true);
 
 const framing = computed(() => resolveFraming(action.value));
+// 参考图跟着共享会话走，通知窗里切换步骤时这里也是同一个动作
+const refImage = computed(() => actionImage(actionSession.id || action.value?.id || ""));
+const refOpen = ref(false);
 
 const feedbackOpen = ref(false);
 const submitting = ref(false);
@@ -175,6 +179,7 @@ function startTick() {
 async function syncSession() {
   if (!action.value) return;
   await loadAction(
+    action.value.id,
     action.value.name,
     steps.value.map((text, index) => ({
       text,
@@ -334,8 +339,15 @@ onBeforeUnmount(() => {
           </div>
         </div>
 
-        <div class="media-row" :class="{ 'no-camera': !cameraOpen }">
-          <ActionCamera v-if="cameraOpen" :framing="framing" />
+        <div class="media-row">
+          <div class="media-col">
+            <ActionCamera v-if="cameraOpen" :framing="framing" />
+            <button v-if="refImage" class="ref-slot" type="button"
+              aria-label="放大参考图" @click="refOpen = true">
+              <img class="ref-img" :src="refImage" alt="" loading="lazy" />
+              <span class="ref-cap">参考图 · 点击放大</span>
+            </button>
+          </div>
 
           <div class="stage">
             <p class="step-text">{{ steps[stepIndex] }}</p>
@@ -355,7 +367,7 @@ onBeforeUnmount(() => {
                   <span slot="icon" class="material-symbols-rounded">play_arrow</span>
                   {{ remaining === stepTotal ? "开始倒计时" : "继续" }}
                 </m3e-button>
-                <m3e-button v-else variant="tonal" size="medium" @click="stopTick">
+                <m3e-button v-else variant="tonal" @click="stopTick">
                   <span slot="icon" class="material-symbols-rounded">pause</span>
                   暂停
                 </m3e-button>
@@ -386,6 +398,17 @@ onBeforeUnmount(() => {
       <span slot="label">提示</span>
       {{ action.caution }}
     </m3e-callout>
+
+    <m3e-dialog :open.prop="refOpen" class="ref-dialog" @closed="refOpen = false">
+      <h2 slot="header">{{ action?.name }}</h2>
+      <div class="ref-body">
+        <img v-if="refImage" :src="refImage" alt="" />
+        <p class="ref-step">第 {{ stepIndex + 1 }} 步：{{ steps[stepIndex] }}</p>
+      </div>
+      <div slot="actions" end class="ref-actions">
+        <m3e-button variant="outlined" @click="refOpen = false">关闭</m3e-button>
+      </div>
+    </m3e-dialog>
 
     <m3e-card v-if="feedbackOpen" variant="elevated" class="surface-card">
       <div class="surface-body">
@@ -502,16 +525,68 @@ onBeforeUnmount(() => {
   display: grid;
   grid-template-columns: 16rem minmax(0, 1fr);
   gap: 1.25rem;
-  align-items: start;
+  align-items: stretch;
 }
 
-.media-row.no-camera {
+.media-col {
+  display: grid;
   grid-template-columns: minmax(0, 1fr);
+  justify-items: start;
+  gap: 0.75rem;
+}
+
+.ref-slot {
+  display: grid;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 0.9rem;
+  overflow: hidden;
+  background: var(--md-sys-color-surface);
+  cursor: zoom-in;
+  text-align: left;
+}
+
+.ref-img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+
+.ref-cap {
+  display: block;
+  padding: 0.35rem 0.5rem;
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.7rem;
+}
+
+.ref-dialog {
+  --m3e-dialog-max-width: 44rem;
+}
+
+.ref-body {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.ref-body img {
+  display: block;
+  width: 100%;
+  border-radius: 0.75rem;
+}
+
+.ref-step {
+  margin: 0;
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.85rem;
 }
 
 .stage {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 0.55rem;
+  min-width: 0;
 }
 
 .step-text {
@@ -540,9 +615,10 @@ onBeforeUnmount(() => {
 }
 
 .timer {
+  margin-top: auto;
   padding: 0.75rem 0.9rem;
   border-radius: 0.9rem;
-  background: var(--md-sys-color-surface-1);
+  background: var(--md-sys-color-surface);
 }
 
 .timer-head {

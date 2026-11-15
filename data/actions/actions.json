@@ -39,6 +39,44 @@
     "caution": "幅度以不引起疼痛为限"
   },
   {
+    "id": "s0-chin-tuck",
+    "name": "坐姿收下巴",
+    "state": "S0",
+    "body_parts": [
+      "neck",
+      "shoulder"
+    ],
+    "duration_minutes": 1,
+    "intensity": "gentle",
+    "desk_friendly": true,
+    "steps": [
+      "坐直，双脚踩地，肩膀放松下沉",
+      "下巴水平向后收，像做出双下巴，停 5 秒",
+      "放松回正，停 2 秒，再做一次，共做 8 次",
+      "最后抬头回正，做 2 次自然深呼吸"
+    ],
+    "caution": "出现眩晕、放射痛立即停止并就医"
+  },
+  {
+    "id": "s0-thoracic-rotation",
+    "name": "坐姿胸椎旋转",
+    "state": "S0",
+    "body_parts": [
+      "upper_back",
+      "shoulder"
+    ],
+    "duration_minutes": 2,
+    "intensity": "gentle",
+    "desk_friendly": true,
+    "steps": [
+      "坐直，双手抱后脑，肘部朝前，双脚踩地",
+      "呼气时上半身向右转，骨盆保持不动，停 5 秒",
+      "回正，再向左侧转，同样停 5 秒",
+      "左右交替各做 5 次，动作放慢"
+    ],
+    "caution": "腰部不适时减小旋转幅度"
+  },
+  {
     "id": "s1-seated-knee",
     "name": "坐姿伸膝与踝泵",
     "state": "S1",
@@ -96,6 +134,45 @@
     "caution": "膝盖不适时垫软垫"
   },
   {
+    "id": "s1-wall-pushup",
+    "name": "靠墙俯卧撑",
+    "state": "S1",
+    "body_parts": [
+      "shoulder",
+      "upper_back"
+    ],
+    "duration_minutes": 2,
+    "intensity": "normal",
+    "desk_friendly": false,
+    "steps": [
+      "面对空墙站立，双手撑墙与肩同高，略宽于肩",
+      "双脚后退半步，身体保持一条斜线",
+      "屈肘贴近身体，让身体靠近墙面，再推回，做 10 次",
+      "推起时不耸肩，肩胛向两侧展开",
+      "最后一组放慢，感受上背发力"
+    ],
+    "caution": "肩部出现锐痛立即停止"
+  },
+  {
+    "id": "s1-calf-pump",
+    "name": "坐姿小腿泵",
+    "state": "S1",
+    "body_parts": [
+      "hip",
+      "low_back"
+    ],
+    "duration_minutes": 2,
+    "intensity": "normal",
+    "desk_friendly": true,
+    "steps": [
+      "坐直，双脚踩地，膝盖与髋同宽",
+      "脚跟抬起、脚尖撑地，停 2 秒后放下，做 15 次",
+      "脚尖回勾、脚跟点地，停 2 秒，做 15 次",
+      "双脚放平，配合深呼吸活动脚踝 10 次"
+    ],
+    "caution": "小腿胀痛或肿胀时停止并就医"
+  },
+  {
     "id": "s2-core-activation",
     "name": "坐姿核心激活",
     "state": "S2",
@@ -132,6 +209,25 @@
       "最后一组，注意不要耸肩，做 12 次"
     ],
     "caution": "无弹力带可用毛巾替代做等长收缩"
+  },
+  {
+    "id": "s2-wall-sit",
+    "name": "靠墙静蹲",
+    "state": "S2",
+    "body_parts": [
+      "hip",
+      "low_back"
+    ],
+    "duration_minutes": 2,
+    "intensity": "normal",
+    "desk_friendly": false,
+    "steps": [
+      "背靠空墙站立，双脚前移约一脚半，与髋同宽",
+      "沿墙下滑到膝盖约 100 度，背部贴墙",
+      "保持 20 秒，膝盖不超过脚尖，别憋气",
+      "缓慢站起，抖动双腿放松，共做 3 组"
+    ],
+    "caution": "膝盖不适时减小下蹲角度"
   },
   {
     "id": "s3-posture-reset",
@@ -171,5 +267,24 @@
       "停 2 秒再开始下一轮，每轮 12 秒，共做 6 轮"
     ],
     "caution": "觉得憋气或头晕时改为自然呼吸"
+  },
+  {
+    "id": "s3-seated-hip-circle",
+    "name": "坐姿髋绕环",
+    "state": "S3",
+    "body_parts": [
+      "hip",
+      "low_back"
+    ],
+    "duration_minutes": 2,
+    "intensity": "normal",
+    "desk_friendly": true,
+    "steps": [
+      "坐在椅子前缘，坐骨压实，双脚略分开踩地",
+      "骨盆向前、右、后、左画小圈，做 8 次",
+      "反方向再画 8 次，上身保持不动",
+      "收回坐正，做 3 次深呼吸"
+    ],
+    "caution": "腰部出现锐痛立即停止"
   }
 ]
