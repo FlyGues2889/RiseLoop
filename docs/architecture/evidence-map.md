@@ -5,7 +5,7 @@
 | 项 | 内容 |
 |---|---|
 | 用途 | 把 PRD 的可配置参数与行为改变路径，逐条挂到可核验文献上；答辩时用于说明“参数不是拍脑袋” |
-| 状态 | **已回填（2026-11-08）**：39 条唯一记录、7 条指南；G4/G5 通过 |
+| 状态 | **已回填（2026-11-08）**：39 条唯一记录；另有 `articles.json` 8 条问答语料；G4/G5 通过 |
 | 上游 | `PRD.md` 第 4、5、10 节 |
 | 下游 | `data/knowledge/evidence.json` |
 | 边界 | 离线资料文档，不参与产品运行时，不接入 `services/agent-orchestrator` |
@@ -64,7 +64,7 @@
 
 ## 5. 质量与验收（2026-11-08）
 
-- 台账：`data/knowledge/evidence.json`，39 条唯一记录 / 40 个主题归属；7 条指南。
+- 台账：`data/knowledge/evidence.json`，39 条唯一记录 / 40 个主题归属；问答语料 `articles.json` 8 条。
 - 契约：`data/knowledge/evidence.schema.json`；每条记录的 `provenance` 与 `verification` 可回溯到 PMID efetch 或官方页面。
 - 验收命令：
   - `python scripts/validate_evidence.py` → 0 error
