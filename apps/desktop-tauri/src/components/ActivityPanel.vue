@@ -357,17 +357,17 @@ onBeforeUnmount(() => {
                 </div>
               </div>
             </div>
-
-            <m3e-callout v-if="action.caution" variant="error" class="caution-callout">
-              <span slot="icon" class="material-symbols-rounded">health_and_safety</span>
-              <span slot="label">健康提示</span>
-              {{ action.caution }}
-            </m3e-callout>
           </div>
         </div>
 
       </div>
     </m3e-card>
+
+    <m3e-callout v-if="action.caution && !feedbackOpen" variant="error" class="caution-callout">
+      <span slot="icon" class="material-symbols-rounded">health_and_safety</span>
+      <span slot="label">健康提示</span>
+      {{ action.caution }}
+    </m3e-callout>
 
     <m3e-card v-if="feedbackOpen" variant="elevated" class="surface-card">
       <div class="surface-body">

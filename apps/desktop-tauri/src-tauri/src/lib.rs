@@ -117,13 +117,14 @@ pub fn run() {
                             sitting_minutes: 46,
                             action: Some(notice::NoticeAction {
                                 name: "起身站立微活动".to_string(),
-                                duration_minutes: 3,
+                                duration_minutes: 2,
                                 steps: vec![
                                     "起身离开座位".to_string(),
                                     "原地抬膝 10 次".to_string(),
                                     "颈肩绕环 30 秒".to_string(),
                                 ],
                                 source: Some("动作依据 · 主动休息".to_string()),
+                                caution: Some("起身时动作放慢，避免体位性眩晕".to_string()),
                             }),
                         },
                     );

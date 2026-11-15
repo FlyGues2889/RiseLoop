@@ -170,36 +170,42 @@ body {
   vertical-align: middle;
 }
 
+/* 步骤列表交给 m3e-list，这里只收掉内边距让它和卡片边缘对齐 */
 .steps {
-  margin: 0.625rem 0 0;
-  padding: 0;
-  list-style: none;
-  display: grid;
-  gap: 0.5rem;
-  counter-reset: notice-step;
+  margin-top: 0.5rem;
+  --m3e-list-item-padding-inline: 0;
+  --m3e-list-item-between-space: 0.625rem;
+  --m3e-list-item-font-size: 0.813rem;
+  --m3e-list-item-font-weight: 400;
+  --m3e-list-item-line-height: 1.6;
 }
 
-.steps li {
-  counter-increment: notice-step;
-  display: flex;
-  gap: 0.625rem;
+.steps > m3e-list-item {
   color: var(--md-sys-color-on-surface-variant);
-  font-size: 0.813rem;
-  line-height: 1.6;
 }
 
-.steps li::before {
-  content: counter(notice-step);
+.step-no {
   flex: 0 0 auto;
   width: 1.25rem;
   height: 1.25rem;
-  margin-top: 0.15rem;
   display: grid;
   place-items: center;
   border-radius: 50%;
   border: 0.2rem solid var(--md-sys-color-outline-variant);
   color: var(--md-sys-color-outline);
   font-size: 0.625rem;
+}
+
+/* 安全警示：主题的 error-container 是整块纯红，压成浅底 + 红字，和主界面同一套口径 */
+.run-caution {
+  display: block;
+  margin-top: 0.75rem;
+  --m3e-error-container-callout-container-color: color-mix(in srgb, var(--md-sys-color-error) 10%, var(--md-sys-color-surface));
+  --m3e-error-container-callout-label-text-color: var(--md-sys-color-error);
+  --m3e-error-container-callout-content-color: var(--md-sys-color-on-surface);
+  --m3e-error-container-callout-icon-color: var(--md-sys-color-error);
+  --m3e-error-container-callout-leading-accent-color: var(--md-sys-color-error);
+  --m3e-callout-content-font-size: 0.75rem;
 }
 
 .source {

@@ -14,7 +14,7 @@
     "name": "肩胛绕环与胸椎伸展",
     "state": "S0",
     "body_parts": ["shoulder", "upper_back"],
-    "duration_minutes": 2,
+    "duration_minutes": 1,
     "intensity": "gentle",
     "steps": ["双手搭肩，肘部画大圆 10 次", "缓慢反向 10 次", "双手抱头轻展胸椎 5 次"],
     "caution": "幅度以不引起疼痛为限"
@@ -24,7 +24,7 @@
     "name": "起身站立微活动",
     "state": "S1",
     "body_parts": ["low_back", "hip"],
-    "duration_minutes": 3,
+    "duration_minutes": 2,
     "intensity": "normal",
     "steps": ["起身站立，双脚与髋同宽", "双手上举伸展 10 秒，重复 3 次", "原地抬膝 20 次"],
     "caution": "起身时动作放慢，避免体位性眩晕"
@@ -34,7 +34,7 @@
     "name": "弓步髋屈肌拉伸",
     "state": "S1",
     "body_parts": ["hip", "low_back"],
-    "duration_minutes": 4,
+    "duration_minutes": 1,
     "intensity": "normal",
     "steps": ["单膝跪地成弓步", "骨盆后倾，感受髋前侧牵拉 20 秒", "换侧，各做 2 组"],
     "caution": "膝盖不适时垫软垫"
@@ -44,7 +44,7 @@
     "name": "坐姿核心激活",
     "state": "S2",
     "body_parts": ["low_back", "core"],
-    "duration_minutes": 6,
+    "duration_minutes": 2,
     "intensity": "normal",
     "steps": ["坐骨压实椅面，脊柱延展", "呼气收腹保持 5 秒，重复 8 次", "配合呼吸做骨盆前后倾 10 次"],
     "caution": "腰部出现锐痛立即停止"
@@ -54,7 +54,7 @@
     "name": "弹力带划船",
     "state": "S2",
     "body_parts": ["upper_back", "shoulder"],
-    "duration_minutes": 7,
+    "duration_minutes": 2,
     "intensity": "normal",
     "steps": ["弹力带固定于胸前高度", "肩胛后缩带动肘部后拉", "每组 12 次，共 3 组"],
     "caution": "无弹力带可用毛巾替代做等长收缩"
@@ -64,7 +64,7 @@
     "name": "维持期体态重置",
     "state": "S3",
     "body_parts": ["neck", "shoulder", "low_back"],
-    "duration_minutes": 3,
+    "duration_minutes": 2,
     "intensity": "normal",
     "steps": ["靠墙站立，后脑、肩胛、骨盆贴墙", "保持 30 秒，重复 3 次", "回到坐姿做 5 次深呼吸"],
     "caution": "贴墙时不必强求全部接触"

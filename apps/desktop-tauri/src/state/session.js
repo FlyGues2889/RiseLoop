@@ -374,6 +374,7 @@ async function pushNoticeAction(action) {
         duration_minutes: action.duration_minutes ?? 0,
         steps: (action.steps ?? []).slice(0, 3),
         source: entry?.title ?? null,
+        caution: action.caution ?? null,
       },
     });
   } catch {

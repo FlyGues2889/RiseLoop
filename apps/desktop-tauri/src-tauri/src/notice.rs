@@ -31,6 +31,9 @@ pub struct NoticeAction {
     pub duration_minutes: u64,
     pub steps: Vec<String>,
     pub source: Option<String>,
+    /// 安全警示，主窗与通知窗共用同一份文案
+    #[serde(default)]
+    pub caution: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

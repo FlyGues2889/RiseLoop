@@ -134,8 +134,9 @@ def test_heartbeat_returns_multiple_matched_actions(client, auth_headers):
     assert body["triggered"] is True
     ids = [action["id"] for action in body["actions"]]
     assert len(ids) == 3, ids
-    assert ids[0] == "s1-stand-break"
-    assert "s1-hip-flexor" in ids
+    # 当前状态优先；同为 S1 时按时长升序，所以最短的那个排前面
+    assert ids[0] in {"s1-stand-break", "s1-hip-flexor"}
+    assert "s1-stand-break" in ids and "s1-hip-flexor" in ids
     assert "s0-neck-release" in ids
     assert body["action"]["id"] == ids[0]
     assert all(action["match_reason"] for action in body["actions"])

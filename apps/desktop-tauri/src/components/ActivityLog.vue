@@ -91,12 +91,12 @@ onBeforeUnmount(stopTicker);
 
       <m3e-tab-panel id="log-actions">
         <div class="panel">
-          <div v-if="state.log.length" class="list">
-            <div v-for="(item, index) in state.log" :key="index" class="row">
-              <span class="time mono">{{ item.at }}</span>
+          <m3e-list v-if="state.log.length" class="log-list">
+            <m3e-list-item v-for="(item, index) in state.log" :key="index">
+              <span slot="leading" class="time mono">{{ item.at }}</span>
               <span class="text">{{ item.message }}</span>
-            </div>
-          </div>
+            </m3e-list-item>
+          </m3e-list>
           <p v-else class="empty">还没有记录。操作之后，这里会留下时间线。</p>
         </div>
       </m3e-tab-panel>
@@ -115,12 +115,12 @@ onBeforeUnmount(stopTicker);
             </p>
           </section>
 
-          <ul v-if="cameraRecent.length" class="rows">
-            <li v-for="item in cameraRecent" :key="item.at + item.text">
-              <span class="time">{{ timeOf(item.at) }}</span>
+          <m3e-list v-if="cameraRecent.length" class="log-list">
+            <m3e-list-item v-for="item in cameraRecent" :key="item.at + item.text">
+              <span slot="leading" class="time">{{ timeOf(item.at) }}</span>
               <span class="kind" :class="item.kind">{{ item.text }}</span>
-            </li>
-          </ul>
+            </m3e-list-item>
+          </m3e-list>
           <p v-else class="empty">还没有记录。</p>
 
           <p v-if="logPath" class="path">日志文件：{{ logPath }}</p>
@@ -145,16 +145,17 @@ onBeforeUnmount(stopTicker);
   padding: 0.25rem 0 0;
 }
 
-.list {
-  display: grid;
-  gap: 0.5rem;
+/* 时间线交给 m3e-list，这里只收掉内边距、压一行高度，让 30 条记录放得下 */
+.log-list {
+  --m3e-list-item-padding-inline: 0;
+  --m3e-list-item-between-space: 0.75rem;
+  --m3e-list-item-one-line-height: 2.75rem;
+  --m3e-list-item-font-size: 0.8125rem;
+  --m3e-list-item-font-weight: 400;
+  --m3e-list-item-line-height: 1.6;
 }
 
-.row {
-  display: flex;
-  gap: 1rem;
-  align-items: baseline;
-  font-size: 0.78rem;
+.log-list > m3e-list-item {
   color: var(--md-sys-color-on-surface-variant);
 }
 
@@ -225,22 +226,6 @@ onBeforeUnmount(stopTicker);
 .status-hint {
   margin: 0;
   color: var(--md-sys-color-on-surface-variant);
-  font-size: 0.8125rem;
-}
-
-.rows {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 0.375rem;
-}
-
-.rows li {
-  display: flex;
-  gap: 0.75rem;
-  align-items: baseline;
   font-size: 0.8125rem;
 }
 

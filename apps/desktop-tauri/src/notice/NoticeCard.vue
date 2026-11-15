@@ -305,6 +305,11 @@ onBeforeUnmount(() => {
               </template>
             </div>
 
+            <m3e-callout v-if="action.caution" variant="error" class="run-caution">
+              <span slot="icon" class="material-symbols-rounded">health_and_safety</span>
+              {{ action.caution }}
+            </m3e-callout>
+
             <p v-if="done" class="run-hint">做完就到主界面记录一下感受吧。</p>
           </template>
 
@@ -313,9 +318,12 @@ onBeforeUnmount(() => {
               <strong>{{ action.name }}<span class="tag">推荐</span></strong>
               <span class="mono">{{ action.duration_minutes }} 分钟</span>
             </div>
-            <ol class="steps">
-              <li v-for="(step, index) in steps()" :key="index">{{ step }}</li>
-            </ol>
+            <m3e-list class="steps">
+              <m3e-list-item v-for="(step, index) in steps()" :key="index">
+                <span slot="leading" class="step-no">{{ index + 1 }}</span>
+                {{ step }}
+              </m3e-list-item>
+            </m3e-list>
             <p v-if="action.source" class="source">{{ action.source }}</p>
           </template>
           <p v-else class="pending">正在准备动作…</p>
@@ -325,6 +333,11 @@ onBeforeUnmount(() => {
             <m3e-button variant="text" size="small" @click="dismiss">跳过</m3e-button>
             <m3e-button variant="text" size="small" @click="openMain">打开主界面</m3e-button>
           </div>
+
+          <m3e-callout v-if="action && action.caution && !actionSession.loaded" variant="error" class="run-caution">
+            <span slot="icon" class="material-symbols-rounded">health_and_safety</span>
+            {{ action.caution }}
+          </m3e-callout>
         </div>
       </div>
 
