@@ -1,9 +1,8 @@
 <script setup>
-import { computed, nextTick, onBeforeUnmount, ref, watch } from "vue";
+import { computed, onBeforeUnmount, ref, watch } from "vue";
+import ActionCamera from "./ActionCamera.vue";
 import ErrorBanner from "./ErrorBanner.vue";
 import LoadingOverlay from "./LoadingOverlay.vue";
-import { sourceForAction } from "../data/actionSources.js";
-import { prefs as cameraPrefs } from "../state/postureMonitor.js";
 import { selectPendingAction, state, submitFeedback } from "../state/session.js";
 
 const actions = computed(() => {
@@ -12,16 +11,17 @@ const actions = computed(() => {
 });
 const index = ref(0);
 const action = computed(() => actions.value[index.value] ?? null);
-const source = computed(() => sourceForAction(action.value?.id));
+// 推荐动作在这一次干预里保持稳定，切换 tab 不会把「推荐」搬走
+const recommendedId = ref(state.pending?.id ?? null);
+const isRecommended = computed(() => action.value?.id === recommendedId.value);
 
-const videoEl = ref(null);
-const cameraOn = ref(false);
-const cameraChecked = ref(false);
-let stream = null;
+// 预留给动作参考图：{ box, label, image }
+const referenceGuide = ref(null);
 
 const remaining = ref(0);
 const running = ref(false);
 const finished = ref(false);
+const feedbackOpen = ref(false);
 const submitting = ref(false);
 const error = ref("");
 
@@ -56,54 +56,6 @@ const timeText = computed(() => {
 let timer = null;
 let advanceTimer = null;
 let autoStartArmed = false;
-
-async function canUseCamera() {
-  if (cameraPrefs.deviceId) return true;
-  try {
-    const status = await navigator.permissions.query({ name: "camera" });
-    return status.state === "granted";
-  } catch {
-    return false;
-  }
-}
-
-function closeCamera() {
-  if (stream) {
-    stream.getTracks().forEach((track) => track.stop());
-    stream = null;
-  }
-  if (videoEl.value) videoEl.value.srcObject = null;
-}
-
-// 只保留一个 video：拿到已授权设备就直接出画面，不再跑关键点
-async function syncCamera() {
-  cameraChecked.value = false;
-  cameraOn.value = false;
-  if (!(await canUseCamera())) {
-    cameraChecked.value = true;
-    return;
-  }
-  try {
-    const deviceId = cameraPrefs.deviceId;
-    stream = await navigator.mediaDevices.getUserMedia({
-      video: deviceId
-        ? { deviceId: { exact: deviceId }, width: { ideal: 640 }, height: { ideal: 480 } }
-        : { width: { ideal: 640 }, height: { ideal: 480 } },
-      audio: false,
-    });
-    cameraOn.value = true;
-    cameraChecked.value = true;
-    await nextTick();
-    if (videoEl.value) {
-      videoEl.value.srcObject = stream;
-      await videoEl.value.play().catch(() => { });
-    }
-  } catch {
-    cameraOn.value = false;
-    cameraChecked.value = true;
-    closeCamera();
-  }
-}
 
 function disarmAutoStart() {
   document.removeEventListener("pointerdown", onFirstFocus, true);
@@ -155,15 +107,33 @@ function onActionDone() {
     return;
   }
   finished.value = true;
+  openFeedback();
+}
+
+function openFeedback() {
+  stopTick();
+  disarmAutoStart();
+  feedbackOpen.value = true;
+}
+
+function skipAction() {
+  finished.value = true;
+  openFeedback();
+}
+
+function indexOfRecommended() {
+  const position = actions.value.findIndex((item) => item.id === recommendedId.value);
+  return position >= 0 ? position : 0;
 }
 
 function resetSequence() {
   stopTick();
   if (advanceTimer) clearTimeout(advanceTimer);
   advanceTimer = null;
-  index.value = 0;
+  index.value = indexOfRecommended();
   remaining.value = totalSeconds.value;
   finished.value = false;
+  feedbackOpen.value = false;
   error.value = "";
   feeling.value = "same";
   painScore.value = state.assessment?.pain_score ?? 2;
@@ -182,11 +152,11 @@ function pickAction(item) {
 }
 
 watch(
-  () => state.pending?.id,
-  (id) => {
-    if (!id) return;
+  () => state.pendingActions,
+  () => {
+    if (!state.pending?.id) return;
+    recommendedId.value = state.pending.id;
     resetSequence();
-    void syncCamera();
     armAutoStart();
   },
   { immediate: true }
@@ -232,25 +202,25 @@ async function submit(completion) {
 onBeforeUnmount(() => {
   disarmAutoStart();
   stopTick();
-  closeCamera();
   if (advanceTimer) clearTimeout(advanceTimer);
 });
 </script>
 <template>
   <div class="activity-panel">
-    <m3e-card v-if="action" variant="elevated" class="surface-card">
+    <m3e-card v-if="action && !feedbackOpen" variant="elevated" class="surface-card">
       <div class="surface-body plan-body-wrap">
         <header class="card-head">
-          <h2>{{ action.name }}</h2>
+          <h2>
+            {{ action.name }}
+            <span v-if="isRecommended" class="tag">推荐</span>
+          </h2>
           <span class="step-count">第 {{ index + 1 }} / {{ actions.length }} 个动作</span>
         </header>
-
-        <p class="lead">{{ action.match_reason || "按当前状态匹配" }}</p>
 
         <m3e-tabs v-if="actions.length > 1" class="plan-tabs">
           <m3e-tab v-for="item in actions" :key="item.id" :selected.prop="item.id === action?.id"
             @click="pickAction(item)">
-            {{ item.name }}
+            {{ item.name }}<span v-if="item.id === recommendedId" class="tag-inline">推荐</span>
           </m3e-tab>
         </m3e-tabs>
 
@@ -262,33 +232,27 @@ onBeforeUnmount(() => {
         </div>
 
         <div class="media-row">
-          <div class="camera">
-            <video v-if="cameraOn" ref="videoEl" class="camera-video" autoplay muted playsinline></video>
-            <div v-else class="camera-off">
-              <span class="material-symbols-rounded">videocam_off</span>
-              <span>{{ cameraChecked ? "未开启" : "检查中" }}</span>
-            </div>
-          </div>
+          <ActionCamera :reference="referenceGuide" />
 
           <div class="timer">
             <div class="timer-head">
               <span class="mono time">{{ timeText }}</span>
-              <span class="step-status">{{ finished ? "已完成" : running ? "进行中" : "准备开始" }}</span>
+              <span class="step-status">{{ running ? "进行中" : "已暂停" }}</span>
             </div>
             <m3e-linear-progress-indicator class="progress" :value.prop="progress"></m3e-linear-progress-indicator>
             <div class="timer-actions">
-              <m3e-button v-if="!running && !finished" variant="tonal" size="small" @click="startTick">
+              <m3e-button v-if="!running" variant="tonal" size="small" @click="startTick">
                 {{ remaining === totalSeconds ? "开始倒计时" : "继续" }}
               </m3e-button>
-              <m3e-button v-else-if="running" variant="text" size="small" @click="stopTick">暂停</m3e-button>
-              <span v-if="finished" class="done">全部动作已完成，请提交反馈</span>
+              <m3e-button v-else variant="text" size="small" @click="stopTick">暂停</m3e-button>
+              <m3e-button variant="text" size="small" @click="skipAction">跳过运动</m3e-button>
             </div>
           </div>
         </div>
       </div>
     </m3e-card>
 
-    <m3e-card variant="elevated" class="surface-card">
+    <m3e-card v-if="feedbackOpen" variant="elevated" class="surface-card">
       <div class="surface-body">
         <header class="card-head">
           <h3>完成反馈</h3>
@@ -388,12 +352,6 @@ onBeforeUnmount(() => {
   white-space: nowrap;
 }
 
-.lead {
-  margin: 0;
-  color: var(--md-sys-color-on-surface-variant);
-  font-size: 0.8rem;
-}
-
 .plan-tabs {
   margin-bottom: 0.25rem;
 }
@@ -417,39 +375,9 @@ onBeforeUnmount(() => {
 
 .media-row {
   display: grid;
-  grid-template-columns: 9rem minmax(0, 1fr);
+  grid-template-columns: 12rem minmax(0, 1fr);
   gap: 1rem;
-  align-items: stretch;
-}
-
-.camera {
-  position: relative;
-  width: 9rem;
-  overflow: hidden;
-  border-radius: 0.9rem;
-  background: #000;
-}
-
-.camera-video {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transform: scaleX(-1);
-}
-
-.camera-off {
-  display: grid;
-  place-content: center;
-  justify-items: center;
-  gap: 0.3rem;
-  height: 100%;
-  color: var(--md-sys-color-outline);
-  font-size: 0.68rem;
-}
-
-.camera-off .material-symbols-rounded {
-  font-size: 1.4rem;
+  align-items: start;
 }
 
 .timer {
@@ -484,11 +412,6 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-}
-
-.done {
-  color: var(--md-sys-color-tertiary);
-  font-size: 0.75rem;
 }
 
 .feedback-grid {
@@ -526,13 +449,26 @@ onBeforeUnmount(() => {
   gap: 0.5rem;
 }
 
+.tag {
+  margin-left: 0.5rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: 62.438rem;
+  background: var(--md-sys-color-tertiary-container);
+  color: var(--md-sys-color-on-tertiary-container);
+  font-size: 0.65rem;
+  font-weight: 500;
+  vertical-align: middle;
+}
+
+.tag-inline {
+  margin-left: 0.35rem;
+  color: var(--md-sys-color-tertiary);
+  font-size: 0.65rem;
+}
+
 @media (max-width: 720px) {
   .media-row {
     grid-template-columns: 1fr;
-  }
-
-  .camera {
-    width: 100%;
   }
 }
 </style>

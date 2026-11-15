@@ -62,7 +62,7 @@ export function cameraErrorMessage(err) {
   const name = err?.name ?? "";
   if (name === "NotAllowedError" || name === "SecurityError") return "没拿到摄像头权限，可以在系统设置里允许后重试。";
   if (name === "NotFoundError" || name === "OverconstrainedError") return "没找到可用的摄像头。";
-  if (name === "NotReadableError" || name === "AbortError") return "摄像头被其他程序占用了，关掉会议软件再试。";
+  if (name === "NotReadableError" || name === "AbortError") return "摄像头被其他程序占用了。";
   return "摄像头没能打开，稍后再试一次。";
 }
 
@@ -89,8 +89,7 @@ export async function requestPermission() {
   return true;
 }
 
-async function ensureLandmarker() {
-  if (landmarker) return landmarker;
+async function buildLandmarker() {
   const { FilesetResolver, PoseLandmarker } = await import("@mediapipe/tasks-vision");
   const vision = await FilesetResolver.forVisionTasks("/mediapipe/wasm");
   const options = {
@@ -102,11 +101,15 @@ async function ensureLandmarker() {
     minTrackingConfidence: 0.5,
   };
   try {
-    landmarker = await PoseLandmarker.createFromOptions(vision, options);
+    return await PoseLandmarker.createFromOptions(vision, options);
   } catch {
     options.baseOptions.delegate = "CPU";
-    landmarker = await PoseLandmarker.createFromOptions(vision, options);
+    return PoseLandmarker.createFromOptions(vision, options);
   }
+}
+
+async function ensureLandmarker() {
+  if (!landmarker) landmarker = await buildLandmarker();
   return landmarker;
 }
 
@@ -348,4 +351,9 @@ export function markAsked(enabled) {
   prefs.asked = true;
   prefs.enabled = enabled;
   savePrefs();
+}
+
+/** 动作页需要独立实例：两个画面各自的视频时间戳不能混用。 */
+export function createPoseLandmarker() {
+  return buildLandmarker();
 }

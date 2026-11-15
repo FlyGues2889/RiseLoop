@@ -156,6 +156,17 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+.tag {
+  margin-left: 0.4rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 62.438rem;
+  background: var(--md-sys-color-tertiary-container);
+  color: var(--md-sys-color-on-tertiary-container);
+  font-size: 0.6rem;
+  font-weight: 500;
+  vertical-align: middle;
+}
+
 .steps {
   margin: 0.625rem 0 0;
   padding: 0;

@@ -6,6 +6,7 @@ import { listen } from "@tauri-apps/api/event";
 
 const AUTO_DISMISS_SECONDS = 15;
 const TICK_MS = 200;
+// .stage 上下各 0.625rem 的留白
 const STAGE_PADDING = 20;
 const MAX_HEIGHT = 640;
 
@@ -37,7 +38,8 @@ async function syncHeight() {
   await nextTick();
   const card = cardEl.value;
   if (!card) return;
-  const height = Math.ceil(card.scrollHeight) + STAGE_PADDING;
+  const rendered = card.getBoundingClientRect().height;
+  const height = Math.ceil(Math.max(rendered, card.scrollHeight)) + STAGE_PADDING + 6;
   invoke("notice_resize", { height, focusable: expanded.value }).catch(() => { });
 }
 
@@ -152,16 +154,16 @@ onBeforeUnmount(() => {
           <strong>{{ payload.title }}</strong>
           <small>{{ payload.body }}</small>
         </div>
-        <button class="close" type="button" aria-label="关闭提醒" @click="dismiss">
+        <m3e-icon-button @click="dismiss" variant="outlined">
           <span class="material-symbols-rounded">close</span>
-        </button>
+        </m3e-icon-button>
       </header>
 
       <div class="reveal">
         <div class="reveal-inner">
           <template v-if="action">
             <div class="action-head">
-              <strong>{{ action.name }}</strong>
+              <strong>{{ action.name }}<span class="tag">推荐</span></strong>
               <span class="mono">{{ action.duration_minutes }} 分钟</span>
             </div>
             <ol class="steps">
