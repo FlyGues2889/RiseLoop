@@ -363,7 +363,7 @@ onBeforeUnmount(() => {
       </div>
     </m3e-card>
 
-    <m3e-callout v-if="action.caution && !feedbackOpen" variant="error" class="caution-callout">
+    <m3e-callout v-if="action.caution && !feedbackOpen" variant="surface" class="caution-callout">
       <span slot="icon" class="material-symbols-rounded">health_and_safety</span>
       <span slot="label">健康提示</span>
       {{ action.caution }}
@@ -545,12 +545,6 @@ onBeforeUnmount(() => {
 
 .caution-callout {
   display: block;
-  /* 主题里的 error-container 是纯红，整块铺满太刺眼，这里压成浅底 + 红字 */
-  --m3e-error-container-callout-container-color: color-mix(in srgb, var(--md-sys-color-error) 10%, var(--md-sys-color-surface));
-  --m3e-error-container-callout-label-text-color: var(--md-sys-color-error);
-  --m3e-error-container-callout-content-color: var(--md-sys-color-on-surface);
-  --m3e-error-container-callout-icon-color: var(--md-sys-color-error);
-  --m3e-error-container-callout-leading-accent-color: var(--md-sys-color-error);
 }
 
 .feedback-grid {

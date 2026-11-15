@@ -196,16 +196,12 @@ body {
   font-size: 0.625rem;
 }
 
-/* 安全警示：主题的 error-container 是整块纯红，压成浅底 + 红字，和主界面同一套口径 */
+/* 安全警示：surface 变体，和主界面同一套口径，只在小窗里收一档字号 */
 .run-caution {
   display: block;
   margin-top: 0.75rem;
-  --m3e-error-container-callout-container-color: color-mix(in srgb, var(--md-sys-color-error) 10%, var(--md-sys-color-surface));
-  --m3e-error-container-callout-label-text-color: var(--md-sys-color-error);
-  --m3e-error-container-callout-content-color: var(--md-sys-color-on-surface);
-  --m3e-error-container-callout-icon-color: var(--md-sys-color-error);
-  --m3e-error-container-callout-leading-accent-color: var(--md-sys-color-error);
   --m3e-callout-content-font-size: 0.75rem;
+  --m3e-callout-top-space: 0.625rem;
 }
 
 .source {
