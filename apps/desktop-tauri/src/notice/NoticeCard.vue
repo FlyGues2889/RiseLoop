@@ -306,8 +306,8 @@ onBeforeUnmount(() => {
             </div>
 
             <m3e-callout v-if="action.caution" variant="surface" class="run-caution">
-              <span slot="icon" class="material-symbols-rounded">health_and_safety</span>
-              <span slot="label">健康提示</span>
+              <span slot="icon" class="material-symbols-rounded">info</span>
+              <span slot="label">提示</span>
               {{ action.caution }}
             </m3e-callout>
 
@@ -336,8 +336,8 @@ onBeforeUnmount(() => {
           </div>
 
           <m3e-callout v-if="action && action.caution && !actionSession.loaded" variant="surface" class="run-caution">
-            <span slot="icon" class="material-symbols-rounded">health_and_safety</span>
-            <span slot="label">健康提示</span>
+            <span slot="icon" class="material-symbols-rounded">info</span>
+            <span slot="label">提示</span>
             {{ action.caution }}
           </m3e-callout>
         </div>

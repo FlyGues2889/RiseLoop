@@ -80,6 +80,7 @@ class Action(Base):
     body_parts: Mapped[list] = mapped_column(JSONB)
     duration_minutes: Mapped[int] = mapped_column(Integer)
     intensity: Mapped[str] = mapped_column(String(16))
+    desk_friendly: Mapped[bool] = mapped_column(Boolean, default=True)
     steps: Mapped[list] = mapped_column(JSONB)
     caution: Mapped[str] = mapped_column(Text, default="")
     enabled: Mapped[bool] = mapped_column(Boolean, default=True)

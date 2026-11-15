@@ -44,11 +44,13 @@ CREATE TABLE IF NOT EXISTS actions (
     body_parts JSONB NOT NULL,
     duration_minutes INTEGER NOT NULL,
     intensity VARCHAR(16) NOT NULL,
+    desk_friendly BOOLEAN NOT NULL DEFAULT TRUE,
     steps JSONB NOT NULL,
     caution TEXT NOT NULL DEFAULT '',
     enabled BOOLEAN NOT NULL DEFAULT TRUE
 );
 CREATE INDEX IF NOT EXISTS ix_actions_state ON actions (state);
+-- 旧库补列：ALTER TABLE actions ADD COLUMN IF NOT EXISTS desk_friendly BOOLEAN NOT NULL DEFAULT TRUE;
 
 CREATE TABLE IF NOT EXISTS intervention_logs (
     id UUID PRIMARY KEY,

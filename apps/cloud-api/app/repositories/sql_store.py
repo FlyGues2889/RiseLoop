@@ -173,6 +173,7 @@ class SqlStore:
                 body_parts=row.body_parts,
                 duration_minutes=row.duration_minutes,
                 intensity=row.intensity,
+                desk_friendly=getattr(row, "desk_friendly", True),
                 steps=row.steps,
                 caution=row.caution or "",
             )
@@ -180,7 +181,9 @@ class SqlStore:
         ]
         if body_parts:
             actions = [action for action in actions if set(action.body_parts) & set(body_parts)]
-        return sorted(actions, key=lambda action: action.duration_minutes)
+        return sorted(
+            actions, key=lambda action: (not action.desk_friendly, action.duration_minutes)
+        )
 
     async def add_sitting_event(self, user_id: str, event_type: str, source: str = "manual") -> None:
         async with self._session() as session:

@@ -28,6 +28,7 @@ async def current_intervention(user_id: UserIdDep, store: StoreDep) -> ActionPay
                 name=action.name,
                 duration_minutes=action.duration_minutes,
                 intensity=action.intensity,
+                desk_friendly=action.desk_friendly,
                 steps=list(action.steps),
                 caution=action.caution,
             )

@@ -79,8 +79,11 @@ export function rankActions(library, { state, bodyParts, maxMinutes, limit = 3 }
   items.sort((a, b) => {
     const aSame = a.sourceState === state ? 1 : 0;
     const bSame = b.sourceState === state ? 1 : 0;
+    const aDesk = a.action.desk_friendly === false ? 1 : 0;
+    const bDesk = b.action.desk_friendly === false ? 1 : 0;
     return (
       bSame - aSame ||
+      aDesk - bDesk ||
       b.overlap - a.overlap ||
       a.action.duration_minutes - b.action.duration_minutes ||
       a.action.id.localeCompare(b.action.id)

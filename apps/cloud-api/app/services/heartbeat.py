@@ -30,6 +30,7 @@ def _to_payload(action, match_reason: str = "") -> ActionPayload:
         body_parts=list(action.body_parts),
         steps=list(action.steps),
         caution=action.caution,
+        desk_friendly=action.desk_friendly,
         match_reason=match_reason,
     )
 
@@ -56,11 +57,25 @@ def _match_reason(
     return "当前阶段的常规动作"
 
 
-def _rank_actions(candidates, current_state: State, body_parts: list[str] | None):
+def _rank_actions(
+    candidates,
+    current_state: State,
+    body_parts: list[str] | None,
+    max_same_state: int | None = None,
+):
+    """当前状态优先；同状态内先挑不起身就能做的工位动作，再看部位重合与时长。"""
+
     def key(item):
         action, source_state = item
         same_state = 1 if source_state is current_state else 0
-        return (-same_state, -_overlap(action, body_parts), action.duration_minutes, action.id)
+        desk_rank = 0 if getattr(action, "desk_friendly", True) else 1
+        return (
+            -same_state,
+            desk_rank,
+            -_overlap(action, body_parts),
+            action.duration_minutes,
+            action.id,
+        )
 
     ranked = sorted(candidates, key=key)
     seen: set[str] = set()
@@ -70,6 +85,10 @@ def _rank_actions(candidates, current_state: State, body_parts: list[str] | None
             continue
         seen.add(action.id)
         unique.append((action, source_state))
+    if max_same_state is not None:
+        same_state_items = [item for item in unique if item[1] is current_state]
+        other_items = [item for item in unique if item[1] is not current_state]
+        unique = same_state_items[:max_same_state] + other_items
     return unique[:3]
 
 
@@ -118,6 +137,7 @@ async def handle_heartbeat(
         )
 
     candidates = [(action, session.state) for action in current_actions]
+    has_fallback = False
     if body_parts:
         matched = [action for action in current_actions if _overlap(action, body_parts) > 0]
         if len(matched) < 2:
@@ -125,8 +145,11 @@ async def handle_heartbeat(
             if lower is not None:
                 lower_actions = await store.list_actions(lower.value, body_parts)
                 candidates.extend((action, lower) for action in lower_actions[:2])
+                has_fallback = True
 
-    ranked = _rank_actions(candidates, session.state, body_parts)
+    ranked = _rank_actions(
+        candidates, session.state, body_parts, max_same_state=2 if has_fallback else None
+    )
     payloads = [
         _to_payload(action, _match_reason(action, source_state, session.state, body_parts))
         for action, source_state in ranked

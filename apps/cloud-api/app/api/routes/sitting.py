@@ -36,6 +36,7 @@ async def list_actions(
             name=action.name,
             duration_minutes=action.duration_minutes,
             intensity=action.intensity,
+            desk_friendly=action.desk_friendly,
             body_parts=list(action.body_parts),
             steps=list(action.steps),
             caution=action.caution,

@@ -208,6 +208,46 @@ test("周复盘汇总干预记录", async () => {
   assert.ok(review.suggestions.length > 0);
 });
 
+test("同状态下优先推荐不起身的工位动作", async () => {
+  const deskLibrary = [
+    {
+      id: "b-stand",
+      name: "起身活动",
+      state: "S1",
+      body_parts: ["neck"],
+      duration_minutes: 1,
+      intensity: "normal",
+      desk_friendly: false,
+      steps: ["起身站立"],
+      caution: "",
+    },
+    {
+      id: "b-seated",
+      name: "坐姿激活",
+      state: "S1",
+      body_parts: ["neck"],
+      duration_minutes: 3,
+      intensity: "normal",
+      desk_friendly: true,
+      steps: ["坐直抬腿"],
+      caution: "",
+    },
+  ];
+  const instance = createLocalEngine({ storage: memoryStorage(), library: deskLibrary });
+  await instance.assessment({
+    body_parts: ["neck"],
+    sedentary_minutes: 300,
+    available_minutes: 10,
+    pain_score: 2,
+    acute_discomfort: false,
+  });
+
+  const result = await instance.heartbeat({ sitting_minutes: 46, threshold_minutes: 45 });
+
+  assert.equal(result.action.id, "b-seated");
+  assert.equal(result.actions[0].id, "b-seated");
+});
+
 test("周复盘无记录时给出提示", async () => {
   const instance = engine();
   const review = await instance.weeklyReview(7);

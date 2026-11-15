@@ -27,6 +27,7 @@ const STANDING = [JOINT.left_shoulder, JOINT.right_shoulder, JOINT.left_hip, JOI
 const TABLE = {
   "s0-neck-release": { framing: "upper", scene: "seated", focus: UPPER, hint: "坐直，让头和双肩在画面里" },
   "s0-shoulder-roll": { framing: "upper", scene: "seated", focus: ARMS, hint: "让两侧肩膀和肘部都在画面里" },
+  "s1-seated-knee": { framing: "none", scene: "seated", focus: [], hint: "腿在桌下，边做边看，不要求对齐" },
   "s1-stand-break": { framing: "full", scene: "standing", focus: STANDING, hint: "起身后往后退半步，让膝盖进画面" },
   "s1-hip-flexor": { framing: "full", scene: "standing", focus: STANDING, hint: "往后退一点，让髋和膝盖都在画面里" },
   "s2-core-activation": { framing: "none", scene: "seated", focus: [], hint: "边做边看，不要求对齐" },

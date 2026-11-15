@@ -364,8 +364,8 @@ onBeforeUnmount(() => {
     </m3e-card>
 
     <m3e-callout v-if="action.caution && !feedbackOpen" variant="surface" class="caution-callout">
-      <span slot="icon" class="material-symbols-rounded">health_and_safety</span>
-      <span slot="label">健康提示</span>
+      <span slot="icon" class="material-symbols-rounded">info</span>
+      <span slot="label">提示</span>
       {{ action.caution }}
     </m3e-callout>
 

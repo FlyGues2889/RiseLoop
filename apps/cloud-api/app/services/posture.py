@@ -14,12 +14,20 @@ def _sort_for_plan(actions: list[ActionPayload], plan: str) -> list[ActionPayloa
     if plan == "quick":
         return sorted(
             actions,
-            key=lambda action: (0 if action.intensity == "gentle" else 1, action.duration_minutes),
+            key=lambda action: (
+                0 if action.intensity == "gentle" else 1,
+                0 if action.desk_friendly else 1,
+                action.duration_minutes,
+            ),
         )
     if plan == "intense":
         return sorted(
             actions,
-            key=lambda action: (0 if action.intensity == "normal" else 1, -action.duration_minutes),
+            key=lambda action: (
+                0 if action.intensity == "normal" else 1,
+                0 if action.desk_friendly else 1,
+                -action.duration_minutes,
+            ),
         )
     return actions
 
@@ -93,6 +101,7 @@ async def handle_posture_risk(
         )
 
     candidates = [(action, state) for action in current_actions]
+    has_fallback = False
     if body_parts:
         matched = [action for action in current_actions if set(action.body_parts) & set(body_parts)]
         if len(matched) < 2:
@@ -100,8 +109,11 @@ async def handle_posture_risk(
             if lower is not None:
                 lower_actions = await store.list_actions(lower.value, body_parts)
                 candidates.extend((action, lower) for action in lower_actions[:2])
+                has_fallback = True
 
-    ranked = _rank_actions(candidates, state, body_parts)
+    ranked = _rank_actions(
+        candidates, state, body_parts, max_same_state=2 if has_fallback else None
+    )
     payloads = [
         _to_payload(action, _match_reason(action, source_state, state, body_parts))
         for action, source_state in ranked

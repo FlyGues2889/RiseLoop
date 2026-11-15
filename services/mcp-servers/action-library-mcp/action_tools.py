@@ -25,11 +25,12 @@ async def get_actions_by_state(
 ) -> list[dict]:
     rows = await backend.fetch(
         """
-        SELECT id, name, state, body_parts, duration_minutes, intensity, steps, caution
+        SELECT id, name, state, body_parts, duration_minutes, intensity, desk_friendly,
+               steps, caution
         FROM actions
         WHERE state = $1 AND enabled = TRUE
           AND ($2::int IS NULL OR duration_minutes <= $2)
-        ORDER BY duration_minutes ASC
+        ORDER BY desk_friendly DESC, duration_minutes ASC
         LIMIT $3
         """,
         state,

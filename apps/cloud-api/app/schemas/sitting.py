@@ -8,6 +8,7 @@ class ActionPayload(BaseModel):
     name: str
     duration_minutes: int
     intensity: Literal["normal", "gentle"]
+    desk_friendly: bool = True
     body_parts: list[str] = Field(default_factory=list)
     steps: list[str]
     caution: str = ""

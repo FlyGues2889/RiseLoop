@@ -22,6 +22,7 @@ class ActionRecord(BaseModel):
     body_parts: list[str]
     duration_minutes: int
     intensity: str
+    desk_friendly: bool = True
     steps: list[str]
     caution: str = ""
 
@@ -239,7 +240,9 @@ class MemoryStore:
             candidates = [
                 action for action in candidates if action.duration_minutes <= max_minutes
             ]
-        return sorted(candidates, key=lambda action: action.duration_minutes)
+        return sorted(
+            candidates, key=lambda action: (not action.desk_friendly, action.duration_minutes)
+        )
 
     async def add_sitting_event(self, user_id: str, event_type: str, source: str = "manual") -> None:
         self._sitting_events.append(

@@ -17,6 +17,12 @@ export const ACTION_SOURCES = {
     url: "https://pubmed.ncbi.nlm.nih.gov/33906239/",
     evidenceId: "pmid-33906239",
   },
+  "s1-seated-knee": {
+    title: "动作依据 · 主动休息",
+    source: "主动休息或姿势变换可降低高风险办公人群 6 个月内颈痛与腰痛新发；本动作是坐姿可做的下肢激活版本（3 臂集群随机对照试验）。",
+    url: "https://pubmed.ncbi.nlm.nih.gov/33906239/",
+    evidenceId: "pmid-33906239",
+  },
   "s1-hip-flexor": {
     title: "动作依据 · 拉伸训练",
     source: "拉伸训练在 6 个月内改善办公人群颈肩腰疼痛，效果优于单纯工位改造（随机对照试验）。",
