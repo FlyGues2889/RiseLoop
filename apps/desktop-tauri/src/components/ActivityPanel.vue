@@ -324,7 +324,7 @@ onBeforeUnmount(() => {
               @click="prevStep">
               <span class="material-symbols-rounded">arrow_back</span>
             </m3e-icon-button>
-            <m3e-icon-button id="step-next" variant="filled" aria-label="下一步" @click="nextStep">
+            <m3e-icon-button id="step-next" variant="outlined" aria-label="下一步" @click="nextStep">
               <span class="material-symbols-rounded">arrow_forward</span>
             </m3e-icon-button>
           </m3e-button-group>

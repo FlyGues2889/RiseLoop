@@ -516,7 +516,7 @@ onBeforeUnmount(() => {
           <p class="risk-line muted" v-else>{{ risk.reason }}</p>
           <p class="risk-line muted" v-if="guidanceText">{{ guidanceText }}</p>
           <p class="risk-line danger" v-if="risk.needs_medical_advice">出现明显不适，建议暂停并就医。</p>
-          <m3e-button v-if="risk.actions?.length && !props.inline" class="risk-action" variant="filled" size="small"
+          <m3e-button v-if="risk.actions?.length && !props.inline" class="risk-action" variant="outlined" size="small"
             @click="adoptRisk">
             采用推荐方案
           </m3e-button>
