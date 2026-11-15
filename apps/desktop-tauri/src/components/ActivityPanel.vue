@@ -341,24 +341,25 @@ onBeforeUnmount(() => {
                   <span slot="icon" class="material-symbols-rounded">pause</span>
                   暂停
                 </m3e-button>
+
+                <div class="step-nav">
+                  <m3e-button-group>
+                    <m3e-icon-button id="step-prev" variant="outlined" aria-label="上一步" :disabled.prop="stepIndex === 0"
+                      @click="prevStep">
+                      <span class="material-symbols-rounded">arrow_back</span>
+                    </m3e-icon-button>
+                    <m3e-icon-button id="step-next" variant="outlined" aria-label="下一步" @click="nextStep">
+                      <span class="material-symbols-rounded">arrow_forward</span>
+                    </m3e-icon-button>
+                  </m3e-button-group>
+                  <m3e-tooltip for="step-prev">上一步</m3e-tooltip>
+                  <m3e-tooltip for="step-next">{{ stepIndex === steps.length - 1 ? "完成这个动作" : "下一步" }}</m3e-tooltip>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div class="step-nav">
-          <m3e-button-group>
-            <m3e-icon-button id="step-prev" variant="outlined" aria-label="上一步" :disabled.prop="stepIndex === 0"
-              @click="prevStep">
-              <span class="material-symbols-rounded">arrow_back</span>
-            </m3e-icon-button>
-            <m3e-icon-button id="step-next" variant="outlined" aria-label="下一步" @click="nextStep">
-              <span class="material-symbols-rounded">arrow_forward</span>
-            </m3e-icon-button>
-          </m3e-button-group>
-          <m3e-tooltip for="step-prev">上一步</m3e-tooltip>
-          <m3e-tooltip for="step-next">{{ stepIndex === steps.length - 1 ? "完成这个动作" : "下一步" }}</m3e-tooltip>
-        </div>
       </div>
     </m3e-card>
 
@@ -531,13 +532,15 @@ onBeforeUnmount(() => {
 
 .timer-actions {
   display: flex;
-  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
 }
 
+/* 步进按钮贴着主按钮右侧，靠右对齐 */
 .step-nav {
   display: flex;
-  justify-content: center;
-  padding-top: 0.25rem;
+  align-items: center;
+  margin-left: auto;
 }
 
 .caution-callout {

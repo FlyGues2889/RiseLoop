@@ -322,7 +322,7 @@ onBeforeUnmount(() => {
 
           <div class="row">
             <m3e-button v-if="!actionSession.loaded" variant="filled" size="small" @click="start">开始</m3e-button>
-            <m3e-button variant="text" size="small" @click="dismiss">稍后</m3e-button>
+            <m3e-button variant="text" size="small" @click="dismiss">跳过</m3e-button>
             <m3e-button variant="text" size="small" @click="openMain">打开主界面</m3e-button>
           </div>
         </div>
