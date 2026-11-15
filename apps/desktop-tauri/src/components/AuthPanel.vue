@@ -16,7 +16,7 @@ import { enterDemo, login, register, state } from "../state/session.js";
         </m3e-form-field>
 
         <m3e-form-field variant="filled" class="field">
-          <span class="material-symbols-rounded" slot="prefix">password</span>
+          <span class="material-symbols-rounded" slot="prefix">lock</span>
           <label slot="label" for="auth-password">密码</label>
           <input id="auth-password" v-model="state.password" type="password" autocomplete="current-password"
             minlength="8" placeholder="至少 8 位" required />

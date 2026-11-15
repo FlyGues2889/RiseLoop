@@ -143,6 +143,10 @@ onUnmounted(() => {
   padding: 2rem 1.5rem 2.5rem;
 }
 
+.view-auth {
+  padding-top: max(2rem, 7vh);
+}
+
 .plan-slot {
   margin-top: 1rem;
 }
