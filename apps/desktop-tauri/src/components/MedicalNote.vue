@@ -1,12 +1,12 @@
 <script setup>
 defineProps({
-  label: { type: String, default: "健康提示" },
+  label: { type: String, default: "提示" },
 });
 </script>
 
 <template>
   <m3e-callout class="medical-note" variant="surface">
-    <span class="material-symbols-rounded" slot="icon">medical_information</span>
+    <span class="material-symbols-rounded" slot="icon">info</span>
     <span slot="label">{{ label }}</span>
     <p>
       本产品为健康行为指导工具，不提供医疗诊断或治疗建议。

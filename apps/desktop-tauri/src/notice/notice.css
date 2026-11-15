@@ -171,6 +171,13 @@ body {
 }
 
 /* 步骤列表交给 m3e-list，这里只收掉内边距让它和卡片边缘对齐 */
+.desk-tag {
+  margin-left: 0.4rem;
+  vertical-align: middle;
+  --m3e-chip-container-height: 1.25rem;
+  --m3e-chip-label-text-font-size: 0.625rem;
+}
+
 .steps {
   margin-top: 0.5rem;
   --m3e-list-item-padding-inline: 0;

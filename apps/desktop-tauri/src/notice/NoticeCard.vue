@@ -46,7 +46,8 @@ function progress() {
 }
 
 function steps() {
-  return (action.value?.steps ?? []).slice(0, 3);
+  // 步骤里已经不含「重复 N 轮」这种概括写法，全部列出来才看得懂
+  return action.value?.steps ?? [];
 }
 
 /* ---------- 动作卡：和主界面共用一份会话，两个窗口操作同步 ---------- */
@@ -285,11 +286,11 @@ onBeforeUnmount(() => {
                 </m3e-button>
               </template>
               <template v-else>
-                <m3e-button v-if="!running" variant="outlined" size="small" @click="toggleAction">
+                <m3e-button v-if="!running" variant="tonal" size="small" @click="toggleAction">
                   <span slot="icon" class="material-symbols-rounded">play_arrow</span>
                   {{ fresh ? "开始" : "继续" }}
                 </m3e-button>
-                <m3e-button v-else variant="outlined" size="small" @click="toggleAction">
+                <m3e-button v-else variant="tonal" size="small" @click="toggleAction">
                   <span slot="icon" class="material-symbols-rounded">pause</span>
                   暂停
                 </m3e-button>
@@ -316,7 +317,10 @@ onBeforeUnmount(() => {
 
           <template v-else-if="action">
             <div class="action-head">
-              <strong>{{ action.name }}<span class="tag">推荐</span></strong>
+              <strong>
+                {{ action.name }}<span class="tag">推荐</span>
+                <m3e-chip v-if="action.desk_friendly" class="desk-tag">工位可做</m3e-chip>
+              </strong>
               <span class="mono">{{ action.duration_minutes }} 分钟</span>
             </div>
             <m3e-list class="steps">
@@ -331,8 +335,14 @@ onBeforeUnmount(() => {
 
           <div class="row">
             <m3e-button v-if="!actionSession.loaded" variant="filled" size="small" @click="start">开始</m3e-button>
-            <m3e-button variant="text" size="small" @click="dismiss">跳过</m3e-button>
-            <m3e-button variant="text" size="small" @click="openMain">打开主界面</m3e-button>
+            <m3e-button variant="text" size="small" @click="dismiss">
+              <span slot="icon" class="material-symbols-rounded">skip_next</span>
+              跳过
+            </m3e-button>
+            <m3e-button variant="text" size="small" @click="openMain">
+              <span slot="icon" class="material-symbols-rounded">open_in_new</span>
+              打开主界面
+            </m3e-button>
           </div>
 
           <m3e-callout v-if="action && action.caution && !actionSession.loaded" variant="surface" class="run-caution">

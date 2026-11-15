@@ -60,9 +60,16 @@ const REP_SECONDS = 3;
 const DEFAULT_STEP_SECONDS = 20;
 const MIN_STEP_SECONDS = 10;
 const MAX_STEP_SECONDS = 75;
+// 读提示、挪椅子、换一口气都要时间，卡着秒数做会一直追倒计时
+const STEP_SLACK_RATIO = 0.2;
+const MIN_STEP_SLACK = 3;
 
 function parseStepSeconds(text) {
   const source = String(text || "");
+  // 「每轮 12 秒，共做 6 轮」这种写法直接乘起来，避免退化成按单轮计时
+  const perRound = /每(?:轮|组)\s*(\d+)\s*秒/.exec(source);
+  const repeat = /(\d+)\s*[轮组]/.exec(source);
+  if (perRound && repeat) return Number(perRound[1]) * Number(repeat[1]);
   const secs = [...source.matchAll(/(\d+)\s*秒/g)].map((match) => Number(match[1]));
   const reps = [...source.matchAll(/(\d+)\s*次/g)].map((match) => Number(match[1]));
   const rounds = /重复\s*(\d+)\s*[轮次]/.exec(source);
@@ -79,7 +86,12 @@ function parseStepSeconds(text) {
   return null;
 }
 
-// 推算值只做参考：压进 [10, 75] 秒，超出动作总时长时整体等比缩，不放大
+// 推算值只做参考：压进 [10, 75] 秒，超出动作总时长时整体等比缩，不放大；
+// 最后给每一步留 20%（至少 3 秒）的弹性，做不到「两次呼吸之间没有间隔」也不会被跳步
+function slackSeconds(value) {
+  return Math.max(MIN_STEP_SLACK, Math.round(value * STEP_SLACK_RATIO));
+}
+
 function planStepSeconds(list, total) {
   const guessed = list.map((text) => parseStepSeconds(text));
   const raw = guessed.map((value) => Math.min(MAX_STEP_SECONDS, Math.max(MIN_STEP_SECONDS, value ?? DEFAULT_STEP_SECONDS)));
@@ -90,9 +102,10 @@ function planStepSeconds(list, total) {
     raw[index] = Math.min(MAX_STEP_SECONDS, raw[index - 1] * (groups ? Number(groups[1]) : 1));
   }
   const sum = raw.reduce((acc, item) => acc + item, 0);
-  if (!total || sum <= total) return raw;
+  const withSlack = (values) => values.map((value) => value + slackSeconds(value));
+  if (!total || sum <= total) return withSlack(raw);
   const ratio = total / sum;
-  return raw.map((value) => Math.max(MIN_STEP_SECONDS, Math.floor(value * ratio)));
+  return withSlack(raw.map((value) => Math.max(MIN_STEP_SECONDS, Math.floor(value * ratio))));
 }
 
 const stepSeconds = computed(() =>
@@ -302,7 +315,7 @@ onBeforeUnmount(() => {
           <m3e-form-field class="picker" variant="filled" style="--md-sys-density-scale: -3">
             <m3e-select id="action-pick" :value.prop="action.id" @change="pickAction">
               <m3e-option v-for="item in actions" :key="item.id" :value="item.id">
-                {{ item.name }}{{ item.id === recommendedId ? "（推荐）" : "" }}
+                {{ item.name }}{{ item.desk_friendly ? " · 工位可做" : "" }}{{ item.id === recommendedId ? "（推荐）" : "" }}
               </m3e-option>
             </m3e-select>
           </m3e-form-field>
@@ -324,7 +337,10 @@ onBeforeUnmount(() => {
 
           <div class="stage">
             <p class="step-text">{{ steps[stepIndex] }}</p>
-            <p class="step-progress">第 {{ stepIndex + 1 }} / {{ steps.length }} 步</p>
+            <div class="step-meta">
+              <p class="step-progress">第 {{ stepIndex + 1 }} / {{ steps.length }} 步</p>
+              <m3e-chip v-if="action.desk_friendly" class="desk-chip">工位可做</m3e-chip>
+            </div>
 
             <div class="timer">
               <div class="timer-head">
@@ -333,11 +349,11 @@ onBeforeUnmount(() => {
               </div>
               <m3e-linear-progress-indicator class="progress" :value.prop="progress"></m3e-linear-progress-indicator>
               <div class="timer-actions">
-                <m3e-button v-if="!running" variant="outlined" size="medium" @click="startTick">
+                <m3e-button v-if="!running" variant="tonal" size="medium" @click="startTick">
                   <span slot="icon" class="material-symbols-rounded">play_arrow</span>
                   {{ remaining === stepTotal ? "开始倒计时" : "继续" }}
                 </m3e-button>
-                <m3e-button v-else variant="outlined" size="medium" @click="stopTick">
+                <m3e-button v-else variant="tonal" size="medium" @click="stopTick">
                   <span slot="icon" class="material-symbols-rounded">pause</span>
                   暂停
                 </m3e-button>
@@ -494,6 +510,17 @@ onBeforeUnmount(() => {
   font-weight: 600;
   line-height: 1.5;
   letter-spacing: 0.01em;
+}
+
+.step-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.desk-chip {
+  --m3e-chip-container-height: 1.375rem;
+  --m3e-chip-label-text-font-size: 0.6875rem;
 }
 
 .step-progress {
