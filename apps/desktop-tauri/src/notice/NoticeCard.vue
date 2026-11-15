@@ -20,6 +20,8 @@ const TICK_MS = 200;
 // .stage 上下各 0.625rem 的留白，量不到样式时用它兜底
 const STAGE_PADDING = 20;
 const MAX_HEIGHT = 640;
+// 展开时多留一行文字的高度：下一步文字多折一行也不会再动窗口（透明窗口改尺寸会闪）
+const STEP_SLACK = 26;
 
 const payload = ref(null);
 const action = ref(null);
@@ -34,7 +36,10 @@ const unlisteners = [];
 let stopwatch = null;
 let hideTimer = null;
 let resizeTimer = null;
-// 上次应用的窗口高度（逻辑像素），没变就不动窗口，避免点按钮时闪
+let animTimer = null;
+// 展开/收起动画期间不动窗口：这时候改尺寸，透明窗口会闪一下
+let animating = false;
+// 上次应用的窗口高度（逻辑像素）；展开后只允许继续长高，不再往回收
 let appliedHeight = 0;
 let observer = null;
 
@@ -81,37 +86,58 @@ function stagePadding() {
   return top + bottom;
 }
 
-// 卡片自然高度。展开态可能被窗口高度卡住（内容在内部滚动），
-// 这时卡片自身的 rect 只是可见高度，要按「标题 + 内容自然高度」重算，否则窗口永远差一截。
-function cardHeight() {
+// 收起态的高度就是卡片自身高度
+function collapsedHeight() {
+  return Math.ceil(cardEl.value?.getBoundingClientRect().height ?? 0);
+}
+
+// 展开后的自然高度：标题 + 展开内容。收起时内容也在 DOM 里（只是被 0fr 裁掉），
+// scrollHeight 已经能拿到真实高度；挂一下 .measuring 补上展开态才有的内边距。
+function naturalHeight() {
   const card = cardEl.value;
   if (!card) return 0;
-  const rect = card.getBoundingClientRect().height;
-  if (!expanded.value) return Math.ceil(rect);
   const head = card.querySelector(".head");
   const inner = card.querySelector(".reveal-inner");
-  const natural =
-    (head?.getBoundingClientRect().height ?? 0) + (inner?.scrollHeight ?? 0);
-  return Math.ceil(Math.max(rect, natural));
+  if (!inner) return collapsedHeight();
+  card.classList.add("measuring");
+  // scrollHeight 已经含内边距，不要再加一次
+  const content = inner.scrollHeight;
+  card.classList.remove("measuring");
+  return Math.ceil((head?.getBoundingClientRect().height ?? 0) + content);
 }
 
-async function syncHeight(force = false) {
-  await nextTick();
-  const measured = cardHeight();
-  if (!measured) return;
-  const height = Math.min(MAX_HEIGHT, Math.round(measured + stagePadding() + 6));
-  if (!force && Math.abs(height - appliedHeight) < 2) return;
+// 改一次窗口就是一次重绘，透明窗口会闪；所以一次状态切换只申请一次高度
+function applyHeight(cardHeight, slack = 0) {
+  if (!cardHeight) return;
+  const height = Math.min(MAX_HEIGHT, Math.round(cardHeight + stagePadding() + 6 + slack));
+  if (Math.abs(height - appliedHeight) < 2) return;
   appliedHeight = height;
-  invoke("notice_resize", { height, focusable: expanded.value }).catch(() => { });
+  invoke("notice_resize", { height }).catch(() => { });
 }
 
-// 内容一变就重新量高度：延迟一帧收拢同一轮变化，高度没变时不会真的去动窗口
-function scheduleHeight(force = false) {
+async function fitCollapsed() {
+  await nextTick();
+  if (expanded.value || animating) return;
+  applyHeight(collapsedHeight());
+}
+
+// 展开态内容变高（步骤文字更长、示意图加载完）才补一次高度，变矮不动窗口
+async function growIfNeeded() {
+  await nextTick();
+  if (!expanded.value || animating) return;
+  const natural = naturalHeight();
+  if (!natural) return;
+  const height = Math.min(MAX_HEIGHT, Math.round(natural + stagePadding() + 6 + STEP_SLACK));
+  if (height > appliedHeight + 2) applyHeight(natural, STEP_SLACK);
+}
+
+// 内容一变就重新量：延迟一帧收拢同一轮变化，且只长不缩
+function scheduleGrow() {
   if (resizeTimer) window.clearTimeout(resizeTimer);
   resizeTimer = window.setTimeout(() => {
     resizeTimer = null;
-    syncHeight(force);
-  }, 80);
+    growIfNeeded();
+  }, 140);
 }
 
 function playIn() {
@@ -123,6 +149,7 @@ function playIn() {
 
 function applyPayload(next) {
   if (!next) return;
+  const wasExpanded = expanded.value;
   payload.value = next;
   action.value = next.action ?? null;
   expanded.value = false;
@@ -130,7 +157,13 @@ function applyPayload(next) {
   remaining.value = AUTO_DISMISS_SECONDS;
   playIn();
   watchCardSize();
-  syncHeight(true);
+  // 从展开态收到新提醒时卡片要 320ms 才收回去，等动画结束再按收起高度量
+  if (animTimer) window.clearTimeout(animTimer);
+  animating = wasExpanded;
+  animTimer = window.setTimeout(() => {
+    animating = false;
+    fitCollapsed();
+  }, wasExpanded ? 340 : 0);
 }
 
 // 卡片尺寸会随后续内容（字体、组件内部布局、步骤文字换行）继续变，盯住它自动补量
@@ -139,7 +172,7 @@ async function watchCardSize() {
   const card = cardEl.value;
   if (!card) return;
   observer ??= new ResizeObserver(() => {
-    if (expanded.value) scheduleHeight();
+    if (expanded.value) scheduleGrow();
   });
   observer.disconnect();
   observer.observe(card);
@@ -151,22 +184,32 @@ function tick() {
   if (remaining.value <= 0) dismiss();
 }
 
-async function expand() {
+function expand() {
   if (expanded.value || !payload.value) return;
+  // 先量好再展开：一次把窗口改到最终高度，动画期间不再碰窗口，
+  // 否则「先撑到上限再收回来」会让透明窗口连闪两三下
+  const natural = naturalHeight();
   expanded.value = true;
-  // 先把窗口撑到上限（多出来是透明的，看不见），让卡片在不受限的画布里先摊开，
-  // 之后再按真实内容收回到刚好够用，避免「先按被裁的高度量，量出来永远偏小」
-  invoke("notice_resize", { height: MAX_HEIGHT, focusable: true }).catch(() => { });
-  window.setTimeout(() => syncHeight(true), 340);
-  window.setTimeout(() => syncHeight(true), 700);
+  animating = true;
+  if (natural) applyHeight(natural, STEP_SLACK);
+  if (animTimer) window.clearTimeout(animTimer);
+  animTimer = window.setTimeout(() => {
+    animating = false;
+    growIfNeeded();
+  }, 360);
 }
 
 function collapse() {
   if (!expanded.value) return;
   expanded.value = false;
   remaining.value = AUTO_DISMISS_SECONDS;
-  window.setTimeout(() => syncHeight(true), 60);
-  window.setTimeout(() => syncHeight(true), 380);
+  // 等 grid 行高动画走完再收窗口，避免收到一半的内容又被窗口裁一次
+  animating = true;
+  if (animTimer) window.clearTimeout(animTimer);
+  animTimer = window.setTimeout(() => {
+    animating = false;
+    applyHeight(collapsedHeight());
+  }, 340);
 }
 
 async function dismiss() {
@@ -201,9 +244,10 @@ function onKeydown(event) {
 }
 
 watch(
-  () => [expanded.value, actionSession.index, actionSession.done, actionSession.running, actionSession.loaded],
+  () => [actionSession.index, actionSession.done, actionSession.running, actionSession.loaded],
   () => {
-    if (expanded.value) scheduleHeight();
+    // 立刻量：晚一帧再改窗口，内容会先被旧的窗口高度裁一下
+    if (expanded.value) growIfNeeded();
   }
 );
 
@@ -216,7 +260,10 @@ onMounted(async () => {
   await initActionSession();
   stopwatch = window.setInterval(tick, TICK_MS);
   window.addEventListener("keydown", onKeydown);
-  document.fonts?.ready.then(() => scheduleHeight(true));
+  document.fonts?.ready.then(() => {
+    if (expanded.value) growIfNeeded();
+    else fitCollapsed();
+  });
   unlisteners.push(
     await listen("riseloop://notice", (event) => applyPayload(event.payload))
   );
@@ -224,7 +271,8 @@ onMounted(async () => {
     await listen("riseloop://notice-action", (event) => {
       action.value = event.payload ?? null;
       watchCardSize();
-      syncHeight(true);
+      if (expanded.value) scheduleGrow();
+      else fitCollapsed();
     })
   );
   unlisteners.push(
@@ -238,6 +286,7 @@ onBeforeUnmount(() => {
   if (stopwatch) window.clearInterval(stopwatch);
   if (hideTimer) window.clearTimeout(hideTimer);
   if (resizeTimer) window.clearTimeout(resizeTimer);
+  if (animTimer) window.clearTimeout(animTimer);
   observer?.disconnect();
   window.removeEventListener("keydown", onKeydown);
   unlisteners.forEach((off) => off());
@@ -253,66 +302,58 @@ onBeforeUnmount(() => {
           <strong>{{ payload.title }}</strong>
           <small>{{ payload.body }}</small>
         </div>
-        <m3e-icon-button variant="outlined" aria-label="关闭" @click="dismiss">
-          <span class="material-symbols-rounded">close</span>
+        <m3e-icon-button variant="text" aria-label="关闭" @click="dismiss">
+          <span class="material-symbols-rounded">keyboard_double_arrow_down</span>
         </m3e-icon-button>
       </header>
 
       <div class="reveal">
         <div class="reveal-inner">
           <template v-if="action && actionSession.loaded">
-            <div class="run-top">
-              <img v-if="refImage" class="run-ref" :src="refImage" alt="" @load="scheduleHeight(true)" />
-              <div class="run-copy">
-                <p class="run-step">{{ done ? "这一组做完了" : stepText }}</p>
-                <p class="run-meta">
-                  {{ actionSession.name || action.name }}
-                  <template v-if="!done"> · 第 {{ actionSession.index + 1 }} / {{ actionSession.steps.length }} 步</template>
-                </p>
-              </div>
-            </div>
-
-            <div v-if="!done" class="run-timer">
-              <span class="run-time">{{ timeText }}</span>
-              <span class="run-status">{{ running ? "进行中" : "已暂停" }}</span>
-            </div>
-            <m3e-linear-progress-indicator
-              v-if="!done"
-              class="run-bar"
-              :value.prop="stepProgress"
-            ></m3e-linear-progress-indicator>
-
-            <div class="run-actions">
-              <template v-if="done">
-                <m3e-button variant="filled" size="small" @click="goFeedback">
-                  <span slot="icon" class="material-symbols-rounded">edit_note</span>
-                  记录感受
-                </m3e-button>
-                <m3e-button variant="outlined" size="small" @click="restartAction">
-                  <span slot="icon" class="material-symbols-rounded">replay</span>
-                  再做一次
-                </m3e-button>
-              </template>
-              <template v-else>
-                <m3e-button v-if="!running" variant="tonal" size="small" @click="toggleAction">
-                  <span slot="icon" class="material-symbols-rounded">play_arrow</span>
-                  {{ fresh ? "开始" : "继续" }}
-                </m3e-button>
-                <m3e-button v-else variant="tonal" size="small" @click="toggleAction">
-                  <span slot="icon" class="material-symbols-rounded">pause</span>
-                  暂停
-                </m3e-button>
-                <m3e-button-group class="run-nav">
-                  <m3e-icon-button variant="outlined" aria-label="上一步"
-                    :disabled.prop="actionSession.index === 0" @click="retreatStep">
-                    <span class="material-symbols-rounded">arrow_back</span>
-                  </m3e-icon-button>
-                  <m3e-icon-button variant="outlined" aria-label="下一步" @click="advanceStep">
-                    <span class="material-symbols-rounded">arrow_forward</span>
-                  </m3e-icon-button>
-                </m3e-button-group>
-              </template>
-            </div>
+            <m3e-list variant="segmented" class="run-list"
+              style="display: block; --m3e-list-item-padding-inline: 0.75rem; --m3e-list-item-between-space: 0.5rem">
+              <m3e-list-item>
+                <span class="run-time">{{ timeText }}</span>
+                <m3e-linear-progress-indicator v-if="!done" class="run-bar"
+                  :value.prop="stepProgress"></m3e-linear-progress-indicator>
+              </m3e-list-item>
+              <m3e-list-item>
+                <div class="run-top">
+                  <img v-if="refImage" class="run-ref" :src="refImage" alt="" @load="scheduleGrow" />
+                  <div class="run-copy">
+                    <p class="run-step">{{ done ? "这一组做完了" : stepText }}</p>
+                    <p class="run-meta">
+                      {{ actionSession.name || action.name }}
+                      <template v-if="!done"> · 第 {{ actionSession.index + 1 }} / {{ actionSession.steps.length }}
+                        步</template>
+                    </p>
+                  </div>
+                </div>
+              </m3e-list-item>
+              <m3e-list-item>
+                <div class="run-actions">
+                  <template v-if="!done">
+                    <m3e-button v-if="!running" variant="tonal" size="small" @click="toggleAction">
+                      <span slot="icon" class="material-symbols-rounded">play_arrow</span>
+                      {{ fresh ? "开始" : "继续" }}
+                    </m3e-button>
+                    <m3e-button v-else variant="tonal" size="small" @click="toggleAction">
+                      <span slot="icon" class="material-symbols-rounded">pause</span>
+                      暂停
+                    </m3e-button>
+                    <m3e-button-group class="run-nav">
+                      <m3e-icon-button variant="outlined" aria-label="上一步" :disabled.prop="actionSession.index === 0"
+                        @click="retreatStep">
+                        <span class="material-symbols-rounded">arrow_back</span>
+                      </m3e-icon-button>
+                      <m3e-icon-button variant="outlined" aria-label="下一步" @click="advanceStep">
+                        <span class="material-symbols-rounded">arrow_forward</span>
+                      </m3e-icon-button>
+                    </m3e-button-group>
+                  </template>
+                </div>
+              </m3e-list-item>
+            </m3e-list>
 
             <m3e-callout v-if="action.caution" variant="surface" class="run-caution">
               <span slot="icon" class="material-symbols-rounded">info</span>
@@ -324,11 +365,11 @@ onBeforeUnmount(() => {
           </template>
 
           <template v-else-if="action">
-            <img v-if="refImage" class="action-ref" :src="refImage" alt="" @load="scheduleHeight(true)" />
+            <img v-if="refImage" class="action-ref" :src="refImage" alt="" @load="scheduleGrow" />
             <div class="action-head">
               <strong>
                 {{ action.name }}<span class="tag">推荐</span>
-                <m3e-chip v-if="action.desk_friendly" class="desk-tag">工位可做</m3e-chip>
+                <m3e-chip v-if="action.desk_friendly" class="desk-tag" variant="elevated">工位可做</m3e-chip>
               </strong>
               <span class="mono">{{ action.duration_minutes }} 分钟</span>
             </div>
@@ -343,14 +384,14 @@ onBeforeUnmount(() => {
           <p v-else class="pending">正在准备动作…</p>
 
           <div class="row">
+            <m3e-button variant="outlined" size="small" @click="openMain">
+              <span slot="icon" class="material-symbols-rounded">open_in_new</span>
+              打开主界面
+            </m3e-button>
             <m3e-button v-if="!actionSession.loaded" variant="filled" size="small" @click="start">开始</m3e-button>
             <m3e-button variant="text" size="small" @click="dismiss">
               <span slot="icon" class="material-symbols-rounded">skip_next</span>
               跳过
-            </m3e-button>
-            <m3e-button variant="text" size="small" @click="openMain">
-              <span slot="icon" class="material-symbols-rounded">open_in_new</span>
-              打开主界面
             </m3e-button>
           </div>
 
@@ -363,7 +404,7 @@ onBeforeUnmount(() => {
       </div>
 
       <footer v-if="!expanded" class="foot">
-        <m3e-button variant="tonal" size="small" @click="expand">
+        <m3e-button variant="filled" size="small" @click="expand">
           <span class="material-symbols-rounded" slot="icon">expand_less</span>
           看看动作
         </m3e-button>

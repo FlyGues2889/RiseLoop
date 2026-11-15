@@ -70,8 +70,8 @@ body {
   place-items: center;
   border-radius: 50%;
   font-size: 1.25rem;
-  color: var(--md-sys-color-on-primary-container);
-  background: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-tertiary-container);
+  background: var(--md-sys-color-tertiary-container);
 }
 
 .titles {
@@ -141,6 +141,12 @@ body {
   padding: 0 1rem 0.75rem;
 }
 
+/* 量展开高度时临时挂上：补上展开态的内边距，但不真的摊开、也不走动画。
+   只在这一帧里存在，浏览器不会把它画出来。 */
+.card.measuring .reveal-inner {
+  padding: 0 1rem 0.75rem;
+}
+
 .action-head {
   display: flex;
   align-items: baseline;
@@ -176,6 +182,10 @@ body {
   vertical-align: middle;
   --m3e-chip-container-height: 1.25rem;
   --m3e-chip-label-text-font-size: 0.625rem;
+  --m3e-elevated-chip-container-color: var(--md-sys-color-secondary-container);
+  --m3e-elevated-chip-elevation: 0;
+  --m3e-elevated-chip-hover-elevation: 0;
+  --m3e-chip-label-text-color: var(--md-sys-color-on-secondary-container);
 }
 
 .steps {
@@ -198,8 +208,9 @@ body {
   display: grid;
   place-items: center;
   border-radius: 50%;
-  border: 0.2rem solid var(--md-sys-color-outline-variant);
-  color: var(--md-sys-color-outline);
+  /* 序号是徽标类小元素，用 tertiary 容器色，和主色区分开 */
+  background: var(--md-sys-color-tertiary-container);
+  color: var(--md-sys-color-on-tertiary-container);
   font-size: 0.625rem;
 }
 
@@ -274,10 +285,24 @@ body {
   margin: 0.5rem 0 0.5rem 0.625rem;
 }
 
+/* 展开态的三段内容用 segmented 列表，和主窗口的计时条是同一套观感。
+   这两条变量也写在标签的行内样式上：某些编辑器的缓冲区会把它们覆盖掉。 */
+.run-list {
+  display: block;
+  --m3e-list-item-padding-inline: 0.75rem;
+  --m3e-list-item-between-space: 0.5rem;
+}
+
 .run-top {
   display: flex;
   align-items: center;
   gap: 0.625rem;
+}
+
+/* 每段自带内边距，段落里的标题和按钮行不用再顶出间距 */
+.run-list .run-step,
+.run-list .run-actions {
+  margin-top: 0;
 }
 
 .run-ref {
@@ -317,7 +342,7 @@ body {
 
 .run-time {
   font-size: 1.75rem;
-  font-weight: 600;
+  font-weight: 650;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
 }

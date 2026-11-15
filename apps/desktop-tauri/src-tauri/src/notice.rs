@@ -23,7 +23,7 @@ const COLLAPSED_HEIGHT: f64 = 168.0;
 const MIN_HEIGHT: f64 = 120.0;
 const MAX_HEIGHT: f64 = 640.0;
 /// 距屏幕工作区右下角的留白
-const MARGIN: f64 = 16.0;
+const MARGIN: f64 = 0.0;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NoticeAction {
