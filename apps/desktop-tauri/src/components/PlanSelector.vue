@@ -16,6 +16,7 @@ function choose(planId) {
   <m3e-card variant="elevated" class="surface-card plan-card">
     <div class="surface-body">
       <h2 class="title">节奏</h2>
+      <p class="lead">按今天能拿出的时间选一档。只调整推荐的先后顺序，不改变状态机，也不放宽安全边界。</p>
 
       <m3e-selection-list variant="segmented" class="plans">
         <m3e-list-option

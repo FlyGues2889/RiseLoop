@@ -40,6 +40,7 @@ watch(
     <div class="surface-body">
       <header class="page-head">
         <h2>近 7 天</h2>
+        <p class="lead">每周自动汇总完成率、疼痛趋势和安全中断，用来看趋势，不替代医疗建议。</p>
         <p class="hint" v-if="!aiEnabled">本地模式不支持智能问答。</p>
       </header>
 

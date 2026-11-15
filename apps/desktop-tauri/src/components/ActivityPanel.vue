@@ -311,6 +311,11 @@ onBeforeUnmount(() => {
   <div class="activity-panel">
     <m3e-card v-if="action && !feedbackOpen" variant="elevated" class="surface-card">
       <div class="surface-body">
+        <header class="page-head action-head">
+          <h2>接下来的动作</h2>
+          <p class="lead">跟着步骤做，倒计时结束会自动进入下一步；中途不舒服就点「结束运动」，直接记感受。</p>
+        </header>
+
         <div class="step-head">
           <m3e-form-field class="picker" variant="filled" style="--md-sys-density-scale: -3">
             <m3e-select id="action-pick" :value.prop="action.id" @change="pickAction">
@@ -461,6 +466,14 @@ onBeforeUnmount(() => {
 .surface-body {
   display: grid;
   gap: 0.75rem;
+}
+
+.action-head {
+  margin-bottom: 0;
+}
+
+.action-head h2 {
+  font-size: 1.05rem;
 }
 
 .step-head {

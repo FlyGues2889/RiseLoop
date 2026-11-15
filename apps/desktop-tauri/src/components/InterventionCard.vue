@@ -103,6 +103,11 @@ function pickField(event, field, value) {
       <ErrorBanner :error="state.error" />
 
       <article v-if="result">
+        <header class="page-head">
+          <h2>本次结果</h2>
+          <p class="lead">状态按最近几次的完成度、感受和疼痛自动迁移，下面是接下来的建议。</p>
+        </header>
+
         <div class="result-head">
           <h1 class="transition mono">
             {{ result.from_state }}<i>
@@ -137,6 +142,11 @@ function pickField(event, field, value) {
       </article>
 
       <article v-else class="idle">
+        <header class="page-head">
+          <h2>久坐计时</h2>
+          <p class="lead">连续坐着达到提醒间隔，就按当前阶段推一个最短有效的动作；中断后计时会自己归零。</p>
+        </header>
+
         <div class="timer-slot">
           <TimeToolbar />
         </div>

@@ -8,6 +8,11 @@ import { enterDemo, login, register, state } from "../state/session.js";
 <template>
   <m3e-card variant="elevated" class="surface-card">
     <div class="surface-body">
+      <header class="page-head">
+        <h1>登录 Rise Loop</h1>
+        <p class="lead">用邮箱登录，记录会同步到云端；不联网时也可以直接进入本地模式，数据只留在这台电脑上。</p>
+      </header>
+
       <form @submit.prevent="login">
         <m3e-form-field variant="filled" class="field">
           <span class="material-symbols-rounded" slot="prefix">email</span>

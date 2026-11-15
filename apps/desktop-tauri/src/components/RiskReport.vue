@@ -66,6 +66,7 @@ function formatTime(value) {
   <section class="risk-report">
     <header class="page-head">
       <h2>姿势与风险</h2>
+      <p class="lead">把坐姿、久坐时长和主观感受合在一起估负荷；等级偏高时才会打断你。</p>
     </header>
 
     <div v-if="report" class="status">

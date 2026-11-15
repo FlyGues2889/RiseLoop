@@ -43,7 +43,10 @@ function onPainChange(event) {
 <template>
   <m3e-card variant="elevated" class="surface-card">
     <div class="surface-body">
-      <h1 class="title">你的情况</h1>
+      <header class="page-head">
+        <h1>你的情况</h1>
+        <p class="lead">花一分钟填完这几项，方案会按你每天能坐多久、每次能挤出多少时间来匹配。</p>
+      </header>
 
       <MedicalNote />
 
@@ -124,11 +127,6 @@ m3e-list.assessForm {
 .field {
   width: 14rem;
   margin-top: 1.4rem;
-}
-
-.title {
-  margin: 0 0 1rem;
-  font-size: 1.6rem;
 }
 
 .pain {
