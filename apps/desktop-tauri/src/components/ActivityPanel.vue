@@ -270,9 +270,9 @@ onBeforeUnmount(() => {
     <m3e-card v-if="action && !feedbackOpen" variant="elevated" class="surface-card">
       <div class="surface-body">
         <div class="step-head">
-          <m3e-form-field class="picker">
+          <m3e-form-field class="picker" variant="filled" style="--md-sys-density-scale: -3">
             <label slot="label" for="action-pick">选择动作</label>
-            <m3e-select id="action-pick" :value.prop="action.id" @change="pickAction" variant="tonal">
+            <m3e-select id="action-pick" :value.prop="action.id" @change="pickAction">
               <m3e-option v-for="item in actions" :key="item.id" :value="item.id">
                 {{ item.name }}{{ item.id === recommendedId ? "（推荐）" : "" }}
               </m3e-option>
