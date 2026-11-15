@@ -3,7 +3,7 @@ import uuid
 from datetime import UTC, datetime
 
 from intervention_engine import State, StateCounters
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 
 from ..cloud.dcs import DcsService
 from ..db.models import (
@@ -13,6 +13,7 @@ from ..db.models import (
     InterventionLog,
     PostureSummary,
     QaLog,
+    RevokedToken,
     SafetyEvent,
     SittingEvent,
     StateTransition,
@@ -375,6 +376,62 @@ class SqlStore:
                 pass
         cached = self._local_sessions.get(user_id)
         return json.dumps(cached.model_dump(mode="json"), ensure_ascii=False) if cached else None
+
+    async def revoke_token(self, jti: str, expires_at: datetime) -> None:
+        if not jti:
+            return
+        async with self._session() as session:
+            existing = (
+                await session.execute(select(RevokedToken).where(RevokedToken.jti == jti))
+            ).scalar_one_or_none()
+            if existing is None:
+                session.add(RevokedToken(jti=jti, expires_at=expires_at))
+                await session.commit()
+
+    async def is_token_revoked(self, jti: str) -> bool:
+        if not jti:
+            return False
+        async with self._session() as session:
+            row = (
+                await session.execute(select(RevokedToken).where(RevokedToken.jti == jti))
+            ).scalar_one_or_none()
+            if row is None:
+                return False
+            expires_at = row.expires_at
+            if expires_at is not None and expires_at.tzinfo is None:
+                expires_at = expires_at.replace(tzinfo=UTC)
+            if expires_at is not None and expires_at <= datetime.now(UTC):
+                await session.execute(delete(RevokedToken).where(RevokedToken.jti == jti))
+                await session.commit()
+                return False
+            return True
+
+    async def delete_user(self, user_id: str) -> bool:
+        async with self._session() as session:
+            user = (
+                await session.execute(select(User).where(User.id == user_id))
+            ).scalar_one_or_none()
+            if user is None:
+                return False
+            for model in (
+                Assessment,
+                StateTransition,
+                InterventionLog,
+                SittingEvent,
+                QaLog,
+                PostureSummary,
+                SafetyEvent,
+            ):
+                await session.execute(delete(model).where(model.user_id == user_id))
+            await session.delete(user)
+            await session.commit()
+        self._local_sessions.pop(user_id, None)
+        if self._settings.resolved_redis_url():
+            try:
+                await self._redis.delete(_session_key(user_id))
+            except Exception:
+                pass
+        return True
 
     async def close(self) -> None:
         await self._redis.close()

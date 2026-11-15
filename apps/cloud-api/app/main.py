@@ -14,6 +14,7 @@ from .api.routes.review import router as review_router
 from .api.routes.sitting import router as sitting_router
 from .cloud.registry import build_registry
 from .core.config import Settings, get_settings
+from .core.ratelimit import RateLimitMiddleware
 from .core.safety import SafetyCheckMiddleware
 from .repositories.store import build_store
 
@@ -56,6 +57,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         allow_headers=["*"],
     )
     app.add_middleware(SafetyCheckMiddleware)
+    app.add_middleware(
+        RateLimitMiddleware,
+        limit=app_settings.rate_limit_requests,
+        window=app_settings.rate_limit_window_seconds,
+        auth_limit=app_settings.rate_limit_auth_requests,
+    )
 
     for router in (
         health_router,

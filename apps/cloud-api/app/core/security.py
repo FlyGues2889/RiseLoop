@@ -48,10 +48,18 @@ def _sign(message: bytes, secret: str) -> bytes:
     return hmac.new(secret.encode(), message, hashlib.sha256).digest()
 
 
-def encode_token(user_id: str, secret: str, ttl_seconds: int) -> str:
+def encode_token(
+    user_id: str, secret: str, ttl_seconds: int, token_type: str = "access"
+) -> str:
     header = {"alg": _ALG, "typ": "JWT"}
     now = int(time.time())
-    payload = {"sub": user_id, "iat": now, "exp": now + ttl_seconds, "jti": uuid.uuid4().hex}
+    payload = {
+        "sub": user_id,
+        "typ": token_type,
+        "iat": now,
+        "exp": now + ttl_seconds,
+        "jti": uuid.uuid4().hex,
+    }
     segments = [
         _b64encode(json.dumps(header, separators=(",", ":")).encode()),
         _b64encode(json.dumps(payload, separators=(",", ":")).encode()),
@@ -78,10 +86,10 @@ def decode_token(token: str, secret: str) -> dict[str, Any]:
     return payload
 
 
-async def get_current_user_id(
+async def get_token_claims(
     request: Request,
     credentials: HTTPAuthorizationCredentials | None = Depends(_bearer),
-) -> str:
+) -> dict[str, Any]:
     if credentials is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="missing_token")
     settings: Settings = request.app.state.settings
@@ -91,4 +99,15 @@ async def get_current_user_id(
         # 过期和伪造要分开：前者只需重新登录，后者说明凭证本身有问题。
         detail = "token_expired" if str(exc) == "expired" else "invalid_token"
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=detail) from exc
-    return str(payload["sub"])
+    # 刷新令牌不能当访问令牌用，否则登出后还能拿它续期
+    if payload.get("typ", "access") != "access":
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid_token")
+    store = getattr(request.app.state, "store", None)
+    is_revoked = getattr(store, "is_token_revoked", None)
+    if is_revoked is not None and await is_revoked(str(payload.get("jti", ""))):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="token_revoked")
+    return payload
+
+
+async def get_current_user_id(claims: dict[str, Any] = Depends(get_token_claims)) -> str:
+    return str(claims["sub"])

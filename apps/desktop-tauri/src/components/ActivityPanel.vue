@@ -3,24 +3,25 @@ import { computed, onBeforeUnmount, ref, watch } from "vue";
 import ActionCamera from "./ActionCamera.vue";
 import ErrorBanner from "./ErrorBanner.vue";
 import LoadingOverlay from "./LoadingOverlay.vue";
-import { selectPendingAction, state, submitFeedback } from "../state/session.js";
+import { resolveFraming } from "../data/actionFraming.js";
+import { state, submitFeedback } from "../state/session.js";
 
 const actions = computed(() => {
   if (state.pendingActions?.length) return state.pendingActions;
   return state.pending ? [state.pending] : [];
 });
-const index = ref(0);
-const action = computed(() => actions.value[index.value] ?? null);
-// 推荐动作在这一次干预里保持稳定，切换 tab 不会把「推荐」搬走
-const recommendedId = ref(state.pending?.id ?? null);
-const isRecommended = computed(() => action.value?.id === recommendedId.value);
 
-// 预留给动作参考图：{ box, label, image }
-const referenceGuide = ref(null);
+const actionIndex = ref(0);
+const action = computed(() => actions.value[actionIndex.value] ?? null);
+const steps = computed(() => {
+  const list = action.value?.steps ?? [];
+  return list.length ? list : ["按上面的提示完成这个动作"];
+});
+const stepIndex = ref(0);
+const cameraOpen = ref(true);
 
-const remaining = ref(0);
-const running = ref(false);
-const finished = ref(false);
+const framing = computed(() => resolveFraming(action.value));
+
 const feedbackOpen = ref(false);
 const submitting = ref(false);
 const error = ref("");
@@ -42,9 +43,24 @@ const obstacleOptions = [
   { value: "forgot", label: "忘了" },
 ];
 
-const totalSeconds = computed(() => Math.max(1, (action.value?.duration_minutes ?? 1) * 60));
+// 动作总时长均分到每一步，最后一步吃掉余数，保证总和不变
+function splitSeconds(total, count) {
+  const size = Math.max(1, count);
+  const base = Math.floor(total / size);
+  const list = Array.from({ length: size }, () => base);
+  list[size - 1] = total - base * (size - 1);
+  return list;
+}
+
+const stepSeconds = computed(() =>
+  splitSeconds((action.value?.duration_minutes ?? 1) * 60, steps.value.length)
+);
+const stepTotal = computed(() => stepSeconds.value[stepIndex.value] ?? 60);
+const remaining = ref(stepTotal.value);
+const running = ref(false);
+
 const progress = computed(() =>
-  Math.max(0, Math.min(100, ((totalSeconds.value - remaining.value) / totalSeconds.value) * 100))
+  Math.max(0, Math.min(100, ((stepTotal.value - remaining.value) / stepTotal.value) * 100))
 );
 const timeText = computed(() => {
   const seconds = Math.max(0, remaining.value);
@@ -52,9 +68,13 @@ const timeText = computed(() => {
   const ss = String(seconds % 60).padStart(2, "0");
   return mm + ":" + ss;
 });
+const counterText = computed(() => {
+  const stepsPart = `第 ${stepIndex.value + 1} / ${steps.value.length} 步`;
+  if (actions.value.length <= 1) return stepsPart;
+  return `动作 ${actionIndex.value + 1} / ${actions.value.length} · ${stepsPart}`;
+});
 
 let timer = null;
-let advanceTimer = null;
 let autoStartArmed = false;
 
 function disarmAutoStart() {
@@ -84,7 +104,7 @@ function stopTick() {
 }
 
 function startTick() {
-  if (running.value || remaining.value <= 0 || finished.value) return;
+  if (running.value || remaining.value <= 0 || feedbackOpen.value) return;
   running.value = true;
   timer = setInterval(() => {
     if (remaining.value <= 0) {
@@ -92,21 +112,74 @@ function startTick() {
       return;
     }
     remaining.value -= 1;
-    if (remaining.value <= 0) onActionDone();
+    if (remaining.value <= 0) onStepDone();
   }, 1000);
+}
+
+function resetStep() {
+  remaining.value = stepSeconds.value[stepIndex.value] ?? 60;
+}
+
+function onStepDone() {
+  stopTick();
+  if (stepIndex.value < steps.value.length - 1) {
+    stepIndex.value += 1;
+    resetStep();
+    startTick();
+    return;
+  }
+  onActionDone();
+}
+
+function stepForward(auto) {
+  if (stepIndex.value < steps.value.length - 1) {
+    stepIndex.value += 1;
+    resetStep();
+    if (auto || running.value) startTick();
+    return;
+  }
+  if (auto) {
+    onActionDone();
+    return;
+  }
+  onActionDone();
 }
 
 function onActionDone() {
   stopTick();
-  if (index.value < actions.value.length - 1) {
-    advanceTimer = setTimeout(() => {
-      index.value += 1;
-      remaining.value = totalSeconds.value;
-      startTick();
-    }, 600);
+  if (actionIndex.value < actions.value.length - 1) {
+    actionIndex.value += 1;
+    stepIndex.value = 0;
+    resetStep();
+    startTick();
     return;
   }
-  finished.value = true;
+  openFeedback();
+}
+
+function nextStep() {
+  disarmAutoStart();
+  stepForward(false);
+}
+
+function prevStep() {
+  disarmAutoStart();
+  if (stepIndex.value === 0) return;
+  stopTick();
+  stepIndex.value -= 1;
+  resetStep();
+}
+
+function skipAction() {
+  disarmAutoStart();
+  stopTick();
+  if (actionIndex.value < actions.value.length - 1) {
+    actionIndex.value += 1;
+    stepIndex.value = 0;
+    resetStep();
+    startTick();
+    return;
+  }
   openFeedback();
 }
 
@@ -116,46 +189,22 @@ function openFeedback() {
   feedbackOpen.value = true;
 }
 
-function skipAction() {
-  finished.value = true;
-  openFeedback();
-}
-
-function indexOfRecommended() {
-  const position = actions.value.findIndex((item) => item.id === recommendedId.value);
-  return position >= 0 ? position : 0;
-}
-
 function resetSequence() {
   stopTick();
-  if (advanceTimer) clearTimeout(advanceTimer);
-  advanceTimer = null;
-  index.value = indexOfRecommended();
-  remaining.value = totalSeconds.value;
-  finished.value = false;
+  actionIndex.value = 0;
+  stepIndex.value = 0;
   feedbackOpen.value = false;
   error.value = "";
   feeling.value = "same";
   painScore.value = state.assessment?.pain_score ?? 2;
   obstacle.value = null;
-}
-
-function pickAction(item) {
-  stopTick();
-  if (advanceTimer) clearTimeout(advanceTimer);
-  const next = actions.value.findIndex((candidate) => candidate.id === item.id);
-  selectPendingAction(item);
-  index.value = next >= 0 ? next : 0;
-  remaining.value = totalSeconds.value;
-  finished.value = false;
-  window.setTimeout(() => startTick(), 60);
+  resetStep();
 }
 
 watch(
   () => state.pendingActions,
   () => {
     if (!state.pending?.id) return;
-    recommendedId.value = state.pending.id;
     resetSequence();
     armAutoStart();
   },
@@ -202,50 +251,43 @@ async function submit(completion) {
 onBeforeUnmount(() => {
   disarmAutoStart();
   stopTick();
-  if (advanceTimer) clearTimeout(advanceTimer);
 });
 </script>
 <template>
   <div class="activity-panel">
     <m3e-card v-if="action && !feedbackOpen" variant="elevated" class="surface-card">
       <div class="surface-body plan-body-wrap">
-        <header class="card-head">
-          <h2>
-            {{ action.name }}
-            <span v-if="isRecommended" class="tag">推荐</span>
-          </h2>
-          <span class="step-count">第 {{ index + 1 }} / {{ actions.length }} 个动作</span>
-        </header>
-
-        <m3e-tabs v-if="actions.length > 1" class="plan-tabs">
-          <m3e-tab v-for="item in actions" :key="item.id" :selected.prop="item.id === action?.id"
-            @click="pickAction(item)">
-            {{ item.name }}<span v-if="item.id === recommendedId" class="tag-inline">推荐</span>
-          </m3e-tab>
-        </m3e-tabs>
-
-        <div class="plan-body">
-          <ol class="steps">
-            <li v-for="(step, stepIndex) in action.steps || []" :key="stepIndex">{{ step }}</li>
-          </ol>
-          <p v-if="action.caution" class="caution">{{ action.caution }}</p>
+        <div class="step-head">
+          <span class="step-count">{{ counterText }}</span>
+          <m3e-button variant="text" size="small" @click="cameraOpen = !cameraOpen">
+            {{ cameraOpen ? "收起画面" : "打开画面" }}
+          </m3e-button>
         </div>
 
-        <div class="media-row">
-          <ActionCamera :reference="referenceGuide" />
+        <div class="media-row" :class="{ 'no-camera': !cameraOpen }">
+          <ActionCamera v-if="cameraOpen" :framing="framing" />
 
-          <div class="timer">
-            <div class="timer-head">
-              <span class="mono time">{{ timeText }}</span>
-              <span class="step-status">{{ running ? "进行中" : "已暂停" }}</span>
-            </div>
-            <m3e-linear-progress-indicator class="progress" :value.prop="progress"></m3e-linear-progress-indicator>
-            <div class="timer-actions">
-              <m3e-button v-if="!running" variant="tonal" size="small" @click="startTick">
-                {{ remaining === totalSeconds ? "开始倒计时" : "继续" }}
-              </m3e-button>
-              <m3e-button v-else variant="text" size="small" @click="stopTick">暂停</m3e-button>
-              <m3e-button variant="text" size="small" @click="skipAction">跳过运动</m3e-button>
+          <div class="stage">
+            <p class="step-text">{{ steps[stepIndex] }}</p>
+            <p v-if="action.caution" class="caution">{{ action.caution }}</p>
+
+            <div class="timer">
+              <div class="timer-head">
+                <span class="mono time">{{ timeText }}</span>
+                <span class="step-status">{{ running ? "进行中" : "已暂停" }}</span>
+              </div>
+              <m3e-linear-progress-indicator class="progress" :value.prop="progress"></m3e-linear-progress-indicator>
+              <div class="timer-actions">
+                <m3e-button v-if="!running" variant="tonal" size="small" @click="startTick">
+                  {{ remaining === stepTotal ? "开始倒计时" : "继续" }}
+                </m3e-button>
+                <m3e-button v-else variant="text" size="small" @click="stopTick">暂停</m3e-button>
+                <m3e-button variant="text" size="small" :disabled.prop="stepIndex === 0" @click="prevStep">
+                  上一步
+                </m3e-button>
+                <m3e-button variant="text" size="small" @click="nextStep">下一步</m3e-button>
+                <m3e-button variant="text" size="small" @click="skipAction">跳过这个动作</m3e-button>
+              </div>
             </div>
           </div>
         </div>
@@ -308,7 +350,6 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-/* 与干预卡片同一套外观：m3e-card + surface-card / surface-body */
 .activity-panel {
   display: grid;
   gap: 1rem;
@@ -328,22 +369,11 @@ onBeforeUnmount(() => {
   gap: 0.75rem;
 }
 
-.card-head {
+.step-head {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-}
-
-.card-head h2 {
-  margin: 0;
-  font-size: 1.4rem;
-}
-
-.card-head h3 {
-  margin: 0;
-  font-size: 1rem;
-  color: var(--md-sys-color-on-surface-variant);
 }
 
 .step-count {
@@ -352,32 +382,40 @@ onBeforeUnmount(() => {
   white-space: nowrap;
 }
 
-.plan-tabs {
-  margin-bottom: 0.25rem;
+.card-head h3 {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--md-sys-color-on-surface-variant);
 }
 
-.plan-body {
-  display: block;
+.media-row {
+  display: grid;
+  grid-template-columns: 16rem minmax(0, 1fr);
+  gap: 1.25rem;
+  align-items: start;
 }
 
-.steps {
-  margin: 0 0 0.6rem;
-  padding-left: 1.2rem;
-  font-size: 0.9rem;
-  line-height: 1.7;
+.media-row.no-camera {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.stage {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.step-text {
+  margin: 0;
+  font-size: clamp(1.4rem, 2.6vw, 1.9rem);
+  font-weight: 600;
+  line-height: 1.5;
+  letter-spacing: 0.01em;
 }
 
 .caution {
   margin: 0;
   color: var(--md-sys-color-error);
   font-size: 0.78rem;
-}
-
-.media-row {
-  display: grid;
-  grid-template-columns: 12rem minmax(0, 1fr);
-  gap: 1rem;
-  align-items: start;
 }
 
 .timer {
@@ -394,7 +432,7 @@ onBeforeUnmount(() => {
 }
 
 .time {
-  font-size: 1.35rem;
+  font-size: 1.45rem;
   font-weight: 700;
   color: var(--md-sys-color-primary);
 }
@@ -410,8 +448,9 @@ onBeforeUnmount(() => {
 
 .timer-actions {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.4rem;
 }
 
 .feedback-grid {
@@ -447,23 +486,6 @@ onBeforeUnmount(() => {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-}
-
-.tag {
-  margin-left: 0.5rem;
-  padding: 0.1rem 0.45rem;
-  border-radius: 62.438rem;
-  background: var(--md-sys-color-tertiary-container);
-  color: var(--md-sys-color-on-tertiary-container);
-  font-size: 0.65rem;
-  font-weight: 500;
-  vertical-align: middle;
-}
-
-.tag-inline {
-  margin-left: 0.35rem;
-  color: var(--md-sys-color-tertiary);
-  font-size: 0.65rem;
 }
 
 @media (max-width: 720px) {

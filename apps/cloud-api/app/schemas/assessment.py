@@ -46,3 +46,15 @@ class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     expires_in: int
+    # 刷新令牌只管续期；不落库，靠 jti 黑名单吊销
+    refresh_token: str = ""
+    refresh_expires_in: int = 0
+
+
+class RefreshRequest(BaseModel):
+    refresh_token: str
+
+
+class LogoutRequest(BaseModel):
+    # 可选：把刷新令牌一并作废，调用方不传也能登出
+    refresh_token: str | None = None

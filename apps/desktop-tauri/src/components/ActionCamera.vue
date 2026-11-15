@@ -5,38 +5,79 @@ import { record, setLiveCamera } from "../state/cameraLog.js";
 import { createPoseLandmarker, prefs as cameraPrefs } from "../state/postureMonitor.js";
 
 const props = defineProps({
-  // 预留：后续动作参考图按归一化坐标给出取景框，例如 { box: { x, y, w, h }, label, image }
-  reference: { type: Object, default: null },
+  // { framing: "upper" | "full" | "none", focus: number[], hint: string }
+  framing: { type: Object, default: null },
 });
+
+const SKELETON_KEY = "riseloop.camera.skeletonOnly";
+const VISIBLE = 0.5;
 
 const videoEl = ref(null);
 const canvasEl = ref(null);
 const status = ref("starting");
 const aligned = ref(false);
+const skeletonOnly = ref(readSkeletonPref());
 
-const box = computed(
-  () => props.reference?.box ?? { x: 0.26, y: 0.08, w: 0.48, h: 0.84 }
-);
-const guideStyle = computed(() => ({
+function readSkeletonPref() {
+  try {
+    return window.localStorage?.getItem(SKELETON_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function toggleSkeleton() {
+  skeletonOnly.value = !skeletonOnly.value;
+  try {
+    window.localStorage?.setItem(SKELETON_KEY, skeletonOnly.value ? "1" : "0");
+  } catch {
+    /* 隐私开关存不下也不阻断 */
+  }
+}
+
+const mode = computed(() => props.framing?.framing ?? "upper");
+const focus = computed(() => props.framing?.focus ?? []);
+const needAlign = computed(() => mode.value !== "none");
+const hint = computed(() => {
+  if (props.framing?.hint) return props.framing.hint;
+  return mode.value === "full" ? "往后退半步，让膝盖进画面" : "坐直，让头和双肩在画面里";
+});
+
+// 久坐场景默认只框上半身；只有站立动作才要求膝盖以下
+const box = computed(() => {
+  if (!needAlign.value) return null;
+  return mode.value === "full"
+    ? { x: 0.16, y: 0.04, w: 0.68, h: 0.92 }
+    : { x: 0.12, y: 0.06, w: 0.76, h: 0.7 };
+});
+
+const guideStyle = computed(() => (box.value ? {
   left: box.value.x * 100 + "%",
   top: box.value.y * 100 + "%",
   width: box.value.w * 100 + "%",
   height: box.value.h * 100 + "%",
-}));
-const guideLabel = computed(() =>
-  aligned.value ? "对齐了" : (props.reference?.label ?? "站进框内")
-);
-const placeholder = computed(() => {
-  if (status.value === "starting") return "正在打开摄像头";
-  if (status.value === "error") return "摄像头不可用";
-  return "摄像头未开启";
+} : {}));
+
+const label = computed(() => {
+  if (!needAlign.value) return hint.value;
+  return aligned.value ? "对齐了" : hint.value;
 });
 
-const BONES = [
+const placeholder = computed(() => {
+  if (status.value === "starting") return "正在打开摄像头";
+  if (status.value === "error") return "摄像头不可用，先按文字做";
+  return "摄像头已暂停";
+});
+
+const TORSO_BONES = [
   [11, 12], [11, 13], [13, 15], [12, 14], [14, 16],
-  [11, 23], [12, 24], [23, 24], [23, 25], [25, 27], [24, 26], [26, 28],
+  [11, 23], [12, 24], [23, 24],
 ];
-const ALIGN_POINTS = [0, 11, 12, 23, 24];
+const LEG_BONES = [[23, 25], [25, 27], [24, 26], [26, 28]];
+
+function bonesForMode() {
+  return mode.value === "full" ? [...TORSO_BONES, ...LEG_BONES] : TORSO_BONES;
+}
 
 let stream = null;
 let rafId = 0;
@@ -51,6 +92,12 @@ function resizeCanvas() {
   const rect = canvas.getBoundingClientRect();
   canvas.width = Math.max(1, Math.round(rect.width));
   canvas.height = Math.max(1, Math.round(rect.height));
+}
+
+function isVisible(point) {
+  if (!point) return false;
+  if (point.x < -0.05 || point.x > 1.05 || point.y < -0.05 || point.y > 1.05) return false;
+  return (point.visibility ?? 1) >= VISIBLE;
 }
 
 function project(points) {
@@ -68,41 +115,46 @@ function project(points) {
   }));
 }
 
-function draw(points) {
+function draw(points, visible) {
   const canvas = canvasEl.value;
   const ctx = canvas.getContext("2d");
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   if (!points) return;
-  ctx.strokeStyle = aligned.value ? "#88f8c8" : "rgba(255,255,255,0.75)";
+  ctx.strokeStyle = aligned.value ? "#88f8c8" : "rgba(255,255,255,0.72)";
   ctx.lineWidth = 2;
   ctx.lineCap = "round";
-  for (const [a, b] of BONES) {
+  // 只画两端都看得见的骨头：看不到的部分留白，比画错位置更可信
+  for (const [a, b] of bonesForMode()) {
+    if (!visible[a] || !visible[b] || !points[a] || !points[b]) continue;
     ctx.beginPath();
     ctx.moveTo(points[a].x, points[a].y);
     ctx.lineTo(points[b].x, points[b].y);
     ctx.stroke();
   }
   ctx.fillStyle = aligned.value ? "#88f8c8" : "rgba(255,255,255,0.9)";
-  for (const index of ALIGN_POINTS) {
+  for (const index of focus.value) {
+    if (!visible[index] || !points[index]) continue;
     ctx.beginPath();
     ctx.arc(points[index].x, points[index].y, 3, 0, Math.PI * 2);
     ctx.fill();
   }
 }
 
-function checkAligned(landmarks) {
+function checkAligned(points, visible) {
+  if (!needAlign.value || !focus.value.length) return true;
   const canvas = canvasEl.value;
-  if (!canvas || !landmarks.length) return false;
-  const points = project(landmarks);
-  if (!points) return false;
+  const { x, y, w, h } = box.value;
   let inside = 0;
-  for (const index of ALIGN_POINTS) {
+  let seen = 0;
+  for (const index of focus.value) {
+    if (!points[index]) continue;
+    seen += 1;
     const nx = points[index].x / canvas.width;
     const ny = points[index].y / canvas.height;
-    const { x, y, w, h } = box.value;
     if (nx >= x && nx <= x + w && ny >= y && ny <= y + h) inside += 1;
   }
-  return inside >= 3;
+  if (seen === 0) return false;
+  return inside / focus.value.length >= 0.6;
 }
 
 function tick() {
@@ -116,14 +168,18 @@ function tick() {
   const landmarks = landmarker.detectForVideo(video, now)?.landmarks?.[0];
   if (!landmarks) {
     aligned.value = false;
-    draw(null);
+    draw(null, []);
     return;
   }
-  aligned.value = checkAligned(landmarks);
-  draw(project(landmarks));
+  const points = project(landmarks);
+  const visible = landmarks.map(isVisible);
+  aligned.value = checkAligned(points, visible);
+  draw(points, visible);
 }
 
 async function start() {
+  if (stream) return;
+  status.value = "starting";
   try {
     if (!navigator.mediaDevices?.getUserMedia) {
       status.value = "error";
@@ -192,18 +248,27 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="action-camera" :class="{ aligned }">
-    <video ref="videoEl" class="feed" autoplay muted playsinline v-show="status === 'ready'"></video>
-    <canvas ref="canvasEl" class="skeleton" v-show="status === 'ready'"></canvas>
+  <div class="action-camera" :class="{ aligned, skeleton: skeletonOnly }">
+    <video ref="videoEl" class="feed" autoplay muted playsinline
+      v-show="status === 'ready' && !skeletonOnly"></video>
+    <canvas ref="canvasEl" class="skeleton-layer" v-show="status === 'ready'"></canvas>
 
-    <div class="guide" :style="guideStyle" aria-hidden="true">
+    <div v-if="needAlign && status === 'ready'" class="guide" :style="guideStyle" aria-hidden="true">
       <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
     </div>
-    <span class="guide-label">{{ guideLabel }}</span>
+
+    <div class="top-bar">
+      <m3e-button variant="text" size="small" @click="toggleSkeleton">
+        {{ skeletonOnly ? "显示画面" : "只看骨架" }}
+      </m3e-button>
+    </div>
+
+    <span v-if="status === 'ready'" class="guide-label">{{ label }}</span>
 
     <div v-if="status !== 'ready'" class="placeholder">
       <span class="material-symbols-rounded">videocam_off</span>
       <span>{{ placeholder }}</span>
+      <m3e-button variant="tonal" size="small" @click="start">打开摄像头</m3e-button>
     </div>
   </div>
 </template>
@@ -212,14 +277,14 @@ onBeforeUnmount(() => {
 .action-camera {
   position: relative;
   width: 100%;
-  aspect-ratio: 3 / 4;
+  aspect-ratio: 4 / 3;
   overflow: hidden;
   border-radius: 0.9rem;
   background: var(--md-sys-color-surface-1);
 }
 
 .feed,
-.skeleton {
+.skeleton-layer {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -227,8 +292,15 @@ onBeforeUnmount(() => {
   object-fit: cover;
 }
 
-.skeleton {
+.skeleton-layer {
   pointer-events: none;
+}
+
+.top-bar {
+  position: absolute;
+  top: 0.15rem;
+  right: 0.25rem;
+  z-index: 2;
 }
 
 .guide {
@@ -261,12 +333,13 @@ onBeforeUnmount(() => {
 
 .guide-label {
   position: absolute;
-  left: 0;
-  right: 0;
+  left: 0.5rem;
+  right: 0.5rem;
   bottom: 0.5rem;
   text-align: center;
   color: var(--md-sys-color-primary-container);
-  font-size: 0.7rem;
+  font-size: 0.72rem;
+  line-height: 1.4;
 }
 
 .aligned .guide-label {
@@ -279,8 +352,10 @@ onBeforeUnmount(() => {
   display: grid;
   place-content: center;
   justify-items: center;
-  gap: 0.4rem;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  text-align: center;
   color: var(--md-sys-color-outline);
-  font-size: 0.72rem;
+  font-size: 0.75rem;
 }
 </style>

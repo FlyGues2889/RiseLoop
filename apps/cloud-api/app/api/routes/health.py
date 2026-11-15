@@ -1,6 +1,12 @@
 from fastapi import APIRouter, Request, Response
 
-from ...schemas.health import DependencyResponse, LiveResponse, ReadinessResponse
+from ...schemas.health import (
+    CapabilitiesResponse,
+    DependencyResponse,
+    LiveResponse,
+    RateLimitCapability,
+    ReadinessResponse,
+)
 
 router = APIRouter(prefix="/health", tags=["health"])
 
@@ -17,6 +23,24 @@ async def live(request: Request) -> LiveResponse:
 async def dependencies(request: Request) -> DependencyResponse:
     statuses = await request.app.state.cloud.check_all()
     return DependencyResponse(dependencies=statuses)
+
+
+@router.get("/capabilities", response_model=CapabilitiesResponse)
+async def capabilities(request: Request) -> CapabilitiesResponse:
+    settings = request.app.state.settings
+    statuses = await request.app.state.cloud.check_all()
+    return CapabilitiesResponse(
+        env=settings.env,
+        version=settings.version,
+        store_backend=settings.store_backend,
+        cloud_provider=settings.cloud_provider,
+        dependencies=statuses,
+        rate_limit=RateLimitCapability(
+            requests=settings.rate_limit_requests,
+            window_seconds=settings.rate_limit_window_seconds,
+            auth_requests=settings.rate_limit_auth_requests,
+        ),
+    )
 
 
 @router.get(

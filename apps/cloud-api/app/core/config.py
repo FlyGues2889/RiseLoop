@@ -27,6 +27,13 @@ class Settings(BaseSettings):
 
     jwt_secret: str = "riseloop-local-dev-secret-change-me"
     jwt_ttl_seconds: int = 3600
+    # 刷新令牌只管"续期"，生命周期比访问令牌长；吊销靠 jti 黑名单
+    jwt_refresh_ttl_seconds: int = 60 * 60 * 24 * 30
+
+    # 接口限流：默认按键（登录态用 token 指纹，否则用来源 IP）计数
+    rate_limit_requests: int = 120
+    rate_limit_window_seconds: int = 60
+    rate_limit_auth_requests: int = 10
 
     sitting_threshold_minutes: int = 45
     push_cooldown_minutes: int = 10

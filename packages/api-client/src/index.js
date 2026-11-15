@@ -50,6 +50,26 @@ const CODE_VIEWS = {
     title: "登录已经过期",
     hint: "太久没使用，重新登录就能接着用。",
   },
+  token_revoked: {
+    title: "这个登录已经退出",
+    hint: "换了设备或点了退出，重新登录就能继续。",
+  },
+  invalid_refresh_token: {
+    title: "续期凭证对不上",
+    hint: "重新登录一次就好，本机的评估和记录不受影响。",
+  },
+  refresh_expired: {
+    title: "续期期限到了",
+    hint: "长时间没打开过，重新登录就能接着用。",
+  },
+  rate_limited: {
+    title: "请求有点频繁",
+    hint: "短时间内操作太多次，等一分钟再试。",
+  },
+  user_not_found: {
+    title: "这个账号已经不在了",
+    hint: "如果之前删过账号，重新注册一个即可。",
+  },
   no_pending_intervention: {
     title: "现在没有待完成的动作",
     hint: "等下一次久坐提醒，或在计时栏点“立即开始活动”。",

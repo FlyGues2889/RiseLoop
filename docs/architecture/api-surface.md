@@ -1,0 +1,102 @@
+# 云端接口清单（api-surface）
+
+> 更新：2026-11-15。这份文件回答一个问题：**接口还缺什么、开通云资源之后要验什么**。
+> 代码口径以 `apps/cloud-api/app/api/routes/*` 为准；本文件与代码不一致时以代码为准并回写本文件。
+
+## 1. 现状一句话
+
+接口层已经完整：从注册登录到评估、计时、姿态、干预、反馈、问答、周复盘全部有路由、有 schema、有测试。
+缺的是**云资源本身**（RDS、DCS、ModelArts endpoint、CodeArts 智能体、OBS、KMS），所以现在所有云服务走 `mock` 适配层。
+`GET /health/capabilities` 是自查入口：返回各依赖的 `provider / configured / reachable` 与限流参数。
+
+## 2. 路由全表
+
+除标注"公开"的以外，全部要求 `Authorization: Bearer <access_token>`。
+
+| 方法 | 路径 | 说明 | 主要错误码 |
+|---|---|---|---|
+| GET | `/` | 服务名、版本、环境、云厂商模式 | — |
+| GET | `/health/live` | 存活探针（公开） | — |
+| GET | `/health/deps` | 各云依赖连通性（公开） | — |
+| GET | `/health/ready` | 就绪探针，RDS/Redis/CodeArts 任一不可达返回 503（公开） | — |
+| GET | `/health/capabilities` | 能力与限流自查（公开） | — |
+| POST | `/auth/register` | 注册，返回访问令牌 + 刷新令牌（公开） | `email_exists`(409)、`rate_limited`(429) |
+| POST | `/auth/login` | 登录（公开） | `invalid_credentials`(401) |
+| POST | `/auth/refresh` | 用刷新令牌换新的一对令牌，旧刷新令牌立即作废（公开） | `invalid_refresh_token`、`refresh_expired`、`token_revoked`(401) |
+| POST | `/auth/logout` | 吊销当前访问令牌；body 带 `refresh_token` 时一并吊销 | `token_revoked`(401) |
+| DELETE | `/auth/account` | 删除账号与其全部数据 | `user_not_found`(404) |
+| POST | `/assessment` | 评估，产出初始状态与两周方案；红旗命中直接 403 | `safety_short_circuit`(403) |
+| POST | `/sitting/heartbeat` | 久坐心跳，到阈值推最多 3 个动作 | — |
+| GET | `/actions/{state}` | 按状态取动作，可加 `body_part`、`max_minutes` | — |
+| POST | `/ingest/wearable` | 穿戴设备上报，**未实现**，固定 501 | `not_implemented`(501) |
+| POST | `/posture/risk` | 姿态特征 + 久坐/疼痛 → BRLI 风险与推荐动作、 citations | — |
+| POST | `/posture/infer` | 关键点 → ModelArts 姿态分类 | `modelarts_unavailable`(503) |
+| GET | `/intervention/current` | 当前待完成动作 | `no_pending_intervention`(404)、`action_not_found`(404) |
+| POST | `/intervention/feedback` | 反馈触发状态迁移（完成/部分/跳过 + 障碍归因） | `safety_short_circuit`(403) |
+| POST | `/qa/ask` | 循证问答，返回答案与引用 id | — |
+| GET | `/review/weekly` | 近 N 天周复盘（默认 7） | — |
+
+## 3. 鉴权生命周期
+
+```text
+register / login        → access(1h) + refresh(30d)
+业务请求                 → Authorization: Bearer <access>
+access 过期(401 token_expired) → POST /auth/refresh（换新一对，旧的刷新令牌作废）
+主动退出                 → POST /auth/logout（jti 进黑名单，refresh 一并作废）
+删账号                   → DELETE /auth/account（清用户 + 全部业务数据）
+```
+
+- 令牌是自签 HS256 JWT，claims：`sub / typ(access|refresh) / iat / exp / jti`。
+- 吊销只存 `jti` 与到期时间（`revoked_tokens` 表 / 内存字典），到期自动清理，不存用户内容。
+- 刷新令牌不能当访问令牌用（`typ` 校验），避免登出后仍能续期。
+
+## 4. 限流
+
+| 桶 | 默认 | 键 |
+|---|---|---|
+| 登录类（`/auth/login`、`/auth/register`、`/auth/refresh`） | 10 次 / 60 秒 | 无 token 时按来源 IP |
+| 其它业务接口 | 120 次 / 60 秒 | 有 token 按 token 指纹，否则按 IP |
+
+超限返回 `429`，body `{"detail": "rate_limited"}`，带 `Retry-After`（秒）。
+健康检查与 `OPTIONS` 不计数。计数在进程内存里；横向扩容时要换成 DCS `INCR`（`app/core/ratelimit.py` 已把实现收口在一个中间件里）。
+
+## 5. mock 与真机怎么切
+
+全部通过环境变量（前缀 `RISELOOP_`，见 `app/core/config.py`）：
+
+| 变量 | 作用 |
+|---|---|
+| `RISELOOP_CLOUD_PROVIDER=mock\|huawei` | 适配层总开关 |
+| `RISELOOP_RDS_DSN` 或 `RDS_HOST/RDS_USER/RDS_DB/RDS_PASSWORD` | 配了就走 SQL 存储，否则内存存储 |
+| `RISELOOP_REDIS_URL` 或 `REDIS_HOST` | 配了实时状态走 DCS，否则进程内存 |
+| `RISELOOP_MODELARTS_ENDPOINT / _API_KEY / _PROJECT_ID / _MODEL_NAME` | 姿态推理；不配时 `/posture/infer` 返回 503，端侧显式降级 |
+| `RISELOOP_CODEARTS_ENDPOINT / _API_KEY / _PLANNING_AGENT_ID / _EXECUTING_AGENT_ID` | 问答与规划智能体 |
+| `RISELOOP_OBS_*`、`RISELOOP_KMS_*` | 对象存储与密钥托管，业务尚未接线 |
+| `RISELOOP_JWT_SECRET` | **上线必须换**，默认值是本地开发用的 |
+| `RISELOOP_JWT_TTL_SECONDS / JWT_REFRESH_TTL_SECONDS` | 访问 1 小时 / 刷新 30 天 |
+| `RISELOOP_RATE_LIMIT_REQUESTS / _WINDOW_SECONDS / _AUTH_REQUESTS` | 限流参数 |
+
+密钥只进 `.env` 或环境变量，不写仓库、不下发客户端。
+
+## 6. 资源开通清单（按开通顺序）
+
+| 顺序 | 资源 | 用途 | 开通后要验的接口 |
+|---|---|---|---|
+| 1 | RDS PostgreSQL | 用户、评估、迁移、执行记录、问答日志、安全事件、姿态摘要 | `/health/ready` 转 ready；重启后数据仍在 |
+| 2 | DCS Redis | session 状态、久坐计时、待响应干预 | 同上；断 Redis 时降级为内存且不崩 |
+| 3 | ModelArts 在线服务 | 关键点 → 姿态分类 | `/posture/infer` 200；超时 2.5s 返回 503 并端侧降级 |
+| 4 | CodeArts 智能体（规划 + 执行） | 问答与方案解释 | `/qa/ask` 返回真实答案与 citations |
+| 5 | OBS | 导出物 / 证据材料 | 业务尚未接线，只验连通 |
+| 6 | KMS | 密钥托管 | 同上 |
+
+开通后必须补的三项验证：断网、关摄像头、ModelArts 超时回退（见 PROGRESS §5 手测清单）。
+
+## 7. 客户端接入状态
+
+| 能力 | 状态 |
+|---|---|
+| 注册 / 登录 / 凭证进钥匙串 | ✅ 已接 |
+| 评估、心跳、动作、姿态、反馈、问答、周复盘 | ✅ 已接 |
+| 错误码 → 人话 | ✅ `packages/api-client` 的 `CODE_VIEWS`，新增 `token_revoked`、`rate_limited` 等 |
+| 刷新令牌自动续期 | ⬜ 服务端已就绪；客户端要 Rust 钥匙串加一个槽位 + 401 时重试一次 |
+| 登出 / 删账号 | ⬜ 服务端已就绪；界面只有"清除本机数据"，未调这两个接口 |

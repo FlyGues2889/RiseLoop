@@ -86,6 +86,12 @@ class Store(Protocol):
 
     async def count_sitting_events(self, user_id: str, since: datetime) -> int: ...
 
+    async def revoke_token(self, jti: str, expires_at: datetime) -> None: ...
+
+    async def is_token_revoked(self, jti: str) -> bool: ...
+
+    async def delete_user(self, user_id: str) -> bool: ...
+
     async def get_session(self, user_id: str) -> SessionState | None: ...
 
     async def save_session(self, user_id: str, session: SessionState) -> None: ...
@@ -104,6 +110,7 @@ class MemoryStore:
         self._safety_events: list[dict] = []
         self._qa_logs: list[dict] = []
         self._posture_summaries: dict[str, list[dict]] = {}
+        self._revoked: dict[str, datetime] = {}
         self._actions = [ActionRecord(**item) for item in load_seed_actions()]
 
     @property
@@ -256,6 +263,42 @@ class MemoryStore:
                 "timestamp": datetime.now(UTC).isoformat(),
             }
         )
+
+    async def revoke_token(self, jti: str, expires_at: datetime) -> None:
+        if jti:
+            self._revoked[jti] = expires_at
+
+    async def is_token_revoked(self, jti: str) -> bool:
+        expires_at = self._revoked.get(jti)
+        if expires_at is None:
+            return False
+        if expires_at <= datetime.now(UTC):
+            # 到期就清掉，黑名单不会无限增长
+            self._revoked.pop(jti, None)
+            return False
+        return True
+
+    async def delete_user(self, user_id: str) -> bool:
+        user = self._users.pop(user_id, None)
+        if user is None:
+            return False
+        self._emails.pop(user.email, None)
+        self._assessments = {
+            key: value
+            for key, value in self._assessments.items()
+            if value.get("user_id") != user_id
+        }
+        self._latest_assessment.pop(user_id, None)
+        self._transitions.pop(user_id, None)
+        self._logs.pop(user_id, None)
+        self._sessions.pop(user_id, None)
+        self._posture_summaries.pop(user_id, None)
+        self._sitting_events = [item for item in self._sitting_events if item["user_id"] != user_id]
+        self._safety_events = [
+            item for item in self._safety_events if item.get("user_id") != user_id
+        ]
+        self._qa_logs = [item for item in self._qa_logs if item["user_id"] != user_id]
+        return True
 
     async def get_session(self, user_id: str) -> SessionState | None:
         return self._sessions.get(user_id)

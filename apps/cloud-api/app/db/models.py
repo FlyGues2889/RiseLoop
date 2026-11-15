@@ -19,6 +19,15 @@ class User(Base):
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
+class RevokedToken(Base):
+    """吊销的令牌只存 jti 与到期时间：到期即可清理，不存任何用户内容。"""
+
+    __tablename__ = "revoked_tokens"
+
+    jti: Mapped[str] = mapped_column(String(64), primary_key=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+
+
 class Assessment(Base):
     __tablename__ = "assessments"
 
