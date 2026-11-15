@@ -46,6 +46,10 @@ pub struct NoticePayload {
 #[derive(Default)]
 pub struct NoticeState {
     payload: Mutex<Option<NoticePayload>>,
+    /// 上次应用过的窗口高度，用来跳过无变化的重复 resize
+    last_height: Mutex<f64>,
+    /// 上次设置的 focusable 状态。反复切换窗口样式会让窗口重绘闪烁，没变化就不碰
+    focusable: Mutex<Option<bool>>,
 }
 
 pub fn create_window(app: &AppHandle<Wry>) -> tauri::Result<WebviewWindow<Wry>> {
@@ -89,7 +93,7 @@ fn reveal(app: &AppHandle<Wry>) -> bool {
     else {
         return false;
     };
-    let _ = window.set_focusable(false);
+    set_focusable(app, &window, false);
     if let Err(error) = place(app, &window, COLLAPSED_HEIGHT) {
         eprintln!("notice: 定位失败，沿用默认位置: {error}");
     }
@@ -103,8 +107,34 @@ fn reveal(app: &AppHandle<Wry>) -> bool {
     }
 }
 
+/// 只在状态真的变化时才改窗口样式：切换 WS_EX_NOACTIVATE 会让窗口重绘，
+/// 每次点按钮都切一遍看起来就是闪一下。
+fn set_focusable(app: &AppHandle<Wry>, window: &WebviewWindow<Wry>, focusable: bool) {
+    let changed = app
+        .try_state::<NoticeState>()
+        .and_then(|state| {
+            state.focusable.lock().ok().map(|mut current| {
+                if *current == Some(focusable) {
+                    false
+                } else {
+                    *current = Some(focusable);
+                    true
+                }
+            })
+        })
+        .unwrap_or(true);
+    if changed {
+        let _ = window.set_focusable(focusable);
+    }
+}
+
 /// 锚定在工作区右下角，向上生长：展开时底边不动，视觉上从卡片往上长。
 fn place(app: &AppHandle<Wry>, window: &WebviewWindow<Wry>, height: f64) -> tauri::Result<()> {
+    if let Some(state) = app.try_state::<NoticeState>() {
+        if let Ok(mut last) = state.last_height.lock() {
+            *last = height;
+        }
+    }
     window.set_size(LogicalSize::new(WIDTH, height))?;
     let Some(monitor) = app.primary_monitor()? else {
         return Ok(());
@@ -136,9 +166,17 @@ pub fn notice_resize(
         .get_webview_window(NOTICE_LABEL)
         .ok_or_else(|| "notice window is not ready".to_string())?;
     if let Some(focusable) = focusable {
-        let _ = window.set_focusable(focusable);
+        set_focusable(&app, &window, focusable);
     }
     let height = height.clamp(MIN_HEIGHT, MAX_HEIGHT);
+    // 页面每次布局变化都会调这里，高度没变就别动窗口（否则会闪）
+    let unchanged = app
+        .try_state::<NoticeState>()
+        .and_then(|state| state.last_height.lock().ok().map(|last| (*last - height).abs() < 0.5))
+        .unwrap_or(false);
+    if unchanged {
+        return Ok(());
+    }
     place(&app, &window, height).map_err(|error| error.to_string())
 }
 

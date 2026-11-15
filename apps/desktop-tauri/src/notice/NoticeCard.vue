@@ -16,7 +16,7 @@ import {
 
 const AUTO_DISMISS_SECONDS = 15;
 const TICK_MS = 200;
-// .stage 上下各 0.625rem 的留白
+// .stage 上下各 0.625rem 的留白，量不到样式时用它兜底
 const STAGE_PADDING = 20;
 const MAX_HEIGHT = 640;
 
@@ -33,6 +33,9 @@ const unlisteners = [];
 let stopwatch = null;
 let hideTimer = null;
 let resizeTimer = null;
+// 上次应用的窗口高度（逻辑像素），没变就不动窗口，避免点按钮时闪
+let appliedHeight = 0;
+let observer = null;
 
 function secondsLeft() {
   return Math.max(1, Math.ceil(remaining.value));
@@ -65,23 +68,46 @@ const running = computed(() => actionSession.running);
 const done = computed(() => actionSession.done);
 const fresh = computed(() => actionSession.remaining >= stepTotal.value && stepTotal.value > 0);
 
-async function syncHeight() {
-  await nextTick();
+function stagePadding() {
+  const stage = cardEl.value?.closest(".stage");
+  if (!stage) return STAGE_PADDING;
+  const style = window.getComputedStyle(stage);
+  const top = Number.parseFloat(style.paddingTop) || 0;
+  const bottom = Number.parseFloat(style.paddingBottom) || 0;
+  return top + bottom;
+}
+
+// 卡片自然高度。展开态可能被窗口高度卡住（内容在内部滚动），
+// 这时卡片自身的 rect 只是可见高度，要按「标题 + 内容自然高度」重算，否则窗口永远差一截。
+function cardHeight() {
   const card = cardEl.value;
-  if (!card) return;
-  const rendered = card.getBoundingClientRect().height;
-  const height = Math.ceil(Math.max(rendered, card.scrollHeight)) + STAGE_PADDING + 6;
+  if (!card) return 0;
+  const rect = card.getBoundingClientRect().height;
+  if (!expanded.value) return Math.ceil(rect);
+  const head = card.querySelector(".head");
+  const inner = card.querySelector(".reveal-inner");
+  const natural =
+    (head?.getBoundingClientRect().height ?? 0) + (inner?.scrollHeight ?? 0);
+  return Math.ceil(Math.max(rect, natural));
+}
+
+async function syncHeight(force = false) {
+  await nextTick();
+  const measured = cardHeight();
+  if (!measured) return;
+  const height = Math.min(MAX_HEIGHT, Math.round(measured + stagePadding() + 6));
+  if (!force && Math.abs(height - appliedHeight) < 2) return;
+  appliedHeight = height;
   invoke("notice_resize", { height, focusable: expanded.value }).catch(() => { });
 }
 
-// 内容一变就重新量高度，节流到一帧，避免每秒钟都在改窗口尺寸
-function scheduleHeight() {
-  if (expanded.value) invoke("notice_resize", { height: MAX_HEIGHT, focusable: true }).catch(() => { });
+// 内容一变就重新量高度：延迟一帧收拢同一轮变化，高度没变时不会真的去动窗口
+function scheduleHeight(force = false) {
   if (resizeTimer) window.clearTimeout(resizeTimer);
   resizeTimer = window.setTimeout(() => {
     resizeTimer = null;
-    syncHeight();
-  }, 60);
+    syncHeight(force);
+  }, 80);
 }
 
 function playIn() {
@@ -96,9 +122,23 @@ function applyPayload(next) {
   payload.value = next;
   action.value = next.action ?? null;
   expanded.value = false;
+  appliedHeight = 0;
   remaining.value = AUTO_DISMISS_SECONDS;
   playIn();
-  syncHeight();
+  watchCardSize();
+  syncHeight(true);
+}
+
+// 卡片尺寸会随后续内容（字体、组件内部布局、步骤文字换行）继续变，盯住它自动补量
+async function watchCardSize() {
+  await nextTick();
+  const card = cardEl.value;
+  if (!card) return;
+  observer ??= new ResizeObserver(() => {
+    if (expanded.value) scheduleHeight();
+  });
+  observer.disconnect();
+  observer.observe(card);
 }
 
 function tick() {
@@ -110,17 +150,19 @@ function tick() {
 async function expand() {
   if (expanded.value || !payload.value) return;
   expanded.value = true;
-  // 先把窗口撑到上限（多出来是透明的），卡片在更大的画布上展开，不会被裁
+  // 先把窗口撑到上限（多出来是透明的，看不见），让卡片在不受限的画布里先摊开，
+  // 之后再按真实内容收回到刚好够用，避免「先按被裁的高度量，量出来永远偏小」
   invoke("notice_resize", { height: MAX_HEIGHT, focusable: true }).catch(() => { });
-  window.setTimeout(syncHeight, 360);
+  window.setTimeout(() => syncHeight(true), 340);
+  window.setTimeout(() => syncHeight(true), 700);
 }
 
 function collapse() {
   if (!expanded.value) return;
   expanded.value = false;
   remaining.value = AUTO_DISMISS_SECONDS;
-  syncHeight();
-  window.setTimeout(syncHeight, 340);
+  window.setTimeout(() => syncHeight(true), 60);
+  window.setTimeout(() => syncHeight(true), 380);
 }
 
 async function dismiss() {
@@ -170,14 +212,15 @@ onMounted(async () => {
   await initActionSession();
   stopwatch = window.setInterval(tick, TICK_MS);
   window.addEventListener("keydown", onKeydown);
-  document.fonts?.ready.then(syncHeight);
+  document.fonts?.ready.then(() => scheduleHeight(true));
   unlisteners.push(
     await listen("riseloop://notice", (event) => applyPayload(event.payload))
   );
   unlisteners.push(
     await listen("riseloop://notice-action", (event) => {
       action.value = event.payload ?? null;
-      syncHeight();
+      watchCardSize();
+      syncHeight(true);
     })
   );
   unlisteners.push(
@@ -191,6 +234,7 @@ onBeforeUnmount(() => {
   if (stopwatch) window.clearInterval(stopwatch);
   if (hideTimer) window.clearTimeout(hideTimer);
   if (resizeTimer) window.clearTimeout(resizeTimer);
+  observer?.disconnect();
   window.removeEventListener("keydown", onKeydown);
   unlisteners.forEach((off) => off());
 });
