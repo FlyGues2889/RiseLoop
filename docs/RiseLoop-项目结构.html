@@ -423,9 +423,8 @@
         <tr><td class="strong">Agent 编排</td><td><span class="p">services/agent-orchestrator/</span></td><td>规划 Agent + 执行 Agent 的提示词、<code>main-workflow.json</code> 事件编排、<code>eval/cases.json</code> 六条评测用例。</td><td><span class="pill ok">已实现</span> <span class="pill part">走 mock</span></td></tr>
         <tr><td class="strong">Skill 能力层</td><td><span class="p">services/skills/</span></td><td>posture-assessment / intervention-state-machine / safety-check / qa-responder 四个 SKILL.md，含职责、输入输出、边界与示例。</td><td><span class="pill ok">已实现</span></td></tr>
         <tr><td class="strong">MCP 工具层</td><td><span class="p">services/mcp-servers/</span></td><td>health-data-mcp（2 工具）+ action-library-mcp（1 工具），合计恰好 3 个：read_realtime_state / get_actions_by_state / write_intervention_result。</td><td><span class="pill ok">已实现</span> <span class="pill part">走 mock</span></td></tr>
-        <tr><td class="strong">数据资产</td><td><span class="p">data/</span></td><td><code>actions/actions.json</code> 8 个动作；<code>knowledge/evidence.json</code> 39 条证据台账（PubMed 36 / WHO 1 / CDC 1 / NIOSH 1）；<code>articles.json</code> 8 条问答语料；<code>evidence.schema.json</code> 校验。</td><td><span class="pill ok">已实现</span></td></tr>
-        <tr><td class="strong">部署与迁移</td><td><span class="p">infra/</span></td><td><code>migrations/0001_init.sql</code> 8 张表；Dockerfile 实际位于 <code>apps/cloud-api/Dockerfile</code>。README 提到的 <code>infra/docker</code>、<code>infra/k8s</code> 尚缺。</td><td><span class="pill part">部分</span></td></tr>
-        <tr><td class="strong">共享类型 / 组件库</td><td><span class="p">packages/shared-types · ui-kit</span></td><td>PRD 约定由 OpenAPI 生成类型、抽公共组件，当前为空目录，类型与组件仍手写。</td><td><span class="pill empty">空</span></td></tr>
+        <tr><td class="strong">数据资产</td><td><span class="p">data/</span></td><td><code>actions/actions.json</code> 15 个动作；<code>knowledge/evidence.json</code> 39 条证据台账（PubMed 36 / WHO 1 / CDC 1 / NIOSH 1）；<code>articles.json</code> 8 条问答语料；<code>evidence.schema.json</code> 校验。</td><td><span class="pill ok">已实现</span></td></tr>
+        <tr><td class="strong">部署与迁移</td><td><span class="p">infra/</span></td><td><code>migrations/0001_init.sql</code> 8 张表；<code>docker/</code> 有 cloud / dev 两份 compose 与 <code>env.example</code>，镜像由 <code>apps/cloud-api/Dockerfile</code> 构建；<code>huawei-cloud/README.md</code> 写云服务接入与验证步骤。</td><td><span class="pill ok">已实现</span></td></tr>
       </tbody>
     </table></div>
   </section>
@@ -476,10 +475,10 @@
     <p class="sec-intro">核心业务逻辑，纯函数实现，表驱动单测覆盖。迁移五类：<code>upgrade</code> / <code>rollback</code> / <code>degrade</code> / <code>short_circuit</code>，以及内部 <code>hold</code>。</p>
 
     <div class="state-row">
-      <div class="state-card s0"><div class="code">S0</div><div class="name">急性缓解</div><span class="dur">0–2 分钟 · gentle</span><p><b>进入</b>：明显酸痛/紧绷或主动报告不适。<br/><b>退出</b>：完成 2–3 次、评分 ≤3、次日无加重。</p></div>
-      <div class="state-card s1"><div class="code">S1</div><div class="name">激活</div><span class="dur">3–5 分钟 · normal</span><p><b>进入</b>：S0 完成或无急性症状。<br/><b>退出</b>：连续完成 ≥5 次。</p></div>
-      <div class="state-card s2"><div class="code">S2</div><div class="name">强化</div><span class="dur">5–8 分钟 · normal</span><p><b>进入</b>：S1 稳定。<br/><b>退出</b>：连续完成 ≥10 次。</p></div>
-      <div class="state-card s3"><div class="code">S3</div><div class="name">维持</div><span class="dur">2–5 分钟 · normal</span><p><b>进入</b>：S2 完成或稳定期。<br/><b>退出</b>：长期维持，异常回退。</p></div>
+      <div class="state-card s0"><div class="code">S0</div><div class="name">急性缓解</div><span class="dur">≤2 分钟 · gentle</span><p><b>进入</b>：明显酸痛/紧绷或主动报告不适。<br/><b>退出</b>：完成 2–3 次、评分 ≤3、次日无加重。</p></div>
+      <div class="state-card s1"><div class="code">S1</div><div class="name">激活</div><span class="dur">2–3 分钟 · normal</span><p><b>进入</b>：S0 完成或无急性症状。<br/><b>退出</b>：连续完成 ≥5 次。</p></div>
+      <div class="state-card s2"><div class="code">S2</div><div class="name">强化</div><span class="dur">5–8 分钟 · 一轮 2–3 条</span><p><b>进入</b>：S1 稳定。<br/><b>退出</b>：连续完成 ≥10 次。</p></div>
+      <div class="state-card s3"><div class="code">S3</div><div class="name">维持</div><span class="dur">2–3 分钟 · normal</span><p><b>进入</b>：S2 完成或稳定期。<br/><b>退出</b>：长期维持，异常回退。</p></div>
     </div>
 
     <div class="kicker">迁移五分支（machine.py 的实际语义）</div>
@@ -569,18 +568,17 @@
   <!-- ============ 07 现状 ============ -->
   <section id="status" class="sec">
     <div class="sec-head"><span class="sec-num">07</span><h2>工程现状</h2></div>
-    <p class="sec-intro">实现进度以 <code>PROGRESS.md</code>（2026-11-13）为准：核心闭环已实现且云端/本地两条链路可跑通，但云端资源仍全部为 mock，交付物缺口集中在文档、部署与演示脚本。</p>
+    <p class="sec-intro">实现进度以 <code>PROGRESS.md</code>（2026-11-17）为准：核心闭环已实现且云端/本地两条链路可跑通，但云端资源仍全部为 mock，交付物缺口集中在架构素材、演示数据与作品书评审。</p>
 
-    <h3>最近一次验证（2026-11-13）</h3>
+    <h3>最近一次验证（2026-11-17）</h3>
     <div class="table-wrap"><table>
       <thead><tr><th>检查</th><th>结果</th><th>说明</th></tr></thead>
       <tbody>
-        <tr><td class="strong">python -m pytest -q</td><td><span class="pill ok">105 passed</span></td><td>状态机 + cloud-api + MCP 契约</td></tr>
-        <tr><td class="strong">local-engine node --test</td><td><span class="pill ok">12 passed</span></td><td>JS 本地引擎单测</td></tr>
+        <tr><td class="strong">python -m pytest -q</td><td><span class="pill ok">118 passed</span></td><td>状态机 + cloud-api + MCP 契约 + 跨语言对拍</td></tr>
+        <tr><td class="strong">local-engine node --test</td><td><span class="pill ok">13 passed</span></td><td>JS 本地引擎单测</td></tr>
         <tr><td class="strong">api-client node --test</td><td><span class="pill ok">8 passed</span></td><td>错误码翻译与请求封装</td></tr>
         <tr><td class="strong">pnpm build</td><td><span class="pill ok">通过</span></td><td>有 chunk 体积告警</td></tr>
-        <tr><td class="strong">cargo check --lib --tests</td><td><span class="pill ok">无警告</span></td><td>历史通过</td></tr>
-        <tr><td class="strong">cargo test / cargo check</td><td><span class="pill part">待复验</span></td><td>本机缺 MSVC 链接器（VS 被卸载），待装回 VS Build Tools</td></tr>
+        <tr><td class="strong">cargo test</td><td><span class="pill ok">20 passed</span></td><td>计时、动作会话、摄像头日志</td></tr>
       </tbody>
     </table></div>
 
@@ -596,24 +594,21 @@
         <tr><td class="strong">评估 / 干预 / 反馈闭环</td><td><span class="pill ok">✅</span></td><td>反馈必带障碍归因</td></tr>
         <tr><td class="strong">BRLI 风险指数</td><td><span class="pill part">🟡</span></td><td>规则版 V1 有单测，已接 /posture/risk，未校准</td></tr>
         <tr><td class="strong">姿态分类推理（ModelArts）</td><td><span class="pill part">🟡</span></td><td>调用链/超时/降级已写，无真实 endpoint，走 mock</td></tr>
-        <tr><td class="strong">自制通知窗</td><td><span class="pill part">🟡</span></td><td>P0 已写，待编译与真机验证</td></tr>
+        <tr><td class="strong">自制通知窗</td><td><span class="pill ok">✅</span></td><td>双窗共用 Rust 动作会话，点击「看看动作」原地展开</td></tr>
         <tr><td class="strong">循证知识库</td><td><span class="pill ok">✅</span></td><td>39 条证据，validate_evidence.py 0 error</td></tr>
         <tr><td class="strong">CodeArts 问答</td><td><span class="pill part">🟡</span></td><td>有适配层与 Skill 资产，走 mock</td></tr>
-        <tr><td class="strong">跨语言一致性测试</td><td><span class="pill no">⬜</span></td><td>Python vs JS 无自动化对拍，已知软肋</td></tr>
-        <tr><td class="strong">限流 / JWT 刷新吊销 / 账户删除</td><td><span class="pill no">⬜</span></td><td>PRD 承诺，未实现（客户端仅「清除本机数据」）</td></tr>
+        <tr><td class="strong">跨语言一致性测试</td><td><span class="pill ok">✅</span></td><td>25 场景 Python/JS 全字段对拍</td></tr>
+        <tr><td class="strong">限流 / JWT 刷新吊销 / 账户删除</td><td><span class="pill ok">✅</span></td><td>限流按 token/IP 滑动窗口；刷新轮换、登出吊销 jti；客户端续期未接</td></tr>
       </tbody>
     </table></div>
 
-    <h3>交付缺口与空目录</h3>
+    <h3>交付缺口</h3>
     <div class="gaps">
-      <div class="gap"><h4>docs/assets</h4><p>空目录；logo 现成于 <code>icons/appIcon.ico·svg</code>，架构图/演示图待补。</p><span class="why">README 的架构图/演示 GIF 占位尚未落地</span></div>
-      <div class="gap"><h4>infra/docker · k8s</h4><p>空目录；真实 Dockerfile 在 <code>apps/cloud-api/Dockerfile</code>，README 的 <code>kubectl apply</code> 命令跑不通。</p><span class="why">部署清单与 README 未对齐</span></div>
-      <div class="gap"><h4>data/seeds</h4><p>空；4 周轨迹演示数据未生成。</p><span class="why">验收要求「种子数据可生成 4 周轨迹」</span></div>
+      <div class="gap"><h4>架构图与演示素材</h4><p>占位目录已删除，README 不再引用不存在的图片；logo 现成于 <code>icons/appIcon.ico·svg</code>。</p><span class="why">画好后新建 docs/assets 再放回去</span></div>
+      <div class="gap"><h4>演示数据</h4><p>4 周轨迹演示数据未生成。</p><span class="why">落地时新建 data/seeds</span></div>
       <div class="gap"><h4>docs/demo 录屏脚本</h4><p>仅 1 份，需按最新界面重写。</p><span class="why">界面已新增姿态与通知，脚本滞后</span></div>
-      <div class="gap"><h4>packages/shared-types · ui-kit</h4><p>空目录；类型与组件仍是手写。</p><span class="why">PRD 要求类型由 shared-types 生成</span></div>
-      <div class="gap"><h4>tests/unit · integration</h4><p>空；实际测试分散在各包内。</p><span class="why">目录结构与约定不一致</span></div>
-      <div class="gap"><h4>docs/submission</h4><p>只有「作品信息收集表」草稿，未定稿、未跟踪。</p><span class="why">申报材料待完成</span></div>
-      <div class="gap"><h4>姿态摘要迁移缺失</h4><p>ORM 有 posture_summaries，迁移 SQL 无该表。</p><span class="why">真实接线 RDS 前必须补</span></div>
+      <div class="gap"><h4>docs/submission</h4><p>作品信息收集表草稿已提交，尚未逐节评审。</p><span class="why">与实现的表述未核对</span></div>
+      <div class="gap"><h4>迁移 SQL 缺表</h4><p>ORM 有 <code>revoked_tokens</code> 与 <code>posture_summaries</code>，<code>0001_init.sql</code> 里没有。</p><span class="why">真实接线 RDS 前必须补</span></div>
     </div>
 
     <h3>主要风险</h3>
@@ -814,22 +809,19 @@
         { name: "src/machine.js", desc: "JS 版 decide()，与 Python 人工同步", badge: "core" },
         { name: "src/actions.js", desc: "动作排序与匹配" },
         { name: "src/safety.js", desc: "红旗关键词 + 字段双路检测" },
-        { name: "test/engine.test.js", desc: "12 用例" }
+        { name: "test/engine.test.js", desc: "13 用例" }
       ] },
       { name: "api-client/", children: [
         { name: "src/index.js", desc: "15 接口封装 + ApiError 错误翻译" },
         { name: "test/describe-error.test.js", desc: "8 用例" }
-      ] },
-      { name: "shared-types/", desc: "空目录（类型应由 OpenAPI 生成）", badge: "empty" },
-      { name: "ui-kit/", desc: "空目录（组件仍手写）", badge: "empty" }
+      ] }
     ] },
     { name: "services/", open: true, desc: "智能层：Agent 编排 / Skill 能力 / MCP 工具", children: [
       { name: "agent-orchestrator/", open: true, desc: "CodeArts 双 Agent", children: [
         { name: "agents/planning-agent.md", desc: "规划 Agent：事件 → 工具调用序列" },
         { name: "agents/executing-agent.md", desc: "执行 Agent：确定性执行" },
         { name: "workflows/main-workflow.json", desc: "五类事件编排 + 守卫规则", badge: "core" },
-        { name: "eval/cases.json", desc: "6 条评测用例（含工具数=3 校验）" },
-        { name: "prompts/ · tools/", desc: "空目录" }
+        { name: "eval/cases.json", desc: "6 条评测用例（含工具数=3 校验）" }
       ] },
       { name: "skills/", desc: "4 个 CodeArts Skill（SKILL.md）", children: [
         { name: "posture-assessment/", desc: "评估 → 初始状态 / 风险 / 计划" },
@@ -851,11 +843,10 @@
       ] }
     ] },
     { name: "data/", open: true, desc: "动作库与知识库（业务唯一数据源）", children: [
-      { name: "actions/actions.json", desc: "8 个动作（S0–S3 各 2 个）", badge: "core" },
+      { name: "actions/actions.json", desc: "15 个动作（S0 4 / S1 5 / S2 3 / S3 3）", badge: "core" },
       { name: "knowledge/evidence.json", desc: "39 条证据台账（PubMed 36 / WHO 1 / CDC 1 / NIOSH 1）" },
       { name: "knowledge/articles.json", desc: "8 条问答语料" },
-      { name: "knowledge/evidence.schema.json", desc: "证据 JSON Schema" },
-      { name: "seeds/", desc: "空目录（4 周轨迹演示数据待生成）", badge: "empty" }
+      { name: "knowledge/evidence.schema.json", desc: "证据 JSON Schema" }
     ] },
     { name: "infra/", desc: "部署与迁移", children: [
       { name: "migrations/0001_init.sql", desc: "8 张表（缺 posture_summaries）", badge: "part" },

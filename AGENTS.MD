@@ -43,19 +43,16 @@ riseloop/
 │   └── cloud-api/           # FastAPI BFF/网关：鉴权、限流、事件触发、调 Agent
 │       └── app/cloud/       # 华为云适配层：RDS / DCS / ModelArts / OBS / KMS / CodeArts（mock/huawei 双模式）
 ├── services/
-│   ├── agent-orchestrator/  # 可选：Agent 编排资产（agents/workflows/prompts/tools/eval）
+│   ├── agent-orchestrator/  # 可选：Agent 编排资产（agents/workflows/eval）
 │   ├── skills/              # posture-assessment / intervention-state-machine / safety-check / qa-responder
 │   └── mcp-servers/         # health-data-mcp / action-library-mcp（合计 3 个工具）
 ├── packages/
 │   ├── intervention-engine/ # 状态机纯逻辑 + 表驱动单测（云端运行时）
 │   ├── local-engine/        # 本地模式状态机 + 动作匹配 + 本地周复盘 + localStorage 适配（云端模式不加载）
-│   ├── shared-types/        # OpenAPI 生成类型
-│   ├── api-client/          # Tauri 调用云端 API
-│   └── ui-kit/              # Vue3 组件库
-├── data/                    # actions / knowledge / seeds
+│   └── api-client/          # Tauri 调用云端 API
+├── data/                    # actions / knowledge
 ├── infra/                   # docker / huawei-cloud / migrations
-├── tests/                   # unit / integration
-├── docs/                    # prd / architecture / api / contest / demo
+├── docs/                    # architecture / api / demo
 └── scripts/
 ```
 
@@ -63,10 +60,12 @@ riseloop/
 
 | 状态 | 名称 | 进入条件 | 干预时长 | 退出条件 |
 |---|---|---|---|---|
-| S0 | 急性缓解 | 明显酸痛或主动报告不适 | ≤2 分钟 | 完成 2–3 次、评分 ≤3、次日无加重 |
-| S1 | 激活 | S0 完成或无急性症状 | 3–5 分钟 | 连续完成 ≥5 次 |
-| S2 | 强化 | S1 稳定 | 5–8 分钟 | 连续完成 ≥10 次 |
-| S3 | 维持 | S2 完成或稳定期 | 2–5 分钟 | 长期；异常回退 |
+| S0 | 急性缓解 | 明显酸痛或主动报告不适 | ≤2 分钟（单条） | 完成 2–3 次、评分 ≤3、次日无加重 |
+| S1 | 激活 | S0 完成或无急性症状 | 2–3 分钟（单条） | 连续完成 ≥5 次 |
+| S2 | 强化 | S1 稳定 | 5–8 分钟（一轮 2–3 条合计） | 连续完成 ≥10 次 |
+| S3 | 维持 | S2 完成或稳定期 | 2–3 分钟（单条） | 长期；异常回退 |
+
+干预时长口径：单条按动作库 `duration_minutes`；只有 S2 一轮串联 2–3 条，合计落在 5–8 分钟；其余状态一条做完即记感受。
 
 迁移四分支（函数必须显式返回 `transition_type`）：
 
@@ -83,7 +82,7 @@ riseloop/
 
 - 状态机逻辑必须为纯函数，输入输出用 Pydantic 模型，禁止在函数内访问数据库或网络。
 - `safety-check` 必须在 `cloud-api` 中间件层强制，不依赖 Agent 或提示词自觉；命中高风险直接返回就医提示与 403 语义。
-- 所有 API 必须有 OpenAPI schema，类型由 `shared-types` 生成，不手写重复类型。
+- 所有 API 必须有 OpenAPI schema，类型由 OpenAPI 生成，不手写重复类型。
 - MCP 工具命名用动词开头，且总数固定 3 个。
 - 每次反馈必须携带障碍归因（太忙/动作太难/没地方做/忘了），用于 `degrade` 判定。
 - 每个 Skill 目录必须含 `SKILL.md`（职责、输入输出、边界、示例）。
@@ -96,14 +95,14 @@ riseloop/
 ## 8. 任务执行顺序（严格按序）
 
 1. 生成 `packages/intervention-engine` 状态机纯函数 + 表驱动单测（四分支）。
-2. 生成 `packages/shared-types` 与 OpenAPI 契约。
+2. 由 OpenAPI 契约生成类型。
 3. 生成 `apps/cloud-api` 的 `/assessment`、`/sitting/heartbeat`、`/intervention/feedback` 三接口（先 mock 智能体）。
 4. 生成 `services/mcp-servers` 两个 MCP Server，工具合计 3 个。
 5. 生成 `services/skills` 四个 Skill 的 SKILL.md 与 schema。
 6. 生成 `services/agent-orchestrator` 的规划/执行双 Agent 配置与工作流。
 7. 在 `apps/desktop-tauri`（Tauri 2 + Vue 3 + JavaScript）上实现 UI 与 Rust 计时/托盘/通知/Keychain。
 8. 生成 `infra/docker` 与华为云部署清单。
-9. 生成 `data/seeds` 演示脚本与 `docs/demo` 录屏脚本。
+9. 生成演示数据脚本与 `docs/demo` 录屏脚本。
 
 ## 9. 每次输出前自查清单
 
@@ -115,7 +114,7 @@ riseloop/
 - [ ] 是否把 JWT 暴露给前端或存入 localStorage？→ 必须走 Keychain + IPC。
 - [ ] 是否引入纯第三方大模型套壳？→ 必须使用华为 AI 技术。
 - [ ] 是否新增了未映射 BCT 的“孤儿功能”？→ 必须能对应到 PRD 第 5 节。
-- [ ] 是否新增类型来自 `shared-types`？→ 禁止前后端各写一套。
+- [ ] 是否新增类型来自 OpenAPI 生成？→ 禁止前后端各写一套。
 - [ ] 是否私自加了浏览器端实现？→ 本期禁止。
 - [ ] 新增云服务是否走 `app/cloud` 适配层，且 `mock` 模式可运行？
 
