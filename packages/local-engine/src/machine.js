@@ -1,10 +1,11 @@
 export const STATE_NAMES = { S0: "急性缓解", S1: "激活", S2: "强化", S3: "维持" };
 
+// 单条动作的实际区间；S2 的 5–8 是一轮 2–3 条动作的合计
 export const DURATION_BY_STATE = {
   S0: [0, 2],
-  S1: [3, 5],
+  S1: [2, 3],
   S2: [5, 8],
-  S3: [2, 5],
+  S3: [2, 3],
 };
 
 export const GENTLE_DURATION_BY_STATE = {

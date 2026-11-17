@@ -10,11 +10,12 @@ from .models import (
     TransitionType,
 )
 
+# 单条动作的实际区间；S2 的 5–8 是一轮 2–3 条动作的合计
 DURATION_BY_STATE: dict[State, tuple[int, int]] = {
     State.S0: (0, 2),
-    State.S1: (3, 5),
+    State.S1: (2, 3),
     State.S2: (5, 8),
-    State.S3: (2, 5),
+    State.S3: (2, 3),
 }
 
 GENTLE_DURATION_BY_STATE: dict[State, tuple[int, int]] = {
