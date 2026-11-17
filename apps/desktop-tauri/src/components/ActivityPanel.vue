@@ -7,6 +7,7 @@ import LoadingOverlay from "./LoadingOverlay.vue";
 import { resolveFraming } from "../data/actionFraming.js";
 import { actionImage } from "../data/actionImages.js";
 import { sourceForAction } from "../data/actionSources.js";
+import { DEFAULT_STEP_SECONDS, planStepSeconds } from "../data/stepTiming.js";
 import {
   actionSession,
   finishAction,
@@ -25,6 +26,15 @@ const actions = computed(() => {
 
 // 推荐动作在这一次干预里保持稳定，手动切换也不会把「推荐」搬走
 const recommendedId = ref(state.pending?.id ?? null);
+
+// S2 一轮串 2–3 条动作，合计落在 5–8 分钟；其余状态一条做完就记感受。
+// 5 分钟是 intervention-engine DURATION_BY_STATE[S2] 的下限，改那边要同步这里。
+const ROUND_STATE = "S2";
+const ROUND_MIN_MINUTES = 5;
+const ROUND_MAX_ACTIONS = 3;
+
+const roundIds = ref([]);
+const roundMinutes = ref(0);
 
 const actionIndex = ref(0);
 const action = computed(() => actions.value[actionIndex.value] ?? null);
@@ -61,60 +71,6 @@ const obstacleOptions = [
   { value: "forgot", label: "忘了" },
 ];
 
-// 步骤时长按文字里的「秒 / 次 / 组」推算：均分会让「弹力带固定于胸前高度」
-// 这种准备动作也占上两分钟，实际做下来只要十几秒。
-const REP_SECONDS = 3;
-const DEFAULT_STEP_SECONDS = 20;
-const MIN_STEP_SECONDS = 10;
-const MAX_STEP_SECONDS = 75;
-// 读提示、挪椅子、换一口气都要时间，卡着秒数做会一直追倒计时
-const STEP_SLACK_RATIO = 0.2;
-const MIN_STEP_SLACK = 3;
-
-function parseStepSeconds(text) {
-  const source = String(text || "");
-  // 「每轮 12 秒，共做 6 轮」这种写法直接乘起来，避免退化成按单轮计时
-  const perRound = /每(?:轮|组)\s*(\d+)\s*秒/.exec(source);
-  const repeat = /(\d+)\s*[轮组]/.exec(source);
-  if (perRound && repeat) return Number(perRound[1]) * Number(repeat[1]);
-  const secs = [...source.matchAll(/(\d+)\s*秒/g)].map((match) => Number(match[1]));
-  const reps = [...source.matchAll(/(\d+)\s*次/g)].map((match) => Number(match[1]));
-  const rounds = /重复\s*(\d+)\s*[轮次]/.exec(source);
-  const groups = /共\s*(\d+)\s*组/.exec(source);
-  const sides = /左右各|各侧|两侧/.test(source) ? 2 : 1;
-  const sum = (list) => list.reduce((acc, item) => acc + item, 0);
-  if (secs.length && reps.length) return sum(secs) * sum(reps);
-  if (secs.length) return sum(secs) * sides * (rounds ? Number(rounds[1]) : 1);
-  if (reps.length) {
-    return sum(reps) * sides * (groups ? Number(groups[1]) : 1) * REP_SECONDS
-      * (rounds && !groups ? Number(rounds[1]) : 1);
-  }
-  if (rounds) return DEFAULT_STEP_SECONDS * Number(rounds[1]);
-  return null;
-}
-
-// 推算值只做参考：压进 [10, 75] 秒，超出动作总时长时整体等比缩，不放大；
-// 最后给每一步留 20%（至少 3 秒）的弹性，做不到「两次呼吸之间没有间隔」也不会被跳步
-function slackSeconds(value) {
-  return Math.max(MIN_STEP_SLACK, Math.round(value * STEP_SLACK_RATIO));
-}
-
-function planStepSeconds(list, total) {
-  const guessed = list.map((text) => parseStepSeconds(text));
-  const raw = guessed.map((value) => Math.min(MAX_STEP_SECONDS, Math.max(MIN_STEP_SECONDS, value ?? DEFAULT_STEP_SECONDS)));
-  // 「换侧，各做 2 组」这类步骤本身没有数字，按上一步的时长乘以组数
-  for (let index = 1; index < list.length; index += 1) {
-    if (guessed[index] !== null || !/换(侧|边)|另一(侧|边)|各做/.test(String(list[index] || ""))) continue;
-    const groups = /(\d+)\s*(组|轮|次)/.exec(String(list[index]));
-    raw[index] = Math.min(MAX_STEP_SECONDS, raw[index - 1] * (groups ? Number(groups[1]) : 1));
-  }
-  const sum = raw.reduce((acc, item) => acc + item, 0);
-  const withSlack = (values) => values.map((value) => value + slackSeconds(value));
-  if (!total || sum <= total) return withSlack(raw);
-  const ratio = total / sum;
-  return withSlack(raw.map((value) => Math.max(MIN_STEP_SECONDS, Math.floor(value * ratio))));
-}
-
 const stepSeconds = computed(() =>
   planStepSeconds(steps.value, (action.value?.duration_minutes ?? 1) * 60)
 );
@@ -129,6 +85,11 @@ const stepIndex = computed(() => {
 const stepTotal = computed(() =>
   actionSession.steps[stepIndex.value]?.seconds ?? stepSeconds.value[stepIndex.value] ?? DEFAULT_STEP_SECONDS
 );
+const stepLabel = computed(() => {
+  const step = `第 ${stepIndex.value + 1} / ${steps.value.length} 步`;
+  if (state.currentState !== ROUND_STATE || roundIds.value.length === 0) return step;
+  return `本轮第 ${roundIds.value.length + 1} 条 · ${step}`;
+});
 const remaining = computed(() => actionSession.remaining);
 const running = computed(() => actionSession.running);
 
@@ -232,16 +193,31 @@ function openFeedback() {
   feedbackOpen.value = true;
 }
 
-// 一个推荐动作做完就结束这次干预：不再自动接下一组动作，直接进反馈
-// （候选列表里的其它动作仍然可以在下拉框里手动切换）
+// S2 一轮要把 2–3 条动作走完再记感受；其余状态一条做完就进反馈
 watch(
   () => actionSession.done,
   (done) => {
     if (!done || feedbackOpen.value) return;
+    if (continueRound()) return;
     openFeedback();
     finishAction();
   }
 );
+
+// 返回 true 表示这一轮还没做完，已经换到下一条动作
+function continueRound() {
+  if (state.currentState !== ROUND_STATE) return false;
+  const current = action.value;
+  if (!current || roundIds.value.includes(current.id)) return false;
+  roundIds.value = [...roundIds.value, current.id];
+  roundMinutes.value += current.duration_minutes ?? 1;
+  if (roundIds.value.length >= ROUND_MAX_ACTIONS) return false;
+  if (roundMinutes.value >= ROUND_MIN_MINUTES) return false;
+  const next = actions.value.findIndex((item) => !roundIds.value.includes(item.id));
+  if (next < 0) return false;
+  switchTo(next, true);
+  return true;
+}
 
 function indexOfRecommended() {
   const position = actions.value.findIndex((item) => item.id === recommendedId.value);
@@ -255,6 +231,8 @@ async function resetSequence() {
   feeling.value = "same";
   painScore.value = state.assessment?.pain_score ?? 2;
   obstacle.value = null;
+  roundIds.value = [];
+  roundMinutes.value = 0;
   await syncSession();
 }
 
@@ -356,7 +334,7 @@ onBeforeUnmount(() => {
           <div class="stage">
             <p class="step-text">{{ steps[stepIndex] }}</p>
             <div class="step-meta">
-              <p class="step-progress">第 {{ stepIndex + 1 }} / {{ steps.length }} 步</p>
+              <p class="step-progress">{{ stepLabel }}</p>
               <m3e-chip v-if="action.desk_friendly" class="desk-chip" variant="elevated">工位可做</m3e-chip>
             </div>
 
