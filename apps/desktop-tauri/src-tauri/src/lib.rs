@@ -65,13 +65,12 @@ fn focus_main_window(app: &tauri::AppHandle) {
 /// 系统通知：只在自制通知窗口不可用时兜底，正常路径走 notice 窗口。
 fn notify_break(app: &tauri::AppHandle, snapshot: &TimerSnapshot) {
     let minutes = snapshot.sitting_seconds / 60;
+    // 这条路径拿不到当前推荐动作，就不写动作时长：写死分钟数会和动作库对不上
     let _ = app
         .notification()
         .builder()
         .title("该活动一下了")
-        .body(format!(
-            "已连续久坐 {minutes} 分钟，做一个 2 分钟的最短有效动作。"
-        ))
+        .body(format!("已连续久坐 {minutes} 分钟，起来做一个最短有效动作。"))
         .show();
 }
 
