@@ -310,8 +310,7 @@ onBeforeUnmount(() => {
       <div class="reveal">
         <div class="reveal-inner">
           <template v-if="action && actionSession.loaded">
-            <m3e-list variant="segmented" class="run-list"
-              style="display: block; --m3e-list-item-padding-inline: 0.75rem; --m3e-list-item-between-space: 0.5rem">
+            <m3e-list variant="segmented" class="run-list">
               <m3e-list-item>
                 <span class="run-time">{{ timeText }}</span>
                 <m3e-linear-progress-indicator v-if="!done" class="run-bar"
