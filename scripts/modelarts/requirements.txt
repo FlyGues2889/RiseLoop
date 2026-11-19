@@ -1,0 +1,17 @@
+# Posture v0 dependencies.
+#
+# ModelArts inference image: the PyTorch engine already provides torch and
+# numpy.  Only add packages here that the base image lacks.  Keep this file
+# free of training-only packages to avoid slowing cold start.
+#
+# ---- inference (ModelArts custom script) ----
+numpy>=1.26
+# torch is supplied by the ModelArts PyTorch image.  Uncomment only for a
+# custom CPU image:
+# torch==2.15.0+cpu
+
+# ---- training only (local CPU; do NOT install into the serving image) ----
+# torch>=2.2,<3
+# scikit-learn>=1.4
+# matplotlib>=3.8
+# pytest>=8

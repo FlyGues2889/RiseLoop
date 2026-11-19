@@ -43,3 +43,125 @@ python -m pytest -q
 - `synthetic` 只证明管线可复现，不能对外称准确率。
 - `capture` 帧按 `subject` 分组划分，同一人不得跨训练与测试。
 - 报告必须同时给 macro-F1、每类 P/R/F1、混淆矩阵、样本来源与受试者数。
+
+---
+
+# 训练包 v0（上游契约对齐后）
+
+> **数据声明**：本轮仍是 **1440 帧合成关键点**（`origin=synthetic`、
+> `label_source=prelabel`、`capture=0`、`human=0`）。以下指标只验证特征契约、
+> 训练管线和部署脚本可复现，**不代表真实场景准确率**，不能对外当作模型效果。
+
+## 数据与标注
+
+| 项 | 值 |
+|---|---|
+| 来源 | synthetic 1440 / capture 0 |
+| 标签来源 | prelabel 1440 / human 0 |
+| 受试者 | 12（`s01`–`s12`），每人 120 帧 |
+| 机位/场景 | 4 种设备、5 种场景 |
+| 类别分布 | baseline 331 / forward_head 339 / lateral_tilt 342 / undetermined 428 |
+| 划分 | 按 subject 70/15/15：train 960 / val 240 / test 240 |
+| seed | 20261117 |
+| 特征版本 | `v1` |
+
+上游 `label_policy.prelabel` 的灰区是“肩倾 6–10° **或** 头前伸 0.20–0.30”，
+且强阈值是 10° / 0.30；因此 `undetermined` 从旧包的 267 增加到 428。这是口径变化，
+不是数据量变化；`dataset_check` 对 1440 帧逐帧重算特征，`ok: true`、`error_count: 0`。
+
+## 训练与结果
+
+| 版本 | 维度 | 参数量 | 最佳 epoch | Val macro-F1 | Test macro-F1 | Test acc |
+|---|---:|---:|---:|---:|---:|---:|
+| **A（v0）** | 6 | 2,660 | 158 | 0.9837 | **0.9582** | 0.9583 |
+| B | 138 | 11,108 | 42 | 0.8882 | 0.8751 | 0.8750 |
+
+A 版每类 P/R/F1：
+
+| 类别 | P | R | F1 | Support |
+|---|---:|---:|---:|---:|
+| baseline | 0.9254 | 0.9688 | 0.9466 | 64 |
+| forward_head | 1.0000 | 1.0000 | 1.0000 | 57 |
+| lateral_tilt | 0.9677 | 0.9836 | 0.9756 | 61 |
+| undetermined | 0.9444 | 0.8793 | 0.9107 | 58 |
+
+A 版混淆矩阵：
+
+| GT \ Pred | baseline | forward_head | lateral_tilt | undetermined |
+|---|---:|---:|---:|---:|
+| baseline | **62** | 0 | 0 | 2 |
+| forward_head | 0 | **57** | 0 | 0 |
+| lateral_tilt | 0 | 0 | **60** | 1 |
+| undetermined | 5 | 0 | 2 | **51** |
+
+![A 版混淆矩阵](artifacts/v0/confusion_matrix.png)
+
+主要错误：`undetermined → baseline` 5 帧、`undetermined → lateral_tilt` 2 帧、
+`baseline → undetermined` 2 帧、`lateral_tilt → undetermined` 1 帧。集中在新口径的
+灰区边界（肩倾 6–10° 或头前伸 0.20–0.30）；模型对边界的近似仍不是 if-else。
+
+## 三代结果对照（同 seed 20261117）
+
+| 版本 | A test macro-F1 | B test macro-F1 | 类别分布 |
+|---|---:|---:|---|
+| 初版（自带 `contract.py`） | 0.9693 | 0.9406 | 416 / 362 / 395 / 267 |
+| 上一轮重建层 | 0.9746 | 0.9373 | 416 / 362 / 395 / 267 |
+| **本轮上游契约** | **0.9582** | **0.8751** | **331 / 339 / 342 / 428** |
+
+本轮指标下降的主因是上游 `label_policy` 把“肩倾灰区或头前伸灰区”都判
+`undetermined`，`undetermined` 增加了 161 帧；没有为了保住 0.9693 绕开口径。
+A 仍优于 B，按验证集 macro-F1 选择 A。
+
+## 复跑
+
+```bash
+python scripts/modelarts/generate_synthetic_frames.py \
+  --out data/posture/frames.jsonl --subjects 12 --frames-per-subject 120 --seed 20261117
+python scripts/modelarts/dataset_check.py data/posture/frames.jsonl
+python scripts/modelarts/train_posture.py --data data/posture/frames.jsonl --seed 20261117
+python scripts/modelarts/evaluate_posture.py --artifacts scripts/modelarts/artifacts/v0
+```
+
+- 训练约 6.0 s（A 4.19 s + B 1.82 s，CPU 单线程）；独立评估 <1 s。
+- `metrics.json` 含 `label_policy: label_policy.describe()`、`feature_spec_version: "v1"`、
+  `data.origin`、`metrics_scope`。
+- 同 seed 两次训练，A/B 的 macro-F1、accuracy、混淆矩阵一致。
+
+## 测试
+
+```bash
+# 需要 Node 在 PATH，否则 cross-language 2 个用例会 skip
+python -m pytest -q
+```
+
+- 上游基线：**129 passed，0 skipped**（Node 在 PATH）。
+- 本分支未新增测试文件；使用上游 `apps/cloud-api/tests/test_modelarts_contract_parity.py`
+  的 11 个用例（含 300 组随机关键点 parity、dataset_check、label_policy）。
+- `dataset_check` 输出：`ok: true`，`frames: 1440`，`subjects: 12`，`errors: 0`。
+
+## 部署
+
+ModelArts 推理包包含：
+
+```
+customize_service.py   # 校验 feature_spec 顺序 + torch 前向 + 日志
+posture_runtime.py     # 上游唯一部署副本：6 特征、features_vector、build_response
+model.py               # MLP、checkpoint、B 版坐标归一化、置信度兜底常量
+model.pt               # A 版，14,717 B
+feature_spec.json      # v1：33 点顺序、6 特征、4 类、label_policy、标准化统计
+```
+
+`customize_service.py` 导出 `FEATURE_SPEC_VERSION = "v1"` 与
+`features_from_keypoints`（来自 `posture_runtime`）；特征缺失时用 runtime 重算，
+`features` 齐全时优先使用请求值。`max(probabilities) < 0.5` 时输出
+`posture=undetermined`（常量在 `model.MIN_MODEL_CONFIDENCE`）。
+
+本机实测单帧约 0.3 ms，HTTP 端到端 <1 ms；远低于 50 ms。
+
+## 局限
+
+- 0 帧真实采集、0 条人工标签；指标只验证管线，不能外推为通用准确率。
+- 单人、单帧、无时序平滑；遮挡是 visibility 数值模拟。
+- test 仅 2 名受试者 240 帧，方差大；灰区本身存在标注分歧。
+- 不包含风险融合、状态迁移、就医判断；这些留在服务端。
+- ModelArts 真实端点未上传（本机无云凭证）。
