@@ -6,7 +6,7 @@
 ## 1. 现状一句话
 
 接口层已经完整：从注册登录到评估、计时、姿态、干预、反馈、问答、周复盘全部有路由、有 schema、有测试。
-缺的是**云资源本身**（DCS、RDS、ModelArts endpoint；OBS、KMS 为可选），所以现在所有云服务走 `mock` 适配层。
+缺的是**云资源本身**（DCS、RDS、ModelArts endpoint；OBS、KMS 为可选），所以现在所有云服务走 `mock` 适配层。姿态模型 v0 的训练包与离线报告已完成（`scripts/modelarts/reports/v0/`），但真实 endpoint 仍未开通。
 `GET /health/capabilities` 是自查入口：返回各依赖的 `provider / configured / reachable` 与限流参数。
 
 ## 2. 路由全表
@@ -30,7 +30,7 @@
 | GET | `/actions/{state}` | 按状态取动作，可加 `body_part`、`max_minutes` | — |
 | POST | `/ingest/wearable` | 穿戴设备上报，**未实现**，固定 501 | `not_implemented`(501) |
 | POST | `/posture/risk` | 姿态特征 + 久坐/疼痛 → BRLI 风险与推荐动作、 citations | — |
-| POST | `/posture/infer` | 关键点 → ModelArts 姿态分类 | `modelarts_unavailable`(503) |
+| POST | `/posture/infer` | 关键点 → ModelArts 姿态四分类（低置信度返回 `undetermined`）；训练包已完成，endpoint 待开通 | `modelarts_unavailable`(503) |
 | GET | `/intervention/current` | 当前待完成动作 | `no_pending_intervention`(404)、`action_not_found`(404) |
 | POST | `/intervention/feedback` | 反馈触发状态迁移（完成/部分/跳过 + 障碍归因） | `safety_short_circuit`(403) |
 | POST | `/qa/ask` | 循证问答，返回答案与引用 id | — |
@@ -84,7 +84,7 @@ access 过期(401 token_expired) → POST /auth/refresh（换新一对，旧的�
 |---|---|---|---|
 | 1 | DCS Redis | session 状态、久坐计时、待响应干预 | `/health/deps` 中 `redis.provider=huawei-dcs`；断 Redis 时降级为内存且不崩 |
 | 2 | RDS PostgreSQL | 用户、评估、迁移、执行记录、问答日志、安全事件、姿态摘要 | `/health/capabilities` 显示 `store_backend=sql`；重启后数据仍在 |
-| 3 | ModelArts 在线服务 | 关键点 → 姿态分类 | `/posture/infer` 返回 `source=huawei`；超时 2.5s 返回 503 并端侧降级 |
+| 3 | ModelArts 在线服务 | 关键点 → 姿态四分类（训练包 v0 已完成） | `/posture/infer` 返回 `source=huawei`；超时 2.5s 返回 503 并端侧降级 |
 | 4 | OBS | 导出物 / 证据材料 | 业务尚未接线，只验预签名连通 |
 | 5 | KMS | 密钥托管与字段加密 | 同上 |
 | — | AgentArts（可选） | 问答与方案解释的编排替身 | `/qa/ask` 返回真实答案与 citations |

@@ -183,11 +183,13 @@
     <text class="ct" x="700" y="376">姿态旁路</text>
   </g>
   <text class="chain" x="700" y="410">摄像头 → MediaPipe Pose 33 点</text>
-  <text class="chain" x="700" y="432">→ 6 个派生特征 → ModelArts 四分类</text>
-  <circle cx="706" cy="472" r="2.2" fill="var(--arrow)" />
-  <text class="b" x="718" y="476">原始画面不出本机</text>
-  <circle cx="706" cy="498" r="2.2" fill="var(--arrow)" />
-  <text class="b" x="718" y="502">2.5 秒超时返回 503，端侧降级</text>
+  <text class="chain" x="700" y="432">→ 6 个派生特征 → MLP v0 四分类</text>
+  <circle cx="706" cy="462" r="2.2" fill="var(--arrow)" />
+  <text class="b" x="718" y="466">置信度 &lt; 0.5 判 undetermined；画面不出本机</text>
+  <circle cx="706" cy="486" r="2.2" fill="var(--arrow)" />
+  <text class="b" x="718" y="490">合成数据 test macro-F1 0.9546，非真实准确率</text>
+  <circle cx="706" cy="510" r="2.2" fill="var(--arrow)" />
+  <text class="b" x="718" y="514">ModelArts endpoint 待开通；超时 503 降级</text>
 
   <!-- 右侧：数据分工 -->
   <g class="box">

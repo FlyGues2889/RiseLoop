@@ -1,12 +1,14 @@
-# 端云姿态感知链路（11.10 路线决策）
+# 端云姿态感知链路（11.10 路线决策，11.19 模型 v0）
+
+> 2026-11-19：姿态模型 v0 训练包与离线报告已完成，真实 ModelArts endpoint 尚未开通；当前线上仍是 mock 几何规则。
 
 ## 1. 目标与边界
 
 | 项 | 内容 |
 |---|---|
-| 目标 | 11.13 跑通“摄像头 → 本地关键点 → ModelArts 推理 → 客户端提示”的最小链路；11.20 接入风险融合与 S0–S3 |
+| 目标 | 11.13 跑通“摄像头 → 本地关键点 → 云端推理 → 客户端提示”的最小链路；姿态模型 v0 已完成训练与离线评估（11.19），真实 endpoint 待开通 |
 | 输入 | 摄像头画面仅在本地处理；上传归一化骨骼关键点，不上传原始图像/视频 |
-| 云端 | ModelArts 在线推理（mock / huawei 双模式），返回姿态分类、置信度与风险因子 |
+| 云端 | ModelArts 在线推理（mock / huawei 双模式）：A 版 6 特征 MLP，四分类 + 置信度 <0.5 判 `undetermined` |
 | 客户端 | Tauri 2 + Vue 3；叠加姿态引导框、风险解释与回退提示 |
 | 边界 | 姿态识别只用于行为指导，不做医疗诊断；安全红线仍由 `safety-check` 中间件前置 |
 
@@ -30,7 +32,7 @@
 | 工作流 | 范围 | 当前状态 | 关键依赖 |
 |---|---|---|---|
 | 端侧与前端 | Tauri、摄像头、关键点提取、隐私开关、姿态引导 UI | spike 已完成；真人关键点/演示机性能待验证 | 演示机摄像头 |
-| 云端与模型 | ModelArts、ECS/FastAPI、APIG、模型部署、性能测试 | `/posture/infer` + ModelArts 适配层已就绪（mock 可跑通）；真实 endpoint 待开通 | ModelArts endpoint/模型/数据集（需付费开通） |
+| 云端与模型 | ModelArts、ECS/FastAPI、APIG、模型部署、性能测试 | 训练包与离线报告已完成（6 特征 MLP，合成数据 test macro-F1 0.9546）；`/posture/infer` + 适配层就绪；真实 endpoint 待开通 | ModelArts endpoint（需付费开通）、真实采集数据 |
 | 算法与运动健康 | 数据集、姿态分类评价、风险规则、循证 JSON、动作适配 | 证据台账已完成；规则草稿/姿态评价待做 | 运康专业审核 |
 | 集成与交付 | S0–S3 集成、DCS/RDS/ModelArts、自动化测试、文档与演示 | 状态机/动作库已有；真实 DCS/RDS/ModelArts 与端到端集成未开始 | 云端环境与演示机 |
 
@@ -50,7 +52,7 @@
 
 1. 浏览器/WebView 直接 `getUserMedia` + WASM，11.13 前最容易跑通，不需要 Rust/C++ FFI。
 2. 本地只跑“关键点感知模型”，不跑姿态决策/风险决策模型，符合“本地不使用决策 AI”的边界。
-3. 33 个关键点足够做基准姿态、明显侧倾、不可判定三类；后续再扩展头部前移、躯干前倾。
+3. 33 个关键点足够做基准、头前伸、明显侧倾、不可判定四类；躯干前倾等扩展项后置。
 4. 跨 Windows/macOS，演示机不需要额外原生依赖。
 5. MediaPipe 的 WASM 与 `pose_landmarker.task` 模型文件随客户端本地打包，不走 CDN，断网也能启动。
 
@@ -64,6 +66,21 @@
 
 > “本地不使用任何 AI 模型”应表述为“本地不运行姿态决策/风险决策模型”。  
 > 关键点提取本身就是轻量感知模型（MediaPipe / MindSpore Lite），否则普通 RGB 摄像头无法直接输出肩、颈、髋坐标。README 和答辩必须把这句话说清楚。
+
+### 姿态模型 v0（2026-11-19）
+
+| 项 | 现状 |
+|---|---|
+| 训练包 | `scripts/modelarts/`：数据校验 → 训练 → 独立评估 → 部署脚本，全部可复跑 |
+| 模型 | A 版 6 特征 MLP（64→32，2,660 参数），四分类 `baseline` / `forward_head` / `lateral_tilt` / `undetermined` |
+| 决策规则 | `argmax` 后 `confidence < 0.5` 改判 `undetermined`；训练、评估、serving 共用 `posture_runtime.decide_posture()` |
+| 数据 | 1440 帧合成关键点 / 12 受试者 / seed 20261117；标签 331 / 339 / 342 / 428 |
+| 选型 | 同 seed 对比 6 维 A 与 138 维 B，按验证集 macro-F1 选 A（0.9598 vs 0.8830） |
+| 离线指标 | 测试集 macro-F1 0.9546、accuracy 0.9542；低置信度改判 1 帧 |
+| 报告 | `scripts/modelarts/reports/v0/`：`metrics.json`、`feature_spec.json`、`split.json`、`smoke_test.json`、混淆矩阵 |
+| 端到端 | 本地 `serve.py` HTTP 冒烟通过（`s01-000001` → `baseline`，0.9951）；真实 ModelArts endpoint 未开通 |
+
+指标只证明特征契约、训练与部署脚本可复现，**不代表真实场景准确率**；对外不得把 0.9546 写成模型准确率。权重与原始数据不入库。
 
 ## 3. 端到端链路
 
@@ -149,8 +166,8 @@ Tauri WebView
 - [ ] Tauri 能打开摄像头，MediaPipe 在本地加载并输出 33 关键点。
 - [ ] 演示机连续 60 秒 ≥15 fps，关键点不中断。
 - [ ] 只上传关键点：抓包/日志检查无原始图像或视频。
-- [x] ModelArts 在线推理可调用（无 endpoint 时用 mock，并在界面标注“mock”）——mock 全链路已实测；真实 endpoint 待开通。
-- [ ] 客户端可显示“基准 / 明显侧倾 / 不可判定”三类结果与引导框；只做基准线与局部调整提示，不做 3D/复杂动效。
+- [x] ModelArts 在线推理可调用（无 endpoint 时用 mock，并在界面标注“mock”）——mock 全链路已实测；训练包 v0 与离线报告已完成，真实 endpoint 待开通。
+- [ ] 客户端可显示“基准 / 头前伸 / 明显侧倾 / 不可判定”四类结果与引导框；只做基准线与局部调整提示，不做 3D/复杂动效。
 - [ ] 关摄像头、断网、ModelArts 超时三种降级都能演示。
 - [ ] 姿态页有免责声明与隐私开关。
 
@@ -178,11 +195,12 @@ Tauri WebView
 
 ## 8. 待确认
 
-1. ModelArts 在线服务是否已有 endpoint、模型格式与数据集；没有则先 mock。
-2. 初始姿态类别是否就按“基准 / 明显侧倾 / 不可判定”三类冻结。
+1. ModelArts endpoint：训练包、特征顺序与响应格式已定，缺账号下的在线服务与鉴权值；没有则继续 mock。
+2. 姿态类别已冻结为四类：`baseline` / `forward_head` / `lateral_tilt` / `undetermined`；新增类别须先改 `PostureClass`、`feature_spec.json` 与两端测试。
 3. 是否需要每人一次基线校准（不同摄像头角度/身高）。
 4. 演示机性能目标：fps、端到端延迟、单次上传字节数。
 5. 如果赛题强制华为端侧推理，MindSpore Lite 的 Windows/Tauri 集成是否有人力支持。
+6. 首次真实 endpoint 调用要确认 ModelArts 传给 `customize_service._preprocess` 的请求体是裸 JSON 还是 `{"data": ...}` 包络；本地 `serve.py` 只验证了裸 JSON。
 
 ## 9. 实现状态（2026-11-08）
 
@@ -199,13 +217,20 @@ Tauri WebView
 - `pnpm build` 通过；`dist/mediapipe/wasm` 与 `dist/models` 已包含运行资产。
 - 隐私边界：默认不自动开摄像头；关闭即停止 track 并清空画布。
 
-**未验证 / 待办：**
+**未验证 / 待办（11-08 快照）：**
 
 - 当前开发机摄像头被隐私锁遮挡，关键点识别未做真人验证；需在演示机现场用真人复核。
-- `/posture/risk` 已接，但云端仍是 BRLI 规则融合，不是真实 ModelArts 推理；`/posture/infer` 与真实模型调用待接。
-- 端侧仍上传“分类特征”而非原始关键点序列；只传坐标的契约待下一版。S0–S3 迁移尚未消费姿态风险。
+- `/posture/risk` 已接，但云端仍是 BRLI 规则融合，不是真实 ModelArts 推理；`/posture/infer` 已接适配层，真实模型待 endpoint。
+- （11-08 时）端侧上传“分类特征”而非原始关键点序列；该契约已于 11-09 收敛为 33 点关键点，见 A.2。S0–S3 迁移尚未消费姿态风险。
 - 当前环境（摄像头黑屏/后台窗口）FPS 偏低，需在演示机实测；目标 ≥15 fps。
 - 11.13 剩余：ModelArts 真实推理、端云数据传输与返回结果可演示。
+
+**2026-11-19 进展：**
+
+- 训练包 v0 完成：6 特征 MLP、四分类、低置信度改判，报告在 `scripts/modelarts/reports/v0/`；`evaluate_posture.py` 复算 A/B/chosen 全部一致。
+- `/posture/infer` 的 mock 全链路与本地 `serve.py` 冒烟均通过；131 个 Python 测试全绿。
+- 仍未完成：真实 ModelArts endpoint、真实摄像头采集与人工标注、真实包络确认、线上 503/超时/断网回退实测。
+- 合成数据指标只验证链路，不能作为泛化准确率或答辩效果数据。
 
 ## 10. 摄像头姿态：记录与报告（不弹通知）
 
@@ -271,7 +296,7 @@ Tauri WebView
 | 实时缓存（DCS） | 已实现 | `posture:latest:{user_id}`，TTL 600s；同时作为写入节流的跨实例依据；DCS 不可用时退回进程内缓存 |
 | 周报消费 | 已实现 | `/review/weekly` 新增 `posture` 块（样本数、主姿态、高风险占比）；高风险占比 ≥30% 时追加一条提示 |
 | 本地资源 | 已打包，不走 CDN | `public/models/pose_landmarker_lite.task`（5.5 MB）、`public/mediapipe/wasm/*`（14.6 MB + 334 KB），本地 200 可访问 |
-| 测试 | 102 passed | `python -m pytest -q`；前端 `pnpm build` 通过 |
+| 测试 | 102 passed（11-09 快照） | `python -m pytest -q`；前端 `pnpm build` 通过；当前为 131 passed |
 
 真实 ModelArts endpoint 尚未开通（**需付费**），因此当前所有推理结果都带 `source: "mock"`，界面显示“mock 模型”，不得对外表述为“已接入华为云推理”。
 
@@ -312,11 +337,15 @@ Tauri WebView
 
 失败（503）：`{ "detail": { "error": "modelarts_unavailable", "reason": "timeout" } }`
 
-### A.3 接真实 ModelArts 时只需三步
+### A.3 接真实 ModelArts 的剩余步骤
 
-1. ModelArts 上创建在线服务，拿到推理 URL 与鉴权方式（IAM Token / APIG AppCode）。
-2. 在 `apps/cloud-api/.env` 填：`RISELOOP_CLOUD_PROVIDER=huawei`、`RISELOOP_MODELARTS_ENDPOINT`、`RISELOOP_MODELARTS_API_KEY`、`RISELOOP_MODELARTS_AUTH_HEADER`（`x-auth-token` / `authorization` / `x-api-key`）。
-3. 服务需要能返回 `{"posture": "...", "confidence": 0.9}` 或 `{"probabilities": {...}}`；两种都会被解析。
+训练包已在 `scripts/modelarts/` 完成，剩下的是部署与联通：
+
+1. **上传模型包**到 ModelArts 模型管理：`customize_service.py`、`posture_runtime.py`、`model.py`、`model.pt`、`feature_spec.json`；部署为在线服务（CPU、1 副本）。
+2. **首次调用确认包络**：用一条真实请求确认 `customize_service._preprocess` 收到的是裸 JSON 还是 `{"data": ...}`。本地 `serve.py` 只验证了裸 JSON；若云端不同，在 `modelarts.py` 加一层包装，不改模型包。
+3. **在 `apps/cloud-api/.env` 填**：`RISELOOP_CLOUD_PROVIDER=huawei`、`RISELOOP_MODELARTS_ENDPOINT`、`RISELOOP_MODELARTS_API_KEY`、`RISELOOP_MODELARTS_AUTH_HEADER`（`x-auth-token` / `authorization` / `x-api-key`）。
+4. **响应解析**：模型包返回 `posture` / `confidence` / `probabilities`；`parse_prediction` 取前两者，兼容 `{"label", "confidence"}` 与概率表。
+5. **验收**：`/posture/infer` 返回 `source=huawei`，`/health/deps` 显示 `modelarts.configured=true`，停服务后返回 503 且端侧显式降级。
 
 ### A.4 真人关键点验证（11.10，需人在镜头前）
 
@@ -350,4 +379,15 @@ Tauri WebView
 | 失败降级 | 权限拒绝、设备被占用、未找到设备分别给出不同提示；监测失败不影响久坐计时 |
 
 未验证项：**真实摄像头下的端到端**（本机摄像头物理挡板仍未打开），以及多摄像头设备的实际切换。
+
+### A.6 姿态模型 v0 部署包与验证（2026-11-19）
+
+| 项 | 内容 |
+|---|---|
+| 模型包 | `customize_service.py`（torch 前向 + 日志）、`posture_runtime.py`（6 特征、`decide_posture`）、`model.py`、`model.pt`、`feature_spec.json` |
+| 决策规则 | `argmax`，`confidence < 0.5` 输出 `undetermined`；训练、评估、serving 共用同一函数 |
+| 离线复跑 | `generate_synthetic_frames.py` → `dataset_check.py` → `train_posture.py` → `evaluate_posture.py`，命令见 `scripts/modelarts/README.md` |
+| 本机冒烟 | `serve.py` 对 `s01-000001` 返回 `baseline` / `0.995108`，与 `smoke_test.json` 一致；日志不含关键点数组 |
+| 测试 | `python -m pytest -q`：131 passed（含决策规则与生成器跨 hash seed 复现） |
+| 未完成 | 真实 endpoint 未创建；未上传模型包；未用真实摄像头数据复评 |
 

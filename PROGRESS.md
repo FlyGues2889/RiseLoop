@@ -7,7 +7,7 @@
 ## 1. 一眼看现状
 
 - 核心闭环（评估 → 久坐计时 → 按状态推送动作 → 反馈 → 迁移）**已实现**，云端与本地两条链路都跑得通。
-- 但**云端资源尚未开通**：DCS、RDS、ModelArts 只有适配层，没有一通到底的真实调用；OBS、KMS 未接线。
+- 但**云端资源尚未开通**：DCS、RDS 只有适配层，没有一通到底的真实调用；ModelArts 已有 v0 训练包与离线报告，仍缺真实 endpoint；OBS、KMS 未接线。
 - 云服务核心（2026-11-15 定）：**DCS for Redis + RDS for PostgreSQL + ModelArts 在线服务**三件为必接项；CodeArts 退为研发工具，不参与运行时；OBS / KMS 为可选加分项；AgentArts 为可选的问答编排替身。
 - 交付物缺口集中在架构素材、演示数据与作品书评审；仓库空目录已清零（8 个约定目录 + 3 个残留空目录删除，README 去掉两处占位图）。
 - 最近一次验证（2026-11-17）：
@@ -21,6 +21,8 @@
 | `cargo check --lib --tests` | ✅ 通过 |
 | `cargo test` | ✅ 20 passed（含摄像头日志追加测试、动作会话 7 项） |
 
+> 2026-11-19 复跑 `python -m pytest -q`：131 passed，0 skipped（Node 在 PATH）；本表其它项未重跑。
+
 ## 2. 云端与算法
 
 | 能力 | 状态 | 说明 |
@@ -31,7 +33,7 @@
 | 跨语言一致性测试 | ✅ | `packages/intervention-engine/tests/test_cross_language.py`：25 个场景 Python/JS 全字段对拍，桥接脚本 `scripts/engine_dump.mjs` |
 | 安全中间件（8 类红旗短路） | ✅ | `app/core/safety.py`，命中直接 403 + 就医提示 |
 | BRLI 风险指数 | 🟡 | 规则版 V1 有单测，已接 `/posture/risk`，未校准 |
-| 姿态分类推理（ModelArts） | 🟡 | 调用链、超时、降级都写了，**没有真实 endpoint**，现走 mock + 端侧降级 |
+| 姿态分类推理（ModelArts） | 🟡 | v0 训练包与离线报告已完成（6 特征 MLP，合成数据 test macro-F1 0.9546）；调用链、超时、降级已写；**没有真实 endpoint**，现走 mock + 端侧降级 |
 | 循证知识库 | ✅ | 39 条证据台账（PubMed 36 / WHO 1 / CDC 1 / NIOSH 1，共 40 个主题归属）+ `articles.json` 8 条问答语料，`scripts/validate_evidence.py` 0 error |
 | 知识库问答 | ✅ | 本地检索 + citations（`data/knowledge/articles.json` 8 条）；无命中明确回答“资料中没有”。AgentArts 增强为可选，未接入 |
 | 限流 | ✅ | `app/core/ratelimit.py`：按 token 指纹或 IP 滑动窗口，登录类接口单独更严；超限 429 + `Retry-After` |
@@ -93,11 +95,13 @@
 - [ ] 客户端接入刷新令牌（Rust 钥匙串加槽位 + api-client 自动续期）
 
 ### 11.17 姿态识别 + 风险融合
-- [ ] 拿到 ModelArts endpoint/密钥，`/posture/infer` 真链路跑通（写进 `.env`，不进仓库）
+- [ ] 开通 ModelArts 在线服务，上传 v0 模型包（`customize_service.py` / `posture_runtime.py` / `model.py` / `model.pt` / `feature_spec.json`）
+- [ ] 首次真实调用确认请求包络（裸 JSON vs `{"data": ...}`），填 `.env`，`/posture/infer` 返回 `source=huawei`
 - [ ] 真实环境验证断网、关摄像头、ModelArts 超时三条回退
 - [ ] 抓包确认不含原始画面；日志不打印关键点数组
 - [x] 真人关键点验证正常
-- [ ] 侧倾/前倾识别精度初测
+- [ ] 真实摄像头采集 + 人工标注，按 subject 划分复评（当前指标全部来自合成数据）
+- [ ] 侧倾/前倾识别精度初测（用真实数据，不用合成指标对外）
 
 ### 11.17 文案与时长对齐
 - [x] 步骤倒计时拟合动作标签时长（推算不足时等比放大），15 条动作标签 vs 实际倒计时全部在 ±6% 内
