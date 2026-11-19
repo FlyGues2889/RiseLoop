@@ -125,7 +125,7 @@ python scripts/modelarts/train_posture.py --data data/posture/frames.jsonl --see
 python scripts/modelarts/evaluate_posture.py --artifacts scripts/modelarts/artifacts/v0
 ```
 
-- 训练约 5.1 s（A 3.27 s + B 1.80 s，CPU 单线程）；独立评估 <1 s。
+- 训练约 5 s（CPU 单线程）；独立评估 <1 s。
 - `metrics.json` 含 `label_policy`、`decision_rule`、`feature_spec_version: "v1"`、
   `data.origin`、`metrics_scope`、`low_confidence_count`。
 - 合成数据同 seed 可复现（sha256 `7514c2c8…`）；同 seed 两次训练，A/B 的
