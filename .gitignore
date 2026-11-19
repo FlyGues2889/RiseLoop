@@ -10,3 +10,7 @@ __pycache__/
 
 #个人todo
 FlyTodo.md
+
+# 姿态训练产物与采集数据（只提交脚本与指标）
+scripts/modelarts/artifacts/
+data/posture/
