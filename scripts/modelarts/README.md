@@ -125,12 +125,13 @@ python scripts/modelarts/train_posture.py --data data/posture/frames.jsonl --see
 python scripts/modelarts/evaluate_posture.py --artifacts scripts/modelarts/artifacts/v0
 ```
 
-- 训练约 6.0 s（A 4.19 s + B 1.82 s，CPU 单线程）；独立评估 <1 s。
+- 训练约 5.1 s（A 3.27 s + B 1.80 s，CPU 单线程）；独立评估 <1 s。
 - `metrics.json` 含 `label_policy`、`decision_rule`、`feature_spec_version: "v1"`、
   `data.origin`、`metrics_scope`、`low_confidence_count`。
 - 同 seed 两次训练，A/B 的 macro-F1、accuracy、混淆矩阵一致。
 - 可复核的产物提交在 `reports/v0/`（`metrics.json`、`feature_spec.json`、
-  `split.json`、`smoke_test.json`、混淆矩阵）；权重与原始数据不入库。
+  `split.json`、`smoke_test.json`、混淆矩阵）；`smoke_test.json` 只含派生特征，
+  不含原始关键点；权重与原始数据不入库。
 
 ## 测试
 
