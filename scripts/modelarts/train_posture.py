@@ -1246,6 +1246,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         posture, confidence, probabilities = _predict_payload(
             deploy_model, deploy_meta, sample
         )
+        report_sample = {key: value for key, value in sample.items() if key != "keypoints"}
         smoke_samples.append(
             {
                 "frame_id": frame.frame_id,
@@ -1254,7 +1255,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 "expected_posture": posture,
                 "expected_confidence": confidence,
                 "expected_probabilities": probabilities,
-                "sample": sample,
+                "sample": report_sample,
             }
         )
         if posture != label:
@@ -1271,7 +1272,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         "created_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "note": (
             "expected_posture is the stored model output for this exact sample; "
-            "ground_truth is the label. Use this file to reconcile a deployed endpoint."
+            "ground_truth is the label. sample carries derived features only and no "
+            "raw keypoints. Use this file to reconcile a deployed endpoint."
         ),
         "samples": smoke_samples,
         "warnings": smoke_warnings,
