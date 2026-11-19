@@ -131,7 +131,8 @@ python scripts/modelarts/evaluate_posture.py --artifacts scripts/modelarts/artif
 - 同 seed 两次训练，A/B 的 macro-F1、accuracy、混淆矩阵一致。
 - 可复核的产物提交在 `reports/v0/`（`metrics.json`、`feature_spec.json`、
   `split.json`、`smoke_test.json`、混淆矩阵）；`smoke_test.json` 只含派生特征，
-  不含原始关键点；权重与原始数据不入库。
+  不含原始关键点，回放 endpoint 需按 seed 重新生成同 `frame_id` 的关键点；
+  权重与原始数据不入库。
 
 ## 测试
 

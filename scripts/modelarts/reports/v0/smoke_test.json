@@ -5,7 +5,7 @@
   "model_file": "model.pt",
   "model_sha256": "c610d19029ca0fb493cc5ba11532d0c4ad9cee25fadff57524f44fe09443561b",
   "created_at": "2026-11-19T12:55:06+00:00",
-  "note": "expected_posture is the stored model output for this exact sample; ground_truth is the label. sample carries derived features only and no raw keypoints. Use this file to reconcile a deployed endpoint.",
+  "note": "expected_posture is the stored model output for this feature vector; ground_truth is the label. sample carries derived features only and no raw keypoints. Endpoint replay also needs the 33 keypoints for the same frame_id, which are not committed.",
   "samples": [
     {
       "frame_id": "s01-000001",

@@ -1271,9 +1271,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         "model_sha256": _sha256(deploy_path),
         "created_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "note": (
-            "expected_posture is the stored model output for this exact sample; "
+            "expected_posture is the stored model output for this feature vector; "
             "ground_truth is the label. sample carries derived features only and no "
-            "raw keypoints. Use this file to reconcile a deployed endpoint."
+            "raw keypoints. Endpoint replay also needs the 33 keypoints for the same "
+            "frame_id, which are not committed."
         ),
         "samples": smoke_samples,
         "warnings": smoke_warnings,
