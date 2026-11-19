@@ -74,7 +74,7 @@ python -m pytest -q
 | 版本 | 维度 | 参数量 | 最佳 epoch | Val macro-F1 | Test macro-F1 | Test acc |
 |---|---:|---:|---:|---:|---:|---:|
 | **A（v0）** | 6 | 2,660 | 92 | 0.9598 | **0.9546** | 0.9542 |
-| B | 138 | 11,108 | 39 | 0.8957 | 0.8957 | 0.8958 |
+| B | 138 | 11,108 | 29 | 0.8830 | 0.8878 | 0.8875 |
 
 A 版每类 P/R/F1：
 
@@ -106,12 +106,12 @@ A 版混淆矩阵：
 |---|---:|---:|---|
 | 初版（自带 `contract.py`） | 0.9693 | 0.9406 | 416 / 362 / 395 / 267 |
 | 上一轮重建层 | 0.9746 | 0.9373 | 416 / 362 / 395 / 267 |
-| **本轮上游契约** | **0.9546** | **0.8957** | **331 / 339 / 342 / 428** |
+| **本轮上游契约** | **0.9546** | **0.8878** | **331 / 339 / 342 / 428** |
 
 本轮指标变化同时来自两处，不能全部归因于模型：上游 `label_policy` 把
 “肩倾灰区或头前伸灰区”都判 `undetermined`，`undetermined` 增加 161 帧；评估与线上
 改用同一条决策规则，A 的 test 有 1 帧因 `confidence < 0.5` 改判 `undetermined`
-（B 为 4 帧），val 选 epoch 也应用同一规则。没有为了保住 0.9693 绕开口径。
+（B 为 6 帧），val 选 epoch 也应用同一规则。没有为了保住 0.9693 绕开口径。
 A 仍优于 B，按验证集 macro-F1 选择 A。
 
 ## 复跑
@@ -128,7 +128,8 @@ python scripts/modelarts/evaluate_posture.py --artifacts scripts/modelarts/artif
 - 训练约 5.1 s（A 3.27 s + B 1.80 s，CPU 单线程）；独立评估 <1 s。
 - `metrics.json` 含 `label_policy`、`decision_rule`、`feature_spec_version: "v1"`、
   `data.origin`、`metrics_scope`、`low_confidence_count`。
-- 同 seed 两次训练，A/B 的 macro-F1、accuracy、混淆矩阵一致。
+- 合成数据同 seed 可复现（sha256 `7514c2c8…`）；同 seed 两次训练，A/B 的
+  macro-F1、accuracy、混淆矩阵一致。
 - 可复核的产物提交在 `reports/v0/`（`metrics.json`、`feature_spec.json`、
   `split.json`、`smoke_test.json`、混淆矩阵）；`smoke_test.json` 只含派生特征，
   不含原始关键点，回放 endpoint 需按 seed 重新生成同 `frame_id` 的关键点；
@@ -141,9 +142,9 @@ python scripts/modelarts/evaluate_posture.py --artifacts scripts/modelarts/artif
 python -m pytest -q
 ```
 
-- 本分支：**130 passed，0 skipped**（Node 在 PATH）；上游基线 129，新增 1 个决策规则用例。
-- 本分支新增 1 个决策规则用例；其余使用上游
-  `apps/cloud-api/tests/test_modelarts_contract_parity.py`
+- 本分支：**131 passed，0 skipped**（Node 在 PATH）；上游基线 129，新增 2 个用例
+  （决策规则、生成器跨 `PYTHONHASHSEED` 复现）。
+- 其余使用上游 `apps/cloud-api/tests/test_modelarts_contract_parity.py`
   的 11 个用例（含 300 组随机关键点 parity、dataset_check、label_policy）。
 - `dataset_check` 输出：`ok: true`，`frames: 1440`，`subjects: 12`，`errors: 0`。
 

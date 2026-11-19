@@ -238,8 +238,9 @@ def build_pose(
         for name in ("left_elbow", "right_elbow", "left_wrist", "right_wrist"):
             visibility[name] = rng.uniform(0.25, 0.55)
     elif occlusion == "desk":
-        for name in LOWER | {"left_hip", "right_hip"}:
-            visibility[name] = rng.uniform(0.12, 0.45)
+        for name in MEDIAPIPE_33:
+            if name in LOWER or name in ("left_hip", "right_hip"):
+                visibility[name] = rng.uniform(0.12, 0.45)
         for name in ("left_wrist", "right_wrist", "left_pinky", "right_pinky",
                      "left_index", "right_index", "left_thumb", "right_thumb"):
             visibility[name] = rng.uniform(0.20, 0.50)

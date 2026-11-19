@@ -3,7 +3,11 @@
 from __future__ import annotations
 
 import json
+import os
 import random
+import subprocess
+import sys
+from pathlib import Path
 
 import pytest
 
@@ -127,6 +131,33 @@ def test_decide_posture_is_shared_by_eval_and_serving():
     assert label == "undetermined"
     assert confidence == pytest.approx(0.4)
     assert runtime.MIN_MODEL_CONFIDENCE == 0.5
+
+
+def test_synthetic_generator_is_stable_across_hash_seeds(tmp_path):
+    script = Path(contract.__file__).with_name("generate_synthetic_frames.py")
+    outputs = []
+    for hash_seed in ("0", "1"):
+        out_path = tmp_path / f"frames-{hash_seed}.jsonl"
+        env = {**os.environ, "PYTHONHASHSEED": hash_seed}
+        subprocess.run(
+            [
+                sys.executable,
+                str(script),
+                "--out",
+                str(out_path),
+                "--subjects",
+                "3",
+                "--frames-per-subject",
+                "20",
+                "--seed",
+                "11",
+            ],
+            check=True,
+            capture_output=True,
+            env=env,
+        )
+        outputs.append(out_path.read_bytes())
+    assert outputs[0] == outputs[1]
 
 
 def test_dataset_check_accepts_valid_file(tmp_path):
