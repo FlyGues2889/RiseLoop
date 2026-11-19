@@ -116,6 +116,7 @@ from model import (
     save_checkpoint,
     softmax_probabilities,
 )
+from posture_runtime import decide_posture
 
 CONTRACT_VERSION = FEATURE_SPEC_VERSION
 LABEL_TO_INDEX = {label: index for index, label in enumerate(LABEL_ORDER)}
@@ -413,8 +414,12 @@ def _predict_frames(
     dataset = FrameDataset(frames, input_version, mean, std)
     loader = DataLoader(dataset, batch_size=batch_size, shuffle=False, num_workers=0)
     true_indices, probabilities = _predict_loader(model, loader)
-    predicted = [LABEL_ORDER[int(np.argmax(row))] for row in probabilities]
+    predicted = [decide_posture(row)[0] for row in probabilities]
     return predicted, probabilities
+
+
+def count_low_confidence(probabilities) -> int:
+    return sum(1 for row in probabilities if float(np.max(row)) < MIN_MODEL_CONFIDENCE)
 
 
 def train_one(
@@ -476,7 +481,7 @@ def train_one(
         )
         true_indices, probabilities = _predict_loader(model, val_loader)
         y_true = [LABEL_ORDER[index] for index in true_indices]
-        y_pred = [LABEL_ORDER[int(np.argmax(row))] for row in probabilities]
+        y_pred = [decide_posture(row)[0] for row in probabilities]
         val_metrics = compute_metrics(y_true, y_pred)
 
         # Validation loss for the curve only; selection uses macro-F1.
@@ -632,11 +637,7 @@ def _predict_payload(
         label: round(float(probabilities[index]), 6)
         for index, label in enumerate(LABEL_ORDER)
     }
-    best_index = int(np.argmax(probabilities))
-    confidence = float(probabilities[best_index])
-    posture = LABEL_ORDER[best_index]
-    if confidence < MIN_MODEL_CONFIDENCE:
-        posture = "undetermined"
+    posture, confidence = decide_posture(probabilities)
     return posture, round(confidence, 6), probabilities_dict
 
 
@@ -785,6 +786,7 @@ def _run_group_split(
             "model": result["model"],
             "test_predictions": predicted,
             "test_probabilities": probabilities,
+            "test_low_confidence": count_low_confidence(probabilities),
         }
 
     chosen = max(("A", "B"), key=lambda version: results[version]["best_val_macro_f1"])
@@ -837,6 +839,7 @@ def _run_loso(
         oof_true: list[str] = []
         oof_pred: list[str] = []
         oof_frames: list[Frame] = []
+        oof_low_confidence = 0
         val_scores: list[float] = []
         best_epochs: list[int] = []
         fold_seconds = 0.0
@@ -852,12 +855,13 @@ def _run_loso(
             result = train_one(
                 train_frames, val_frames, version, mean, std, args, seed=args.seed
             )
-            predicted, _ = _predict_frames(
+            predicted, probabilities = _predict_frames(
                 result["model"], test_frames, version, mean, std
             )
             oof_true.extend(frame.label for frame in test_frames)
             oof_pred.extend(predicted)
             oof_frames.extend(test_frames)
+            oof_low_confidence += count_low_confidence(probabilities)
             val_scores.append(result["best_val_macro_f1"])
             best_epochs.append(result["best_epoch"])
             fold_seconds += result["train_seconds"]
@@ -872,6 +876,7 @@ def _run_loso(
             "mean_val_macro_f1": float(statistics.mean(val_scores)),
             "best_val_macro_f1": float(statistics.mean(val_scores)),
             "test": metrics,
+            "test_low_confidence": oof_low_confidence,
             "oof_frames": len(oof_frames),
             "train_seconds": round(fold_seconds, 3),
             "best_epochs": best_epochs,
@@ -1057,6 +1062,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         deploy_test_metrics = compute_metrics(
             [frame.label for frame in test_frames], predicted
         )
+        deploy_low_confidence = count_low_confidence(probabilities)
         predicted_val, _ = _predict_frames(
             deploy_model, val_frames, chosen, deploy_meta["mean"], deploy_meta["std"]
         )
@@ -1066,6 +1072,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     else:
         deploy_test_metrics = results[chosen]["test"]
         deploy_val_metrics = None
+        deploy_low_confidence = int(results[chosen].get("test_low_confidence", 0))
 
     # ------------------------------------------------------------------
     # Metrics, spec, split, smoke samples.
@@ -1122,6 +1129,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             "train_seconds": entry.get("train_seconds"),
             "val": entry.get("val"),
             "test": entry.get("test"),
+            "test_low_confidence": entry.get("test_low_confidence"),
             "history": entry.get("history"),
             "fold_val_macro_f1": entry.get("fold_val_macro_f1"),
         }
@@ -1140,7 +1148,16 @@ def main(argv: Sequence[str] | None = None) -> int:
             "chosen": chosen,
             "A": results["A"].get("best_val_macro_f1"),
             "B": results["B"].get("best_val_macro_f1"),
-            "note": "the test split is evaluated once after selection",
+            "note": (
+                "selection used validation macro-F1 only; test is reported for both "
+                "variants as a diagnostic and was not used for selection"
+            ),
+        },
+        "decision_rule": {
+            "policy": "argmax; confidence below threshold becomes undetermined",
+            "min_confidence": MIN_MODEL_CONFIDENCE,
+            "low_confidence_count": deploy_low_confidence,
+            "applied_in_evaluation": True,
         },
         "input_versions": {
             "A": len(FEATURE_NAMES),

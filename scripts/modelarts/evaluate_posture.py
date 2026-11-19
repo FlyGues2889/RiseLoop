@@ -36,6 +36,7 @@ from posture_contract import (
 )
 from metrics_util import compute_metrics
 from model import coordinates_vector, load_checkpoint
+from posture_runtime import decide_posture
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPT_DIR.parents[1]
@@ -154,8 +155,8 @@ def _predict(model, meta: dict[str, Any], rows: Sequence[dict[str, Any]]) -> tup
     with torch.inference_mode():
         for inputs, targets in loader:
             logits = model(inputs)
-            indices = torch.argmax(logits, dim=-1)
-            predictions.extend(LABEL_ORDER[int(index)] for index in indices.tolist())
+            probabilities = torch.softmax(logits, dim=-1).cpu().tolist()
+            predictions.extend(decide_posture(row)[0] for row in probabilities)
             true_indices.extend(int(value) for value in targets.tolist())
     return predictions, true_indices
 

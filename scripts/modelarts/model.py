@@ -9,10 +9,13 @@ from typing import Any, Mapping, Sequence
 import torch
 from torch import nn
 
-from posture_runtime import FEATURE_ORDER, FEATURE_SPEC_VERSION, LABELS
+from posture_runtime import (
+    FEATURE_ORDER,
+    FEATURE_SPEC_VERSION,
+    LABELS,
+    MIN_MODEL_CONFIDENCE,
+)
 
-# Model-side response policy, shared by training smoke checks and serving.
-MIN_MODEL_CONFIDENCE = 0.5
 # Version-B coordinate preprocessing: shoulder midpoint origin, shoulder width scale.
 COORD_SCALE_FLOOR = 0.05
 

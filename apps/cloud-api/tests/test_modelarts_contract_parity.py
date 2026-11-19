@@ -109,6 +109,25 @@ def test_build_response_returns_native_floats():
     assert isinstance(response["confidence"], float)
     assert all(isinstance(value, float) for value in response["probabilities"].values())
 
+    low = runtime.build_response(
+        {"baseline": 0.4, "forward_head": 0.3, "lateral_tilt": 0.2, "undetermined": 0.1}
+    )
+    assert low["posture"] == "undetermined"
+    assert low["confidence"] == pytest.approx(0.4)
+
+
+def test_decide_posture_is_shared_by_eval_and_serving():
+    label, confidence = runtime.decide_posture([0.1, 0.7, 0.1, 0.1])
+    assert label == "forward_head"
+    assert confidence == pytest.approx(0.7)
+
+    label, confidence = runtime.decide_posture(
+        {"baseline": 0.4, "forward_head": 0.3, "lateral_tilt": 0.2, "undetermined": 0.1}
+    )
+    assert label == "undetermined"
+    assert confidence == pytest.approx(0.4)
+    assert runtime.MIN_MODEL_CONFIDENCE == 0.5
+
 
 def test_dataset_check_accepts_valid_file(tmp_path):
     report = dataset_check.check_dataset(_write(tmp_path, [_frame(), _frame("lateral_tilt")]))

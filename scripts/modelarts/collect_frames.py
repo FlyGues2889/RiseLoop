@@ -130,7 +130,6 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--origin", choices=("capture", "synthetic"), default=None)
     parser.add_argument("--prelabel", action="store_true", help="derive a draft label with the v0 rubric")
     parser.add_argument("--note", default="")
-    parser.add_argument("--allow-unlabeled", action="store_true")
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args(argv)
 
@@ -211,13 +210,10 @@ def main(argv: list[str] | None = None) -> int:
             label = args.label or record.get("label") or ""
             if args.prelabel and not label:
                 label = prelabel(features)
-            if label not in LABEL_ORDER and not args.allow_unlabeled:
-                skipped["missing_label_use_prelabel_or_allow_unlabeled"] = (
-                    skipped.get("missing_label_use_prelabel_or_allow_unlabeled", 0) + 1
+            if label not in LABEL_ORDER:
+                skipped["missing_label_use_label_or_prelabel"] = (
+                    skipped.get("missing_label_use_label_or_prelabel", 0) + 1
                 )
-                continue
-            if label and label not in LABEL_ORDER:
-                skipped["invalid_label"] = skipped.get("invalid_label", 0) + 1
                 continue
 
             label_source = args.label_source or record.get("label_source")

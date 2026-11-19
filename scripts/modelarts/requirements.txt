@@ -6,12 +6,7 @@
 #
 # ---- inference (ModelArts custom script) ----
 numpy>=1.26
-# torch is supplied by the ModelArts PyTorch image.  Uncomment only for a
-# custom CPU image:
-# torch==2.15.0+cpu
+# torch is supplied by the ModelArts PyTorch image.  For a custom CPU image see
+# requirements-train.txt (the same torch version used for training).
 
-# ---- training only (local CPU; do NOT install into the serving image) ----
-# torch>=2.2,<3
-# scikit-learn>=1.4
-# matplotlib>=3.8
-# pytest>=8
+# ---- training only: see requirements-train.txt ----

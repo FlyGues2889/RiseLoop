@@ -73,31 +73,31 @@ python -m pytest -q
 
 | 版本 | 维度 | 参数量 | 最佳 epoch | Val macro-F1 | Test macro-F1 | Test acc |
 |---|---:|---:|---:|---:|---:|---:|
-| **A（v0）** | 6 | 2,660 | 158 | 0.9837 | **0.9582** | 0.9583 |
-| B | 138 | 11,108 | 42 | 0.8882 | 0.8751 | 0.8750 |
+| **A（v0）** | 6 | 2,660 | 92 | 0.9598 | **0.9546** | 0.9542 |
+| B | 138 | 11,108 | 39 | 0.8957 | 0.8957 | 0.8958 |
 
 A 版每类 P/R/F1：
 
 | 类别 | P | R | F1 | Support |
 |---|---:|---:|---:|---:|
-| baseline | 0.9254 | 0.9688 | 0.9466 | 64 |
-| forward_head | 1.0000 | 1.0000 | 1.0000 | 57 |
-| lateral_tilt | 0.9677 | 0.9836 | 0.9756 | 61 |
-| undetermined | 0.9444 | 0.8793 | 0.9107 | 58 |
+| baseline | 0.9118 | 0.9688 | 0.9394 | 64 |
+| forward_head | 1.0000 | 0.9825 | 0.9912 | 57 |
+| lateral_tilt | 1.0000 | 0.9672 | 0.9833 | 61 |
+| undetermined | 0.9123 | 0.8966 | 0.9043 | 58 |
 
 A 版混淆矩阵：
 
 | GT \ Pred | baseline | forward_head | lateral_tilt | undetermined |
 |---|---:|---:|---:|---:|
 | baseline | **62** | 0 | 0 | 2 |
-| forward_head | 0 | **57** | 0 | 0 |
-| lateral_tilt | 0 | 0 | **60** | 1 |
-| undetermined | 5 | 0 | 2 | **51** |
+| forward_head | 0 | **56** | 0 | 1 |
+| lateral_tilt | 0 | 0 | **59** | 2 |
+| undetermined | 6 | 0 | 0 | **52** |
 
-![A 版混淆矩阵](artifacts/v0/confusion_matrix.png)
+![A 版混淆矩阵](reports/v0/confusion_matrix.png)
 
-主要错误：`undetermined → baseline` 5 帧、`undetermined → lateral_tilt` 2 帧、
-`baseline → undetermined` 2 帧、`lateral_tilt → undetermined` 1 帧。集中在新口径的
+主要错误：`undetermined → baseline` 6 帧、`baseline → undetermined` 2 帧、
+`lateral_tilt → undetermined` 2 帧、`forward_head → undetermined` 1 帧。集中在新口径的
 灰区边界（肩倾 6–10° 或头前伸 0.20–0.30）；模型对边界的近似仍不是 if-else。
 
 ## 三代结果对照（同 seed 20261117）
@@ -106,15 +106,18 @@ A 版混淆矩阵：
 |---|---:|---:|---|
 | 初版（自带 `contract.py`） | 0.9693 | 0.9406 | 416 / 362 / 395 / 267 |
 | 上一轮重建层 | 0.9746 | 0.9373 | 416 / 362 / 395 / 267 |
-| **本轮上游契约** | **0.9582** | **0.8751** | **331 / 339 / 342 / 428** |
+| **本轮上游契约** | **0.9546** | **0.8957** | **331 / 339 / 342 / 428** |
 
-本轮指标下降的主因是上游 `label_policy` 把“肩倾灰区或头前伸灰区”都判
-`undetermined`，`undetermined` 增加了 161 帧；没有为了保住 0.9693 绕开口径。
+本轮指标变化同时来自两处，不能全部归因于模型：上游 `label_policy` 把
+“肩倾灰区或头前伸灰区”都判 `undetermined`，`undetermined` 增加 161 帧；评估与线上
+改用同一条决策规则，A 的 test 有 1 帧因 `confidence < 0.5` 改判 `undetermined`
+（B 为 4 帧），val 选 epoch 也应用同一规则。没有为了保住 0.9693 绕开口径。
 A 仍优于 B，按验证集 macro-F1 选择 A。
 
 ## 复跑
 
 ```bash
+python -m pip install -r scripts/modelarts/requirements-train.txt
 python scripts/modelarts/generate_synthetic_frames.py \
   --out data/posture/frames.jsonl --subjects 12 --frames-per-subject 120 --seed 20261117
 python scripts/modelarts/dataset_check.py data/posture/frames.jsonl
@@ -123,9 +126,11 @@ python scripts/modelarts/evaluate_posture.py --artifacts scripts/modelarts/artif
 ```
 
 - 训练约 6.0 s（A 4.19 s + B 1.82 s，CPU 单线程）；独立评估 <1 s。
-- `metrics.json` 含 `label_policy: label_policy.describe()`、`feature_spec_version: "v1"`、
-  `data.origin`、`metrics_scope`。
+- `metrics.json` 含 `label_policy`、`decision_rule`、`feature_spec_version: "v1"`、
+  `data.origin`、`metrics_scope`、`low_confidence_count`。
 - 同 seed 两次训练，A/B 的 macro-F1、accuracy、混淆矩阵一致。
+- 可复核的产物提交在 `reports/v0/`（`metrics.json`、`feature_spec.json`、
+  `split.json`、`smoke_test.json`、混淆矩阵）；权重与原始数据不入库。
 
 ## 测试
 
@@ -134,8 +139,9 @@ python scripts/modelarts/evaluate_posture.py --artifacts scripts/modelarts/artif
 python -m pytest -q
 ```
 
-- 上游基线：**129 passed，0 skipped**（Node 在 PATH）。
-- 本分支未新增测试文件；使用上游 `apps/cloud-api/tests/test_modelarts_contract_parity.py`
+- 本分支：**130 passed，0 skipped**（Node 在 PATH）；上游基线 129，新增 1 个决策规则用例。
+- 本分支新增 1 个决策规则用例；其余使用上游
+  `apps/cloud-api/tests/test_modelarts_contract_parity.py`
   的 11 个用例（含 300 组随机关键点 parity、dataset_check、label_policy）。
 - `dataset_check` 输出：`ok: true`，`frames: 1440`，`subjects: 12`，`errors: 0`。
 
@@ -145,16 +151,16 @@ ModelArts 推理包包含：
 
 ```
 customize_service.py   # 校验 feature_spec 顺序 + torch 前向 + 日志
-posture_runtime.py     # 上游唯一部署副本：6 特征、features_vector、build_response
-model.py               # MLP、checkpoint、B 版坐标归一化、置信度兜底常量
+posture_runtime.py     # 上游唯一部署副本：6 特征、features_vector、build_response、决策规则
+model.py               # MLP、checkpoint、B 版坐标归一化
 model.pt               # A 版，14,717 B
 feature_spec.json      # v1：33 点顺序、6 特征、4 类、label_policy、标准化统计
 ```
 
 `customize_service.py` 导出 `FEATURE_SPEC_VERSION = "v1"` 与
 `features_from_keypoints`（来自 `posture_runtime`）；特征缺失时用 runtime 重算，
-`features` 齐全时优先使用请求值。`max(probabilities) < 0.5` 时输出
-`posture=undetermined`（常量在 `model.MIN_MODEL_CONFIDENCE`）。
+`features` 齐全时优先使用请求值。`posture_runtime.decide_posture` 是训练评估与
+线上共用的唯一决策规则：argmax，`confidence < 0.5` 时输出 `posture=undetermined`。
 
 本机实测单帧约 0.3 ms，HTTP 端到端 <1 ms；远低于 50 ms。
 

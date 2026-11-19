@@ -21,6 +21,7 @@ FEATURE_ORDER = (
 LABELS = ("baseline", "forward_head", "lateral_tilt", "undetermined")
 VISIBILITY_MIN = 0.5
 REQUIRED_POINTS = ("nose", "left_shoulder", "right_shoulder", "left_hip", "right_hip")
+MIN_MODEL_CONFIDENCE = 0.5
 
 
 def _index(keypoints: Sequence[Mapping[str, Any]]) -> dict[str, Mapping[str, Any]]:
@@ -105,5 +106,22 @@ def build_response(probabilities: Mapping[str, float]) -> dict[str, Any]:
     if missing:
         raise ValueError(f"概率缺类别：{', '.join(missing)}")
     scores = {label: float(probabilities[label]) for label in LABELS}
-    posture = max(scores, key=scores.get)
-    return {"posture": posture, "confidence": scores[posture], "probabilities": scores}
+    posture, confidence = decide_posture(scores)
+    return {"posture": posture, "confidence": confidence, "probabilities": scores}
+
+
+def decide_posture(probabilities: Sequence[float] | Mapping[str, float]) -> tuple[str, float]:
+    """线上与评估共用的决策规则：argmax，低于阈值改判 undetermined。"""
+    if isinstance(probabilities, Mapping):
+        scores = {label: float(probabilities[label]) for label in LABELS}
+    else:
+        values = [float(value) for value in probabilities]
+        if len(values) != len(LABELS):
+            raise ValueError(f"概率维度应为 {len(LABELS)}，实际 {len(values)}")
+        scores = dict(zip(LABELS, values))
+    posture = max(LABELS, key=lambda label: scores[label])
+    confidence = scores[posture]
+    if confidence < MIN_MODEL_CONFIDENCE:
+        return "undetermined", confidence
+    return posture, confidence
+

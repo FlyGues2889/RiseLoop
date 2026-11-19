@@ -1,0 +1,6 @@
+# Training dependencies (CPU). Do not install into the ModelArts serving image.
+# Verified on Windows with CPython 3.14; works on 3.11+.
+torch==2.15.0
+numpy>=1.26,<3
+scikit-learn>=1.4,<2
+matplotlib>=3.8,<4

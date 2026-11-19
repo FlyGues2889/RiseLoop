@@ -11,13 +11,13 @@ from typing import Mapping, Union
 import posture_contract  # noqa: F401  先装配仓库路径，再 import app
 from app.cloud.modelarts import HEAD_FORWARD_THRESHOLD, TILT_THRESHOLD_DEG
 from app.schemas.posture import PostureFeatures
+from posture_runtime import MIN_MODEL_CONFIDENCE
 
 POLICY_VERSION = "v1"
 TILT_GRAY_DEG = 2.0
 HEAD_FORWARD_GRAY = 0.05
 MIN_SHOULDER_VISIBILITY = 0.5
 MIN_VISIBLE_RATIO = 0.5
-MIN_MODEL_CONFIDENCE = 0.5
 
 
 def prelabel(features: Union[PostureFeatures, Mapping[str, float]]) -> str:

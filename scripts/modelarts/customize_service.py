@@ -37,7 +37,7 @@ elif _SCRIPT_DIR not in sys.path:
     sys.path.insert(0, _SCRIPT_DIR)
 
 import posture_runtime as runtime  # noqa: E402
-from model import MIN_MODEL_CONFIDENCE, coordinates_vector, load_checkpoint  # noqa: E402
+from model import coordinates_vector, load_checkpoint  # noqa: E402
 
 FEATURE_SPEC_VERSION = runtime.FEATURE_SPEC_VERSION
 features_from_keypoints = runtime.features_from_keypoints
@@ -123,8 +123,9 @@ class Model(PTServingBaseService):
         self.feature_order = list(spec["feature_order"])
         if self.feature_order != list(runtime.FEATURE_ORDER):
             raise ValueError("feature_spec feature_order mismatch")
-        if self.keypoint_order != list(spec["mediapipe_landmarks"]):
-            raise ValueError("feature_spec keypoint order mismatch")
+        checkpoint_order = list(self.meta.get("mediapipe_landmarks", []))
+        if checkpoint_order and self.keypoint_order != checkpoint_order:
+            raise ValueError("feature_spec/checkpoint keypoint order mismatch")
         if len(self.keypoint_order) != 33:
             raise ValueError("feature_spec must contain 33 landmarks")
         if list(spec["label_order"]) != list(runtime.LABELS):
@@ -347,10 +348,12 @@ class Model(PTServingBaseService):
             }
 
         try:
-            response = runtime.build_response(
-                {label: probability for label, probability in zip(runtime.LABELS, data["probabilities"])}
-            )
-        except Exception as exc:  # noqa: BLE001
+            probabilities = {
+                label: probability
+                for label, probability in zip(runtime.LABELS, data["probabilities"])
+            }
+            response = runtime.build_response(probabilities)
+        except Exception:  # noqa: BLE001
             logger.info(
                 "posture_inference request_id=%s posture=%s confidence=%.6f latency_ms=%.3f error_code=%s",
                 request_id,
@@ -362,11 +365,6 @@ class Model(PTServingBaseService):
             return {
                 "error": {"code": "invalid_output", "message": "model output invalid", "request_id": request_id}
             }
-
-        # Model-side veto from the original contract; runtime keeps the raw
-        # argmax so the 300-frame parity test stays exact.
-        if response["confidence"] < MIN_MODEL_CONFIDENCE:
-            response["posture"] = "undetermined"
 
         logger.info(
             "posture_inference request_id=%s posture=%s confidence=%.6f latency_ms=%.3f error_code=%s",
