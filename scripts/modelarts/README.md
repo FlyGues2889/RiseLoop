@@ -11,6 +11,8 @@
 | `posture_runtime.py` | 部署副本：纯 Python 特征提取与响应组装，无 torch | 是 |
 | `label_policy.py` | 标注口径（预标注/合成数据）；引用 mock 阈值 | 否 |
 | `dataset_check.py` | jsonl 校验：契约、特征一致性、标签、禁止字段 | 否 |
+| `collect_frames.py` | 原始关键点 → 训练集：重算 6 特征、分配 `frame_id`、拒绝画面字段 | 否 |
+| `capture_webcam.py` | 摄像头采集：MediaPipe 33 点 → 仅关键点 jsonl，不写画面 | 否 |
 
 `posture_runtime.py` 是唯一允许的重复，因为 ModelArts 只能上传模型目录。
 `apps/cloud-api/tests/test_modelarts_contract_parity.py` 用 300 组随机关键点
@@ -25,6 +27,49 @@ python -m pytest -q
 
 `dataset_check.py` 退出码 0 才允许训练。它会拒绝：关键点数量/顺序不符、
 `features` 与关键点重算结果差 >1e-3、未知类别、`image`/`base64` 等画面字段。
+
+## 真实摄像头采集（路线 B）
+
+采集端只用 MediaPipe 导出关键点，不保存图像或视频。使用 CPython 3.11：
+
+```bash
+py -3.11 -m venv .venv-capture
+.venv-capture\Scripts\activate
+python -m pip install -r scripts/modelarts/requirements-capture.txt
+```
+
+先无摄像头自测：
+
+```bash
+python scripts/modelarts/capture_webcam.py --self-test \
+  --out data/posture/raw/s01__baseline__laptop-cam__office.jsonl \
+  --subject s01 --device laptop-cam --scene office --label baseline
+```
+
+正式采集一段：
+
+```bash
+python scripts/modelarts/capture_webcam.py \
+  --out data/posture/raw/s01__baseline__laptop-cam__office.jsonl \
+  --subject s01 --device laptop-cam --scene office --label baseline \
+  --duration 30 --interval 0.5
+```
+
+转换成训练集（可重复追加）：
+
+```bash
+python scripts/modelarts/collect_frames.py \
+  --input data/posture/raw/s01__baseline__laptop-cam__office.jsonl \
+  --out data/posture/frames_capture.jsonl --append
+python scripts/modelarts/dataset_check.py data/posture/frames_capture.jsonl
+```
+
+采集约束：
+
+- 一段只放一个类别，靠文件名和 `--label` 标注，不做逐帧点击。
+- `--self-test` 不需要摄像头，用来验证“采集 → collect → dataset_check”链路。
+- 原始文件只有 33 点；图片、视频、base64 不会被写出。
+- 训练时用 `--origin capture`；capture 帧必须 `label_source=human`，否则会被排除。
 
 ## 合并训练包的规则
 
@@ -142,8 +187,8 @@ python scripts/modelarts/evaluate_posture.py --artifacts scripts/modelarts/artif
 python -m pytest -q
 ```
 
-- 本分支：**131 passed，0 skipped**（Node 在 PATH）；上游基线 129，新增 2 个用例
-  （决策规则、生成器跨 `PYTHONHASHSEED` 复现）。
+- 本分支：**139 passed，0 skipped**（Node 在 PATH）；上游基线 129，新增 10 个用例
+  （决策规则、生成器跨 `PYTHONHASHSEED` 复现、采集脚本 8 项）。
 - 其余使用上游 `apps/cloud-api/tests/test_modelarts_contract_parity.py`
   的 11 个用例（含 300 组随机关键点 parity、dataset_check、label_policy）。
 - `dataset_check` 输出：`ok: true`，`frames: 1440`，`subjects: 12`，`errors: 0`。
