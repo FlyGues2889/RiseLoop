@@ -1,8 +1,9 @@
-# Webcam capture + collect/dataset_check in one CPython 3.11 venv.
+# Webcam capture + collect/dataset_check in one CPython 3.11 64-bit venv.
+# MediaPipe ships no 32-bit wheels; py -3.11 must report 64bit.
+# cv2 comes from mediapipe's opencv-contrib-python; do not add opencv-python.
 # Do not install into the ModelArts serving image.
 mediapipe>=0.10,<0.11
-opencv-python>=4.9,<5
-numpy>=1.26,<2
+numpy>=1.26
 pydantic>=2.6,<3
 pydantic-settings>=2.3,<3
 httpx>=0.27,<1

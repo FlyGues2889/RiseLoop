@@ -26,6 +26,8 @@ from __future__ import annotations
 
 import argparse
 import json
+import shutil
+import tempfile
 import time
 from datetime import datetime
 from pathlib import Path
@@ -198,6 +200,23 @@ def run_self_test(args: argparse.Namespace) -> int:
     return 0
 
 
+def ascii_model_path(path: Path) -> Path:
+    """MediaPipe's C++ loader cannot open non-ASCII paths on Windows."""
+
+    try:
+        str(path).encode("ascii")
+        return path
+    except UnicodeEncodeError:
+        pass
+
+    target = Path(tempfile.gettempdir()) / "riseloop-capture-models" / path.name
+    source_size = path.stat().st_size
+    if not target.is_file() or target.stat().st_size != source_size:
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(path, target)
+    return target
+
+
 def _load_landmarker(model_path: Path) -> tuple[Any, Any]:
     try:
         import mediapipe as mp
@@ -213,7 +232,7 @@ def _load_landmarker(model_path: Path) -> tuple[Any, Any]:
         raise SystemExit(f"模型文件不存在：{model_path}")
 
     options = vision.PoseLandmarkerOptions(
-        base_options=mp_python.BaseOptions(model_asset_path=str(model_path)),
+        base_options=mp_python.BaseOptions(model_asset_path=str(ascii_model_path(model_path))),
         running_mode=vision.RunningMode.VIDEO,
         num_poses=1,
         min_pose_detection_confidence=0.5,

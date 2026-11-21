@@ -21,7 +21,7 @@
 | `cargo check --lib --tests` | ✅ 通过 |
 | `cargo test` | ✅ 20 passed（含摄像头日志追加测试、动作会话 7 项） |
 
-> 2026-11-21 复跑 `python -m pytest -q`：139 passed，0 skipped（Node 在 PATH）；本表其它项未重跑。
+> 2026-11-21 复跑 `python -m pytest -q`：141 passed，0 skipped（Node 在 PATH）；本表其它项未重跑。
 
 ## 2. 云端与算法
 

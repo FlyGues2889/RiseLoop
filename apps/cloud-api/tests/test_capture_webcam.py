@@ -94,6 +94,25 @@ def test_self_test_to_collect_and_dataset_check(tmp_path):
     assert not {"image", "video", "base64", "pixel"} & set(first)
 
 
+def test_ascii_model_path_keeps_ascii_paths(tmp_path):
+    source = tmp_path / "pose.task"
+    source.write_bytes(b"abc")
+    assert capture_webcam.ascii_model_path(source) == source
+
+
+def test_ascii_model_path_copies_non_ascii_paths(tmp_path, monkeypatch):
+    monkeypatch.setattr(capture_webcam.tempfile, "gettempdir", lambda: str(tmp_path / "tmp"))
+    source = tmp_path / "模型" / "pose.task"
+    source.parent.mkdir()
+    source.write_bytes(b"landmarker")
+
+    target = capture_webcam.ascii_model_path(source)
+
+    assert str(target).isascii()
+    assert target.name == "pose.task"
+    assert target.read_bytes() == b"landmarker"
+
+
 def test_make_record_has_no_media_fields():
     record = capture_webcam.make_record(
         capture_webcam.self_test_pose("baseline"),

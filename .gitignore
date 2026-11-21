@@ -4,6 +4,7 @@ target/
 __pycache__/
 *.pyc
 .venv/
+.venv-capture/
 .env
 *.log
 .DS_Store

@@ -30,38 +30,47 @@ python -m pytest -q
 
 ## 真实摄像头采集（路线 B）
 
-采集端只用 MediaPipe 导出关键点，不保存图像或视频。使用 CPython 3.11：
+采集端只用 MediaPipe 导出关键点，不保存图像或视频。需要 **CPython 3.11 64 位**：
+MediaPipe 没有 32 位轮子，32 位解释器会报 `No matching distribution`。
 
-```bash
+```powershell
+# 32 位会失败，先确认输出 64bit
+py -3.11 -c "import platform; print(platform.architecture()[0])"
+
 py -3.11 -m venv .venv-capture
-.venv-capture\Scripts\activate
-python -m pip install -r scripts/modelarts/requirements-capture.txt
+.venv-capture\Scripts\python.exe -m pip install -i https://pypi.tuna.tsinghua.edu.cn/simple `
+  -r scripts/modelarts/requirements-capture.txt
 ```
+
+国内直连 PyPI 下载 mediapipe 常超时，`-i` 换成清华源即可；阿里、中科大同样有效。
+
+`cv2` 由 mediapipe 自带的 `opencv-contrib-python` 提供，不要再单独装
+`opencv-python`，否则两份 `cv2` 会互相覆盖。
 
 先无摄像头自测：
 
-```bash
-python scripts/modelarts/capture_webcam.py --self-test \
-  --out data/posture/raw/s01__baseline__laptop-cam__office.jsonl \
+```powershell
+.venv-capture\Scripts\python.exe scripts/modelarts/capture_webcam.py --self-test `
+  --out data/posture/raw/s01__baseline__laptop-cam__office.jsonl `
   --subject s01 --device laptop-cam --scene office --label baseline
 ```
 
 正式采集一段：
 
-```bash
-python scripts/modelarts/capture_webcam.py \
-  --out data/posture/raw/s01__baseline__laptop-cam__office.jsonl \
-  --subject s01 --device laptop-cam --scene office --label baseline \
+```powershell
+.venv-capture\Scripts\python.exe scripts/modelarts/capture_webcam.py `
+  --out data/posture/raw/s01__baseline__laptop-cam__office.jsonl `
+  --subject s01 --device laptop-cam --scene office --label baseline `
   --duration 30 --interval 0.5
 ```
 
 转换成训练集（可重复追加）：
 
-```bash
-python scripts/modelarts/collect_frames.py \
-  --input data/posture/raw/s01__baseline__laptop-cam__office.jsonl \
+```powershell
+.venv-capture\Scripts\python.exe scripts/modelarts/collect_frames.py `
+  --input data/posture/raw/s01__baseline__laptop-cam__office.jsonl `
   --out data/posture/frames_capture.jsonl --append
-python scripts/modelarts/dataset_check.py data/posture/frames_capture.jsonl
+.venv-capture\Scripts\python.exe scripts/modelarts/dataset_check.py data/posture/frames_capture.jsonl
 ```
 
 采集约束：
@@ -70,6 +79,9 @@ python scripts/modelarts/dataset_check.py data/posture/frames_capture.jsonl
 - `--self-test` 不需要摄像头，用来验证“采集 → collect → dataset_check”链路。
 - 原始文件只有 33 点；图片、视频、base64 不会被写出。
 - 训练时用 `--origin capture`；capture 帧必须 `label_source=human`，否则会被排除。
+- 模型路径含中文时，脚本先复制到 `%TEMP%\riseloop-capture-models\`；
+  MediaPipe 的 C++ 加载器读不了非 ASCII 路径。
+- `written: 0` 且 `no_pose > 0` 表示镜头里没人或光线不足，不是脚本故障。
 
 ## 合并训练包的规则
 
@@ -187,8 +199,8 @@ python scripts/modelarts/evaluate_posture.py --artifacts scripts/modelarts/artif
 python -m pytest -q
 ```
 
-- 本分支：**139 passed，0 skipped**（Node 在 PATH）；上游基线 129，新增 10 个用例
-  （决策规则、生成器跨 `PYTHONHASHSEED` 复现、采集脚本 8 项）。
+- 本分支：**141 passed，0 skipped**（Node 在 PATH）；上游基线 129，新增 12 个用例
+  （决策规则、生成器跨 `PYTHONHASHSEED` 复现、采集脚本 10 项）。
 - 其余使用上游 `apps/cloud-api/tests/test_modelarts_contract_parity.py`
   的 11 个用例（含 300 组随机关键点 parity、dataset_check、label_policy）。
 - `dataset_check` 输出：`ok: true`，`frames: 1440`，`subjects: 12`，`errors: 0`。
