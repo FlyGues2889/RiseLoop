@@ -87,6 +87,8 @@ export const state = reactive({
   pendingActions: [],
   postureOpen: false,
   logOpen: false,
+  experimentalOpen: false,
+  trainingOpen: false,
   postureRisk: null,
   postureReport: null,
   postureEvents: loadPostureEvents(),
@@ -586,21 +588,6 @@ export function recordPostureRisk(result, postureClass, confidence = null) {
   ].slice(0, 20);
   state.postureEvents = events;
   savePostureEvents(events);
-}
-
-export async function evaluatePostureRisk(payload) {
-  if (state.mode === MODES.demo.id) return null;
-  try {
-    const result = await activeApi.postureRisk(payload);
-    recordPostureRisk(result, payload.posture_class, payload.confidence);
-    return result;
-  } catch (error) {
-    if (error instanceof ApiError && error.isSafetyShortCircuit) {
-      handleError(error);
-      return null;
-    }
-    return null;
-  }
 }
 
 export async function evaluatePostureInfer(payload) {

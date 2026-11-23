@@ -26,7 +26,7 @@ export const monitor = reactive({
   samples: 0,
   gaps: 0,
   lastSampleAt: null,
-  window: null, // { at, samples, dominant, abnormalRatio, duration }
+  window: null, // { at, samples, posture, duration }；posture 只来自云端结果
   latest: null, // { at, posture, confidence, risk, source }
 });
 
@@ -37,6 +37,9 @@ let windowStart = 0;
 let windowSamples = [];
 let bestSample = null;
 let lastSkip = "";
+// 姿态类别只认云端结果；这里记录云端最近一次判定，用来累计异常时长。
+let confirmedPosture = null;
+let confirmedSince = 0;
 
 function loadPrefs() {
   try {
@@ -121,21 +124,21 @@ async function ensureLandmarker() {
   return landmarker;
 }
 
-function localPosture(landmarks) {
+// 端侧只量肩线角度和可见度，不判断姿态类别；类别由云端模型给。
+function measure(landmarks) {
   const left = landmarks[11];
   const right = landmarks[12];
   const visibility = Math.min(left?.visibility ?? 0, right?.visibility ?? 0);
-  if (!left || !right || visibility < 0.5) {
-    return { posture: "undetermined", deviation: 0, confidence: visibility };
-  }
+  if (!left || !right) return { tilt: 0, visibility };
   let degrees = (Math.atan2(right.y - left.y, right.x - left.x) * 180) / Math.PI;
   if (degrees > 90) degrees -= 180;
   if (degrees < -90) degrees += 180;
-  return {
-    posture: Math.abs(degrees) > 8 ? "lateral_tilt" : "baseline",
-    deviation: Math.abs(degrees),
-    confidence: visibility,
-  };
+  return { tilt: Math.round(Math.abs(degrees) * 10) / 10, visibility };
+}
+
+function confirmedDuration(now) {
+  if (!confirmedPosture || confirmedPosture === "baseline") return 0;
+  return Math.round(((now - confirmedSince) / 60000) * 10) / 10;
 }
 
 function resetWindow(now) {
@@ -151,10 +154,10 @@ function ingest(landmarks, now) {
   const keypoints = toContractKeypoints(landmarks);
   if (!keypoints) return;
 
-  const local = localPosture(landmarks);
+  const local = measure(landmarks);
   monitor.samples += 1;
   windowSamples.push({ ...local, at: now });
-  if (!bestSample || local.confidence > bestSample.confidence) {
+  if (!bestSample || local.visibility > bestSample.visibility) {
     bestSample = { ...local, keypoints };
   }
 
@@ -164,27 +167,11 @@ function ingest(landmarks, now) {
 async function flushWindow() {
   const collected = windowSamples.slice();
   const best = bestSample;
-  const startedAt = windowStart;
   resetWindow(performance.now());
   if (collected.length < 2 || !best) return;
 
-  const determined = collected.filter((item) => item.posture !== "undetermined");
-  const pool = determined.length ? determined : collected;
-  const counts = {};
-  for (const item of pool) counts[item.posture] = (counts[item.posture] ?? 0) + 1;
-  const dominant = Object.keys(counts).sort((a, b) => counts[b] - counts[a])[0];
-  const abnormal = determined.filter((item) => item.posture !== "baseline").length;
-  const ratio = determined.length ? abnormal / determined.length : 0;
-  const minutes = Math.max(0, (performance.now() - startedAt) / 60000);
-  const duration = Math.round(ratio * minutes * 10) / 10;
-
-  monitor.window = {
-    at: new Date().toISOString(),
-    samples: collected.length,
-    dominant,
-    abnormalRatio: Math.round(ratio * 100) / 100,
-    duration,
-  };
+  const now = performance.now();
+  const duration = confirmedDuration(now);
 
   const sittingMinutes = Math.floor((state.timer?.sitting_seconds ?? 0) / 60);
   try {
@@ -202,16 +189,38 @@ async function flushWindow() {
     });
 
     if (result?.localMode) {
-      monitor.latest = {
+      // 本地模式不连云端，也就没有姿态类别可显示。
+      monitor.window = {
         at: new Date().toISOString(),
-        posture: dominant,
-        confidence: best.confidence,
-        risk: null,
-        source: "local_mode",
+        samples: collected.length,
+        posture: null,
+        duration: 0,
       };
+      monitor.latest = null;
+      monitor.error = "本地模式不连接云端，姿态由云端判定。";
       return;
     }
-    if (!result) return;
+    if (!result) {
+      monitor.window = {
+        at: new Date().toISOString(),
+        samples: collected.length,
+        posture: null,
+        duration: 0,
+      };
+      monitor.latest = null;
+      return;
+    }
+
+    if (result.posture !== confirmedPosture) {
+      confirmedPosture = result.posture;
+      confirmedSince = now;
+    }
+    monitor.window = {
+      at: new Date().toISOString(),
+      samples: collected.length,
+      posture: result.posture,
+      duration: duration,
+    };
     monitor.latest = {
       at: new Date().toISOString(),
       posture: result.posture,
@@ -221,6 +230,13 @@ async function flushWindow() {
     };
     monitor.error = "";
   } catch (err) {
+    monitor.window = {
+      at: new Date().toISOString(),
+      samples: collected.length,
+      posture: null,
+      duration: 0,
+    };
+    monitor.latest = null;
     // 失败原因要照实说：网络断了和被云端拦下不是一回事。
     monitor.error = describeError(err).hint ?? "这一分钟没能拿到云端结果，稍后自动重试。";
   }
@@ -388,6 +404,9 @@ async function release() {
     timer = null;
   }
   sampling = false;
+  resetWindow(performance.now());
+  confirmedPosture = null;
+  confirmedSince = 0;
 }
 
 export async function pause() {

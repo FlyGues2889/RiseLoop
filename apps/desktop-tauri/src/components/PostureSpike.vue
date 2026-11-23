@@ -19,21 +19,20 @@ const error = ref("");
 const status = ref("摄像头未开启");
 const fps = ref(0);
 const pointCount = ref(0);
-const posture = ref("undetermined");
+const posture = ref(null);
 const tilt = ref(0);
 const confidence = ref(0);
 const risk = ref(null);
 const inferBusy = ref(false);
-// 推理来源：huawei(云端) / mock(演示模型，未接真实云端) / local_fallback(端侧规则) / local_mode(本地演示)
-const source = ref("local_fallback");
+// 推理来源：huawei(云端模型) / mock(规则占位，未接真实 endpoint) / unavailable(未连接云端)
+const source = ref("unavailable");
 const latency = ref(0);
 const guidanceText = ref("");
 const cloudError = ref("");
-const localPosture = ref("undetermined");
-const localConfidence = ref(0);
 
 const POSTURE_LABELS = {
   baseline: "基准姿态",
+  forward_head: "头前伸",
   lateral_tilt: "明显侧倾",
   undetermined: "未能识别",
 };
@@ -55,8 +54,7 @@ const PLAN_LABELS = {
 const SOURCE_LABELS = {
   huawei: "华为云识别",
   mock: "演示模型",
-  local_fallback: "端侧模式",
-  local_mode: "本地演示",
+  unavailable: "未连接云端",
 };
 
 const POSTURE_CONNECTIONS = [
@@ -67,22 +65,18 @@ const POSTURE_CONNECTIONS = [
   [27, 31], [24, 26], [26, 28], [28, 30], [30, 32], [28, 32],
 ];
 
-const postureLabel = computed(() => POSTURE_LABELS[posture.value] || "未能识别");
+const postureLabel = computed(() => POSTURE_LABELS[posture.value] || "未连接云端");
 const postureTone = computed(() => {
   if (posture.value === "baseline") return "ok";
-  if (posture.value === "lateral_tilt") return "warn";
+  if (posture.value === "lateral_tilt" || posture.value === "forward_head") return "warn";
   return "muted";
 });
-const sourceLabel = computed(() => SOURCE_LABELS[source.value] || "端侧模式");
+const sourceLabel = computed(() => SOURCE_LABELS[source.value] || "未连接云端");
 const sourceTone = computed(() => {
   if (source.value === "huawei") return "cloud";
   if (source.value === "mock") return "warn";
   return "muted";
 });
-const isCloudResult = computed(
-  () => source.value === "huawei" || source.value === "mock"
-);
-
 const riskLevelLabel = computed(() => RISK_LABELS[risk.value?.risk_level] || "评估中");
 const riskPlanLabel = computed(() => PLAN_LABELS[risk.value?.recommended_plan] || "—");
 
@@ -94,7 +88,7 @@ let frames = 0;
 let fpsStartedAt = performance.now();
 let lastInferAt = 0;
 let postureSince = performance.now();
-let lastPostureClass = "undetermined";
+let lastPostureClass = null;
 let latestLandmarks = null;
 
 function resizeCanvas() {
@@ -176,29 +170,17 @@ function applyPosture(next, conf = 0, src = source.value) {
 function updateMetrics(landmarks) {
   if (!landmarks || landmarks.length === 0) {
     pointCount.value = 0;
-    localPosture.value = "undetermined";
-    localConfidence.value = 0;
-    if (!isCloudResult.value) applyPosture("undetermined", 0, source.value);
     return;
   }
   pointCount.value = landmarks.length;
   const left = landmarks[11];
   const right = landmarks[12];
-  const minVisibility = Math.min(left?.visibility ?? 0, right?.visibility ?? 0);
-  if (!left || !right || minVisibility < 0.5) {
-    localPosture.value = "undetermined";
-    localConfidence.value = minVisibility;
-    if (!isCloudResult.value) applyPosture("undetermined", minVisibility, source.value);
-    return;
-  }
+  if (!left || !right) return;
   let degrees = (Math.atan2(right.y - left.y, right.x - left.x) * 180) / Math.PI;
   if (degrees > 90) degrees -= 180;
   if (degrees < -90) degrees += 180;
+  // 端侧只量角度和可见度，不下姿态结论。
   tilt.value = Math.round(degrees * 10) / 10;
-  localPosture.value = Math.abs(degrees) > 8 ? "lateral_tilt" : "baseline";
-  localConfidence.value = minVisibility;
-  // 云端结果优先；未拿到云端结果时才用端侧规则
-  if (!isCloudResult.value) applyPosture(localPosture.value, minVisibility, source.value);
 }
 
 const REASON_TEXT = {
@@ -212,11 +194,11 @@ function describeInferError(err) {
   if (err?.status === 503) {
     const reason = err.payload?.detail?.reason ?? "";
     const detail = REASON_TEXT[reason] ? `（${REASON_TEXT[reason]}）` : "";
-    return `云端暂时不可用${detail}，先用端侧模式`;
+    return `云端暂时不可用${detail}，暂不判定姿态`;
   }
-  if (err?.status === 0) return "连不上云端，先用端侧模式";
-  if (err?.status === 422) return "关键点数据有误，先用端侧模式";
-  return "云端识别没成功，先用端侧模式";
+  if (err?.status === 0) return "连不上云端，暂不判定姿态";
+  if (err?.status === 422) return "关键点数据有误，暂不判定姿态";
+  return "云端识别没成功，暂不判定姿态";
 }
 
 async function maybeInfer() {
@@ -248,11 +230,10 @@ async function maybeInfer() {
     });
 
     if (result?.localMode) {
-      // 本地演示模式：不发云端请求
-      source.value = "local_mode";
+      // 本地模式不连云端，因此没有姿态类别可显示
       cloudError.value = "";
       risk.value = null;
-      applyPosture(localPosture.value, localConfidence.value, "local_mode");
+      applyPosture(null, 0, "unavailable");
       return;
     }
     if (!result) {
@@ -269,7 +250,7 @@ async function maybeInfer() {
   } catch (err) {
     cloudError.value = describeInferError(err);
     risk.value = null;
-    applyPosture(localPosture.value, localConfidence.value, "local_fallback");
+    applyPosture(null, 0, "unavailable");
   } finally {
     inferBusy.value = false;
   }
@@ -369,15 +350,13 @@ async function start() {
     fpsStartedAt = performance.now();
     lastInferAt = 0;
     postureSince = performance.now();
-    lastPostureClass = "undetermined";
+    lastPostureClass = null;
     confidence.value = 0;
     risk.value = null;
     latency.value = 0;
     guidanceText.value = "";
     cloudError.value = "";
-    source.value = "local_fallback";
-    localPosture.value = "undetermined";
-    localConfidence.value = 0;
+    source.value = "unavailable";
     status.value = "画面不上传，每 2 秒上传一次关键点";
     tick();
   } catch (err) {
@@ -407,8 +386,8 @@ function stop() {
   if (canvas) canvas.getContext("2d")?.clearRect(0, 0, canvas.width, canvas.height);
   fps.value = 0;
   pointCount.value = 0;
-  posture.value = "undetermined";
-  lastPostureClass = "undetermined";
+  posture.value = null;
+  lastPostureClass = null;
   confidence.value = 0;
   tilt.value = 0;
   risk.value = null;
@@ -418,7 +397,7 @@ function stop() {
   latency.value = 0;
   guidanceText.value = "";
   cloudError.value = "";
-  source.value = "local_fallback";
+  source.value = "unavailable";
   postureSince = performance.now();
   if (!error.value) status.value = "摄像头已关闭";
 }
@@ -522,7 +501,7 @@ onBeforeUnmount(() => {
           </m3e-button>
         </template>
         <p v-else class="risk-line muted">
-          {{ inferBusy ? "正在识别…" : "保持姿势稳定就会开始评估。云端不可用时，自动切到端侧模式。" }}
+          {{ inferBusy ? "正在识别…" : "保持姿势稳定就会开始评估。云端不可用时不做姿态判定。" }}
         </p>
         <p v-if="cloudError" class="risk-line warn-line">{{ cloudError }}</p>
       </section>
@@ -534,7 +513,7 @@ onBeforeUnmount(() => {
           {{ loading ? "加载中…" : "开启摄像头" }}
         </m3e-button>
         <m3e-button v-else variant="outlined" size="small" @click="stop">关闭摄像头</m3e-button>
-        <span class="hint">关键点在本地提取，分类和风险由云端给出。演示环境还没接入云端真实模型，失败时会切到端侧模式。</span>
+        <span class="hint">关键点在本地提取，姿态类别与风险由云端模型给出；端侧不做分类。</span>
       </footer>
     </section>
   </div>
