@@ -1,5 +1,5 @@
 <p align="center">
-  <img width="100" height="100" alt="appIcon" src="https://github.com/user-attachments/assets/0e1c0e36-9ebb-4f14-ada9-4752b2f02970" />
+  <img width="100" height="100" alt="appIcon" src="./apps/desktop-tauri/src-tauri/icons/appIcon.png" />
 </p>
 
 <h1 align="center">Rise Loop</h1>
@@ -52,8 +52,8 @@ S0 急性缓解 → S1 激活 → S2 强化 → S3 维持
 
 - **状态机收口**：迁移逻辑为纯函数，无网络、无数据库；端侧与 API 层均不实现迁移，保证可测试性与可审计性。
 - **云端智能**：ModelArts 在线服务做姿态四分类（训练包 v1、特征契约 v2 与离线报告已完成，真实 endpoint 待开通；当前 mock 只作联调）。模型只吃 5 个派生特征，只要求头部与双肩入画，不要求全身；状态机与风险融合留在纯函数里；知识库问答带引用，无命中不编造。
-- **周度复盘**：完成率、疼痛趋势、迁移次数、阻碍分布与规则化建议；云端由 API 聚合，本地模式由端侧按同一口径计算。
-- **双模式运行**：本地模式由 `packages/local-engine` 纯端侧运行并持久化到 localStorage，无云资源也能完整跑通。
+- **周度复盘**：完成率、疼痛趋势、迁移次数、阻碍分布与规则化建议；云端由 API 聚合，端侧只负责展示。
+- **云端运行**：Tauri 通过公网 API 调用云端，状态迁移、周度聚合与安全判定留在服务端；客户端不执行迁移。
 - **PC 瘦客户端**：Tauri 2 + Vue 3，调用系统原生通知提醒用户。
 - **系统亮暗色**：跟随操作系统亮/暗色，首屏预应用主题，避免暗色系统下的白闪。
 
@@ -96,10 +96,10 @@ pip install -e packages/intervention-engine -e apps/cloud-api
 ### 本地开发
 
 ```bash
-# 云端模式：自动起 mock 后端并拉起客户端
+# 一键演示：启动 mock 后端并拉起客户端
 pnpm demo
 
-# 仅客户端（本地模式）：登录页可直接进入「本地模式」，无需任何后端
+# 只启动客户端（先确保后端在 8000）
 pnpm tauri dev
 ```
 
@@ -171,8 +171,7 @@ RiseLoop/
 │   ├── cloud-api/          # FastAPI 网关（鉴权、安全中间件、迁移编排）
 │   └── desktop-tauri/      # Tauri 2 + Vue 3 客户端
 ├── packages/
-│   ├── intervention-engine/ # 状态机纯函数（迁移逻辑核心）
-│   └── local-engine/        # 本地模式引擎（端侧运行 + localStorage）
+│   └── intervention-engine/ # 状态机纯函数（迁移逻辑核心）
 ├── services/
 │   ├── mcp-servers/         # 两个 MCP Server（合计 3 个工具）
 │   ├── skills/              # Skill 能力定义（平台无关）
@@ -191,12 +190,12 @@ RiseLoop/
 | 文档 | 内容 |
 | :--- | :--- |
 | [PRD.md](PRD.md) | 需求唯一来源：四状态机、迁移规则、验收标准 |
-| [docs/architecture/huawei-cloud-integration.md](docs/architecture/huawei-cloud-integration.md) | 华为云适配层、双模式设计 |
+| [docs/architecture/huawei-cloud-integration.md](docs/architecture/huawei-cloud-integration.md) | 华为云适配层与 mock/huawei 切换 |
 | [docs/architecture/evidence-map.md](docs/architecture/evidence-map.md) | 参数/BCT 与文献证据的映射，含支撑强度与边界 |
 | [docs/architecture/posture-pipeline.md](docs/architecture/posture-pipeline.md) | 端云姿态感知：11.10 路线决策、v1 模型（特征契约 v2）与指标、数据契约、隐私与降级 |
 | [docs/architecture/cumulative-load.md](docs/architecture/cumulative-load.md) | 久坐累积负荷 BRLI：公式、权重、风险分级与实现状态 |
 | [docs/api/README.md](docs/api/README.md) | 接口契约与调用示例 |
-| [docs/demo/demo-mode.md](docs/demo/demo-mode.md) | 本地模式说明：入口、能力边界、数据存储 |
+| [docs/demo/demo-mode.md](docs/demo/demo-mode.md) | 演示流程：云端链路、现场步骤与录屏兜底 |
 
 ---
 

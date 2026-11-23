@@ -221,7 +221,7 @@ python scripts/modelarts/evaluate_posture.py --artifacts scripts/modelarts/artif
 python -m pytest -q
 ```
 
-- 本轮全绿：**150 passed**。
+- 本轮全绿：**153 passed**。
 - 覆盖决策规则、生成器跨 `PYTHONHASHSEED` 复现、采集链路、`framing` 校验，
   以及“只有头肩可见仍能分类”的回归用例。
 

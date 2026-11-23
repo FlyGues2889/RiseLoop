@@ -8,7 +8,7 @@
 |---|---|
 | 目标 | 11.13 跑通“摄像头 → 本地关键点 → 云端推理 → 客户端提示”的最小链路；姿态模型 v1（特征契约 v2）已完成训练与离线评估（11.23），真实 endpoint 待开通 |
 | 输入 | 摄像头画面仅在本地处理；上传归一化骨骼关键点，不上传原始图像/视频；只要求头部与双肩清晰入画，不要求全身 |
-| 云端 | ModelArts 在线推理（mock / huawei 双模式）：A 版 5 个派生特征 MLP，四分类 + 置信度 <0.5 判 `undetermined` |
+| 云端 | ModelArts 在线推理（mock / huawei 两种云端配置）：A 版 5 个派生特征 MLP，四分类 + 置信度 <0.5 判 `undetermined` |
 | 客户端 | Tauri 2 + Vue 3；叠加姿态引导框、风险解释与回退提示 |
 | 边界 | 姿态识别只用于行为指导，不做医疗诊断；安全红线仍由 `safety-check` 中间件前置 |
 
@@ -113,7 +113,7 @@ Tauri WebView
 
 降级：
 
-- 摄像头关闭/无权限 → 回退到 Rust 久坐计时 + `local-engine` 本地干预。
+- 摄像头关闭/无权限 → 回退到 Rust 久坐计时，不给出姿态结论。
 - 网络断开/ModelArts 超时 → 明确提示“云端不可用，已回退”，不伪造云端结果。
 - 关键点置信度过低 → 返回 `undetermined`，不强行给姿态结论。
 
@@ -321,7 +321,7 @@ Tauri WebView
 | 项 | 状态 | 证据 |
 |---|---|---|
 | `POST /posture/infer` | 已实现 | 请求 33 点关键点 + 上下文；响应含姿态、置信度、来源、耗时、引导文案与 `risk` |
-| ModelArts 适配层 | 已实现，mock/huawei 双模式 | `apps/cloud-api/app/cloud/modelarts.py`；注册进 `CloudRegistry`，`/health/deps` 可见 |
+| ModelArts 适配层 | 已实现，mock/huawei 两种云端配置 | `apps/cloud-api/app/cloud/modelarts.py`；注册进 `CloudRegistry`，`/health/deps` 可见 |
 | 关键点契约校验 | 已实现 | 数量或顺序不符直接 422；端云两份清单有跨语言一致性测试 |
 | 云端不可用 | 显式降级 | ModelArts 失败返回 503 `modelarts_unavailable`，端侧切“端侧兜底”并提示，不伪造云端结论 |
 | 姿态摘要落库（RDS） | 已实现 | `posture_summaries` 表：只存类别/置信度/偏差/风险/BRLI/时长/来源，**不存关键点**；同类默认 60 秒一条，类别变化立即写 |
@@ -421,6 +421,6 @@ Tauri WebView
 | 决策规则 | `argmax`，`confidence < 0.5` 输出 `undetermined`；训练、评估、serving 共用同一函数 |
 | 离线复跑 | `generate_synthetic_frames.py` → `dataset_check.py` → `train_posture.py` → `evaluate_posture.py`，命令见 `scripts/modelarts/README.md` |
 | 本机冒烟 | `customize_service.Model` 对 `s01-000000` 返回 `forward_head` / `0.9862`，与样本标签一致；日志不含关键点数组 |
-| 测试 | `python -m pytest -q`：150 passed（含决策规则、生成器跨 hash seed 复现、采集链路、头肩受限视野回归） |
+| 测试 | `python -m pytest -q`：153 passed（含决策规则、生成器跨 hash seed 复现、采集链路、头肩受限视野回归） |
 | 未完成 | 真实 endpoint 未创建；未上传模型包；未用真实摄像头数据复评 |
 

@@ -1,14 +1,13 @@
 <script setup>
 import { computed, ref } from "vue";
 import WindowControls from "./WindowControls.vue";
-import { clearAllData, logout, modeBadge, state } from "../state/session.js";
+import { clearAllData, logout, state } from "../state/session.js";
 import { monitor, ui as cameraUi } from "../state/postureMonitor.js";
 
 const isSignedIn = computed(() => state.phase !== "auth");
 
 const profileLabel = computed(() => {
   if (!isSignedIn.value) return "未登录";
-  if (state.mode === "demo") return "本地账号";
   return state.email || "已登录";
 });
 
@@ -46,7 +45,6 @@ async function confirmClear() {
       <div class="name" data-tauri-drag-region>
         Rise Loop
       </div>
-      <span v-if="modeBadge" class="mode">{{ modeBadge }}</span>
     </div>
 
     <div class="side">
@@ -155,15 +153,6 @@ async function confirmClear() {
   font-size: 1.2rem;
   font-weight: 700;
   letter-spacing: 0.01em;
-  white-space: nowrap;
-}
-
-.mode {
-  padding: 0.2rem 0.5rem;
-  border-radius: 62.438rem;
-  background: var(--md-sys-color-secondary-container);
-  color: var(--md-sys-color-on-secondary-container);
-  font-size: 0.688rem;
   white-space: nowrap;
 }
 

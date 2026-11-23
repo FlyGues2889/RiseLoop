@@ -104,7 +104,6 @@ export const state = reactive({
 });
 
 export const sittingMinutes = computed(() => Math.floor(state.timer.sitting_seconds / 60));
-export const modeBadge = computed(() => MODES[state.mode]?.badge ?? "");
 export const aiEnabled = computed(() => MODES[state.mode]?.aiEnabled ?? true);
 
 function pushLog(message) {

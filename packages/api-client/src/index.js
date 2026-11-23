@@ -83,12 +83,12 @@ const CODE_VIEWS = {
     hint: "不影响评估、计时、干预、反馈这条主线。",
   },
   local_mode_unavailable: {
-    title: "本地模式没有这项能力",
-    hint: "需要这项能力时切回云端模式。",
+    title: "这项能力暂未开放",
+    hint: "当前版本没有提供这项能力。",
   },
   modelarts_unavailable: {
     title: "云端姿态模型暂时不可用",
-    hint: "已退回端侧模式，稍后会自动重试。",
+    hint: "姿态判定暂停，稍后会自动重试。",
   },
   validation_error: {
     title: "提交的内容不完整",
@@ -145,7 +145,7 @@ export function describeError(error) {
   if (error.isNetworkError) {
     return {
       title: "连不上云服务",
-      hint: "检查网络或服务地址后重试，也可以先切到本地模式。",
+      hint: "检查网络或服务地址后重试。",
       message: null,
       detail: `${error.method} ${error.url}`,
     };

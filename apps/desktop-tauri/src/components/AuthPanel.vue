@@ -2,7 +2,7 @@
 import ErrorBanner from "./ErrorBanner.vue";
 import LoadingOverlay from "./LoadingOverlay.vue";
 import MedicalNote from "./MedicalNote.vue";
-import { enterDemo, login, register, state } from "../state/session.js";
+import { login, register, state } from "../state/session.js";
 </script>
 
 <template>
@@ -10,7 +10,7 @@ import { enterDemo, login, register, state } from "../state/session.js";
     <div class="surface-body">
       <header class="page-head">
         <h1>登录 Rise Loop</h1>
-        <p class="lead">用邮箱登录，记录会同步到云端；不联网时也可以直接进入本地模式，数据只留在这台电脑上。</p>
+        <p class="lead">用邮箱登录，记录同步到云端。</p>
       </header>
 
       <form @submit.prevent="login">
@@ -36,13 +36,6 @@ import { enterDemo, login, register, state } from "../state/session.js";
           创建账号
         </m3e-button>
       </form>
-
-      <div class="alt">
-        <span>或者进入</span>
-        <m3e-button variant="text" size="extra-small" :disabled.prop="state.busy" @click="enterDemo">
-          本地模式
-        </m3e-button>
-      </div>
 
       <MedicalNote />
     </div>
@@ -71,16 +64,5 @@ import { enterDemo, login, register, state } from "../state/session.js";
   display: block;
   width: 100%;
   margin: 0.5rem 0 0;
-}
-
-.alt {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.375rem;
-  margin-top: 1.125rem;
-  padding-top: 0.875rem;
-  color: var(--md-sys-color-secondary);
-  font-size: 0.813rem;
 }
 </style>

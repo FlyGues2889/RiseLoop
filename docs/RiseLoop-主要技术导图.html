@@ -6,26 +6,26 @@
 <title>Rise Loop 主要技术</title>
 <style>
   :root {
-    --bg: #f6f4f0;
-    --panel: #ffffff;
-    --ink: #191817;
-    --muted: #6d6862;
-    --line: #d8d2c8;
-    --arrow: #9a938a;
-    --accent: #2f5fd0;
-    --engine: #2f6f4e;
-    --danger: #b3261e;
+    --bg: #fbfdf9;
+    --panel: #eff6f1;
+    --ink: #191c1a;
+    --muted: #404944;
+    --line: #bfc9c2;
+    --arrow: #707973;
+    --accent: #006c4d;
+    --engine: #3e6374;
+    --danger: #ba1a1a;
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #131211;
-      --panel: #1c1b1a;
-      --ink: #f1eeea;
-      --muted: #a09a92;
-      --line: #3a3733;
-      --arrow: #7d776f;
-      --accent: #8fb0ff;
-      --engine: #86c7a6;
+      --bg: #191c1a;
+      --panel: #1d2521;
+      --ink: #e1e3df;
+      --muted: #bfc9c2;
+      --line: #404944;
+      --arrow: #8a938d;
+      --accent: #6bdbad;
+      --engine: #a5ccdf;
       --danger: #ffb4ab;
     }
   }
@@ -127,7 +127,7 @@
     <rect x="100" y="636" width="500" height="84" rx="14" />
     <text class="h" x="126" y="670">执行</text>
     <text class="p" x="126" y="693">端侧倒计时 + 系统原生通知</text>
-    <text class="d" x="126" y="709">画面不出本机，只上传 33 个关键点和 5 个特征</text>
+    <text class="d" x="126" y="709">画面不出本机，只上传 33 个关键点</text>
   </g>
 
   <!-- 07 反馈 -->
@@ -167,7 +167,7 @@
   <text class="row-k" x="700" y="178">界面</text>
   <text class="row-v" x="780" y="178">Vue 3，Composition API</text>
   <text class="row-k" x="700" y="205">原生</text>
-  <text class="row-v" x="780" y="205">Tauri 2 + Rust，管计时、托盘和通知</text>
+  <text class="row-v" x="780" y="205">Tauri 2 + Rust，管计时、托盘、通知和训练采集</text>
   <text class="row-k" x="700" y="232">契约</text>
   <text class="row-v" x="780" y="232">OpenAPI 生成 api-client 类型</text>
   <text class="row-k" x="700" y="259">服务</text>
@@ -175,7 +175,7 @@
   <text class="row-k" x="700" y="286">决策</text>
   <text class="row-v" x="780" y="286">intervention-engine，纯函数</text>
   <text class="row-k" x="700" y="313">云适配</text>
-  <text class="row-v" x="780" y="313">app/cloud，mock 和 huawei 双模式</text>
+  <text class="row-v" x="780" y="313">app/cloud，mock / huawei 适配</text>
 
   <!-- 右侧：姿态旁路 -->
   <g class="box">
@@ -183,13 +183,13 @@
     <text class="ct" x="700" y="376">姿态旁路</text>
   </g>
   <text class="chain" x="700" y="410">摄像头 → MediaPipe Pose 33 点</text>
-  <text class="chain" x="700" y="432">→ 5 个派生特征 → MLP v1 四分类</text>
+  <text class="chain" x="700" y="432">→ 5 个派生特征 → 云端 MLP v1 四分类</text>
   <circle cx="706" cy="462" r="2.2" fill="var(--arrow)" />
-  <text class="b" x="718" y="466">头肩入画即可，画面不出本机</text>
+  <text class="b" x="718" y="466">头肩入画即可；端侧只量角，不做分类</text>
   <circle cx="706" cy="486" r="2.2" fill="var(--arrow)" />
-  <text class="b" x="718" y="490">置信度 &lt; 0.5 判 undetermined；endpoint 待开通</text>
+  <text class="b" x="718" y="490">只传 33 点；特征在云端派生，置信度 &lt; 0.5 判 undetermined</text>
   <circle cx="706" cy="510" r="2.2" fill="var(--arrow)" />
-  <text class="b" x="718" y="514">合成数据 test macro-F1 0.9670，非真实准确率</text>
+  <text class="b" x="718" y="514">合成数据 test macro-F1 0.9670，非真实准确率；endpoint 待开通</text>
 
   <!-- 右侧：数据分工 -->
   <g class="box">
@@ -211,11 +211,11 @@
     <text class="ct" x="700" y="756">运行边界</text>
   </g>
   <circle cx="706" cy="786" r="2.2" fill="var(--arrow)" />
-  <text class="b" x="718" y="790">云端和本地由用户选，不会自动切换</text>
+  <text class="b" x="718" y="790">默认只走云端；huawei 缺 RDS 不启动</text>
   <circle cx="706" cy="822" r="2.2" fill="var(--arrow)" />
-  <text class="b" x="718" y="826">两个引擎规则一致，靠跨语言对拍守住</text>
+  <text class="b" x="718" y="826">迁移由纯函数状态机决定，可单测复现</text>
   <circle cx="706" cy="858" r="2.2" fill="var(--arrow)" />
-  <text class="b" x="718" y="862">云端模式下，端侧不碰迁移</text>
+  <text class="b" x="718" y="862">端侧不碰迁移；存储故障返回 503</text>
   <circle cx="706" cy="894" r="2.2" fill="var(--arrow)" />
   <text class="b" x="718" y="898">CodeArts 只在研发阶段用</text>
 
