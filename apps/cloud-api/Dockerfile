@@ -1,8 +1,13 @@
 FROM python:3.11-slim
 
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
 WORKDIR /app
 
-RUN pip install --no-cache-dir \
+COPY packages/intervention-engine /tmp/intervention-engine
+
+RUN pip install --no-cache-dir /tmp/intervention-engine \
     "fastapi>=0.115" \
     "uvicorn[standard]>=0.30" \
     "pydantic>=2.6" \
@@ -10,12 +15,12 @@ RUN pip install --no-cache-dir \
     "httpx>=0.27" \
     "sqlalchemy[asyncio]>=2.0" \
     "asyncpg>=0.29" \
-    "redis>=5.0"
+    "redis>=5.0" \
+    "cryptography>=42" \
+    && rm -rf /tmp/intervention-engine
 
 COPY apps/cloud-api/app ./app
-COPY packages/intervention-engine/src ./packages/intervention-engine/src
-
-ENV PYTHONPATH=/app/packages/intervention-engine/src
+COPY data/actions/actions.json ./data/actions/actions.json
 
 EXPOSE 8000
 

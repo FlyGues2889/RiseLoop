@@ -72,11 +72,14 @@ _DEFAULT_ACTIONS: list[dict] = [
 
 def _candidate_paths() -> list[Path]:
     module = Path(__file__).resolve()
-    return [
-        module.parents[4] / "data" / "actions" / "actions.json",
-        module.parents[2] / "data" / "actions" / "actions.json",
-        Path.cwd() / "data" / "actions" / "actions.json",
+    parents = list(module.parents)
+    candidates = [
+        parents[index] / "data" / "actions" / "actions.json"
+        for index in (4, 2)
+        if index < len(parents)
     ]
+    candidates.append(Path.cwd() / "data" / "actions" / "actions.json")
+    return candidates
 
 
 def load_seed_actions() -> list[dict]:

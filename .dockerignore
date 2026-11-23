@@ -5,7 +5,9 @@
 **/.pytest_cache
 **/.mypy_cache
 .venv*
-data/
+data/actions/images/
+data/knowledge/
+data/posture/
 docs/
 infra/
 services/
