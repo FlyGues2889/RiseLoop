@@ -15,6 +15,7 @@ import PlanSelector from "./components/PlanSelector.vue";
 import PostureSpike from "./components/PostureSpike.vue";
 import SafetyAlert from "./components/SafetyAlert.vue";
 import StatusBar from "./components/StatusBar.vue";
+import TrainingView from "./components/TrainingView.vue";
 import { initActionSession } from "./state/actionSession.js";
 import { closePosture, refreshTimer, restoreSession, state, tickHeartbeat, tickPreview } from "./state/session.js";
 import { monitor, prefs as cameraPrefs, ui as cameraUi } from "./state/postureMonitor.js";
@@ -104,7 +105,8 @@ onUnmounted(() => {
     <CameraPermissionDialog />
     <PostureSpike v-if="state.postureOpen" @close="closePosture" />
     <m3e-content-pane class="content">
-      <div class="view" :class="`view-${state.phase}`">
+      <TrainingView v-if="state.trainingOpen" @close="state.trainingOpen = false" />
+      <div v-else class="view" :class="`view-${state.phase}`">
         <Transition name="fade" mode="out-in">
           <AuthPanel v-if="state.phase === 'auth'" key="auth" />
           <AssessmentForm v-else-if="state.phase === 'assessment'" key="assessment" />
@@ -120,7 +122,6 @@ onUnmounted(() => {
         <ActivityLog />
         <SafetyAlert />
       </div>
-
     </m3e-content-pane>
   </div>
 </template>

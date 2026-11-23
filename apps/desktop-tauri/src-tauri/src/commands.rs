@@ -99,9 +99,43 @@ pub fn camera_log(app: tauri::AppHandle, line: String) -> Result<(), String> {
 pub fn camera_log_path(app: tauri::AppHandle) -> Result<String, String> {
     Ok(camera_log_path_of(&app)?.display().to_string())
 }
+
+fn capture_path_of(app: &tauri::AppHandle) -> Result<PathBuf, String> {
+    let dir = app.path().app_data_dir().map_err(|error| error.to_string())?;
+    Ok(dir.join("capture").join("frames.jsonl"))
+}
+
+fn append_lines(path: &std::path::Path, lines: &[String]) -> Result<(), String> {
+    if let Some(dir) = path.parent() {
+        std::fs::create_dir_all(dir).map_err(|error| error.to_string())?;
+    }
+    let mut file = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(path)
+        .map_err(|error| error.to_string())?;
+    for line in lines {
+        writeln!(file, "{line}").map_err(|error| error.to_string())?;
+    }
+    Ok(())
+}
+
+/// 追加若干行已序列化好的关键点记录，返回落盘路径。
+#[tauri::command]
+pub fn capture_append(app: tauri::AppHandle, lines: Vec<String>) -> Result<String, String> {
+    let path = capture_path_of(&app)?;
+    append_lines(&path, &lines)?;
+    Ok(path.display().to_string())
+}
+
+#[tauri::command]
+pub fn capture_path(app: tauri::AppHandle) -> Result<String, String> {
+    Ok(capture_path_of(&app)?.display().to_string())
+}
+
 #[cfg(test)]
 mod tests {
-    use super::append_camera_log;
+    use super::{append_camera_log, append_lines};
 
     #[test]
     fn camera_log_appends_instead_of_truncating() {
@@ -114,6 +148,21 @@ mod tests {
         assert_eq!(text.lines().count(), 2);
         assert!(text.contains("打开摄像头采样"));
         assert!(text.contains("摄像头已关闭"));
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn capture_append_creates_directory_and_keeps_lines() {
+        let dir = std::env::temp_dir().join(format!("riseloop-capture-{}", std::process::id()));
+        let path = dir.join("capture").join("frames.jsonl");
+        let _ = std::fs::remove_dir_all(&dir);
+
+        append_lines(&path, &["{\"a\":1}".to_string()]).unwrap();
+        append_lines(&path, &["{\"a\":2}".to_string(), "{\"a\":3}".to_string()]).unwrap();
+
+        let text = std::fs::read_to_string(&path).unwrap();
+        assert_eq!(text.lines().count(), 3);
+        assert!(text.starts_with("{\"a\":1}"));
         let _ = std::fs::remove_dir_all(&dir);
     }
 }

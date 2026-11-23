@@ -15,6 +15,13 @@ const profileLabel = computed(() => {
 const confirmOpen = ref(false);
 const clearing = ref(false);
 
+const trainingHint = "坐在摄像头前采集几分钟，数据存在本机";
+
+function openTraining() {
+  state.experimentalOpen = false;
+  state.trainingOpen = true;
+}
+
 const monitorStatus = computed(() => {
   if (monitor.status === "running") return "监测中";
   if (monitor.status === "paused") return "已暂停";
@@ -68,6 +75,10 @@ async function confirmClear() {
       姿势监测设置
       <span class="menu-status">{{ monitorStatus }}</span>
     </m3e-menu-item>
+    <m3e-menu-item @click="state.experimentalOpen = true">
+      <span slot="icon" class="material-symbols-rounded">science</span>
+      实验性功能
+    </m3e-menu-item>
     <m3e-menu-item v-if="isSignedIn" @click="confirmOpen = true">
       <span slot="icon" class="material-symbols-rounded">delete_sweep</span>
       清除本机数据
@@ -77,6 +88,27 @@ async function confirmClear() {
       退出
     </m3e-menu-item>
   </m3e-menu>
+
+  <m3e-dialog
+    class="experimental"
+    dismissible
+    :open.prop="state.experimentalOpen"
+    @closed="state.experimentalOpen = false"
+  >
+    <h2 slot="header">实验性功能</h2>
+    <m3e-list variant="segmented">
+      <m3e-list-item @click="openTraining">
+        <span class="material-symbols-rounded" slot="leading">model_training</span>
+        <div class="entry">
+          <span class="entry-title">采集训练数据</span>
+          <span class="entry-hint">{{ trainingHint }}</span>
+        </div>
+        <m3e-button slot="trailing" variant="tonal" size="small" @click.stop="openTraining">
+          进入
+        </m3e-button>
+      </m3e-list-item>
+    </m3e-list>
+  </m3e-dialog>
 
   <m3e-dialog
     class="confirm"
@@ -168,6 +200,25 @@ async function confirmClear() {
 
 .confirm {
   --m3e-dialog-max-width: 26.25rem;
+}
+
+.experimental {
+  --m3e-dialog-max-width: 24rem;
+}
+
+.entry {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.entry-title {
+  font-size: 0.875rem;
+}
+
+.entry-hint {
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.75rem;
 }
 
 .confirm .hint {
