@@ -1,13 +1,13 @@
-"""Train and evaluate the v0 posture MLP end to end.
+"""Train and evaluate the v1 posture MLP end to end.
 
-One command reproduces every artefact under ``artifacts/v0``:
+One command reproduces every artefact under ``artifacts/v1``:
 
     python scripts/modelarts/train_posture.py --data <frames.jsonl>
 
 Input versions
 --------------
-A: 6 derived features.
-B: 132 normalised coordinates (33 x [x, y, z, visibility]) + 6 features = 138.
+A: 5 derived features (head and shoulders only).
+B: 132 normalised coordinates (33 x [x, y, z, visibility]) + 5 features = 137.
 
 Both are standardised with train-split statistics only.  The version with the
 better *validation* macro-F1 is shipped as ``model.pt``; the test split is
@@ -101,7 +101,8 @@ from posture_contract import (
     FEATURE_SPEC_VERSION,
     KEYPOINT_ORDER as MEDIAPIPE_33,
     LABELS as LABEL_ORDER,
-    MIN_VISIBILITY as VISIBILITY_THRESHOLD,
+    MIN_UPPER_BODY_VISIBILITY as VISIBILITY_THRESHOLD,
+    UPPER_BODY_POINTS,
     ContractError,
     features_from_keypoints as compute_features,
     features_vector,
@@ -140,7 +141,7 @@ def _validate_features(raw) -> dict[str, float]:
     if not isinstance(raw, dict):
         raise ContractError("features must be an object")
     if set(raw.keys()) != set(FEATURE_NAMES):
-        raise ContractError("features must contain exactly the six contract fields")
+        raise ContractError("features must contain exactly the contract fields")
     return {name: float(raw[name]) for name in FEATURE_NAMES}
 
 
@@ -164,7 +165,7 @@ def build_input_vector(input_version: str, keypoints, features) -> list[float]:
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPT_DIR.parents[1]
-DEFAULT_OUT = SCRIPT_DIR / "artifacts" / "v0"
+DEFAULT_OUT = SCRIPT_DIR / "artifacts" / "v1"
 
 
 @dataclass
@@ -173,6 +174,7 @@ class Frame:
     subject: str
     device: str
     scene: str
+    framing: str
     origin: str
     label_source: str
     label: str
@@ -256,6 +258,7 @@ def load_frames(path: Path, warnings: list[str]) -> list[Frame]:
                     scene=str(record.get("scene") or "unknown"),
                     origin=str(record.get("origin") or "capture"),
                     label_source=str(record.get("label_source") or "human"),
+                    framing=str(record.get("framing") or "upper_body"),
                     label=label,
                     points=points,
                     features=features,
@@ -647,6 +650,7 @@ def _feature_spec(mean_a: np.ndarray, std_a: np.ndarray, mean_b: np.ndarray, std
         "contract_version": CONTRACT_VERSION,
         "feature_spec_version": FEATURE_SPEC_VERSION,
         "mediapipe_landmarks": list(MEDIAPIPE_33),
+        "upper_body_points": list(UPPER_BODY_POINTS),
         "feature_order": list(FEATURE_NAMES),
         "label_order": list(LABEL_ORDER),
         "label_index": {label: index for index, label in enumerate(LABEL_ORDER)},
@@ -654,7 +658,7 @@ def _feature_spec(mean_a: np.ndarray, std_a: np.ndarray, mean_b: np.ndarray, std
         "input_versions": {
             "A": {
                 "dimension": len(FEATURE_NAMES),
-                "layout": "6 derived features in feature_order",
+                "layout": "5 derived features in feature_order",
                 "standardization": {
                     "method": "z-score with train-split mean/std",
                     "mean": mean_a.tolist(),
@@ -663,7 +667,7 @@ def _feature_spec(mean_a: np.ndarray, std_a: np.ndarray, mean_b: np.ndarray, std
             },
             "B": {
                 "dimension": len(mean_b),
-                "layout": "132 coordinates (33 landmarks x [x, y, z, visibility]) + 6 features",
+                "layout": "132 coordinates (33 landmarks x [x, y, z, visibility]) + 5 features",
                 "coordinate_normalization": {
                     "origin": "shoulder midpoint (left_shoulder, right_shoulder), including z",
                     "scale": f"max(2D shoulder width, {COORD_SCALE_FLOOR})",
@@ -671,7 +675,7 @@ def _feature_spec(mean_a: np.ndarray, std_a: np.ndarray, mean_b: np.ndarray, std
                     "rationale": "removes camera distance and image position; visibility stays 0..1",
                 },
                 "standardization": {
-                    "method": "z-score with train-split mean/std over all 138 dimensions",
+                    "method": "z-score with train-split mean/std over all 137 dimensions",
                     "mean": mean_b.tolist(),
                     "std": std_b.tolist(),
                 },
@@ -679,7 +683,7 @@ def _feature_spec(mean_a: np.ndarray, std_a: np.ndarray, mean_b: np.ndarray, std
         },
         "preprocess_constants": {
             "coord_scale_floor": COORD_SCALE_FLOOR,
-            "visibility_threshold": VISIBILITY_THRESHOLD,
+            "upper_body_visibility_threshold": VISIBILITY_THRESHOLD,
         },
         "model": {
             "hidden": list(args.hidden),
@@ -704,6 +708,7 @@ def _data_summary(
 
     origin_counts = Counter(frame.origin for frame in all_frames)
     source_counts = Counter(frame.label_source for frame in all_frames)
+    framing_counts = Counter(frame.framing for frame in all_frames)
     try:
         relative = str(path.relative_to(REPO_ROOT))
     except ValueError:
@@ -715,6 +720,7 @@ def _data_summary(
         "origin_counts": {key: int(value) for key, value in sorted(origin_counts.items())},
         "real_capture_frames": int(origin_counts.get("capture", 0)),
         "synthetic_frames": int(origin_counts.get("synthetic", 0)),
+        "framing_counts": {key: int(value) for key, value in sorted(framing_counts.items())},
         "label_source_counts": {key: int(value) for key, value in sorted(source_counts.items())},
         "frames_total": len(all_frames),
         "frames_used": len(frames),
@@ -1063,6 +1069,18 @@ def main(argv: Sequence[str] | None = None) -> int:
             [frame.label for frame in test_frames], predicted
         )
         deploy_low_confidence = count_low_confidence(probabilities)
+        framing_metrics: dict[str, Any] = {}
+        for framing in sorted({frame.framing for frame in test_frames}):
+            indices = [
+                index for index, frame in enumerate(test_frames) if frame.framing == framing
+            ]
+            framing_metrics[framing] = {
+                "frames": len(indices),
+                **compute_metrics(
+                    [test_frames[index].label for index in indices],
+                    [predicted[index] for index in indices],
+                ),
+            }
         predicted_val, _ = _predict_frames(
             deploy_model, val_frames, chosen, deploy_meta["mean"], deploy_meta["std"]
         )
@@ -1073,6 +1091,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         deploy_test_metrics = results[chosen]["test"]
         deploy_val_metrics = None
         deploy_low_confidence = int(results[chosen].get("test_low_confidence", 0))
+        framing_metrics = {}
 
     # ------------------------------------------------------------------
     # Metrics, spec, split, smoke samples.
@@ -1183,6 +1202,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             "per_class": deploy_test_metrics["per_class"],
             "confusion_matrix": deploy_test_metrics["confusion_matrix"],
         },
+        "by_framing": framing_metrics,
         "confusion_matrix": deploy_test_metrics["confusion_matrix"],
         "data": data_summary,
         "split": {
@@ -1221,7 +1241,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     _plot_confusion(
         deploy_test_metrics,
         out_dir / "confusion_matrix.png",
-        f"Posture v0 test confusion matrix ({scope})",
+        f"Posture v1 test confusion matrix ({scope})",
     )
 
     # Smoke samples: one per ground-truth class, fixed by frame_id.

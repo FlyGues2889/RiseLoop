@@ -48,6 +48,7 @@ def _frame(label: str = "baseline") -> dict:
         "device": "unit-test",
         "subject": "s1",
         "scene": "desk",
+        "framing": "upper_body",
         "keypoints": keypoints,
         "features": contract.features_from_keypoints(keypoints),
         "label": label,
@@ -69,14 +70,41 @@ def test_constants_follow_cloud_api():
     assert contract.KEYPOINT_ORDER == contract.MEDIAPIPE_33
     assert len(contract.KEYPOINT_ORDER) == 33
     assert contract.LABELS == ("baseline", "forward_head", "lateral_tilt", "undetermined")
+    assert contract.FRAMINGS == ("upper_body", "full_body")
+    assert len(contract.UPPER_BODY_POINTS) == 13
+    assert contract.FEATURE_SPEC_VERSION == "v2"
     assert contract.FEATURE_ORDER == (
         "shoulder_tilt_deg",
         "shoulder_width",
         "shoulder_visibility",
         "head_forward_ratio",
-        "torso_lean_deg",
-        "visible_ratio",
+        "upper_body_visibility",
     )
+
+
+def test_upper_body_only_framing_still_labels():
+    keypoints = _pose(random.Random(20261123))
+    fixed = {
+        "nose": (0.5, 0.18, 0.0),
+        "left_shoulder": (0.4, 0.42, 0.0),
+        "right_shoulder": (0.6, 0.42, 0.0),
+    }
+    for point in keypoints:
+        if point["name"] in fixed:
+            point["x"], point["y"], point["z"] = fixed[point["name"]]
+    upper = set(contract.UPPER_BODY_POINTS)
+    for point in keypoints:
+        point["visibility"] = 0.95 if point["name"] in upper else 0.05
+    features = contract.features_from_keypoints(keypoints)
+    assert features["upper_body_visibility"] == 1.0
+    assert label_policy.prelabel(features) == "baseline"
+
+    for point in keypoints:
+        if point["name"] in ("left_shoulder", "right_shoulder"):
+            point["visibility"] = 0.1
+    hidden = contract.features_from_keypoints(keypoints)
+    assert hidden["upper_body_visibility"] < 1.0
+    assert label_policy.prelabel(hidden) == "undetermined"
 
 
 def test_runtime_copy_matches_cloud_features():
@@ -93,7 +121,9 @@ def test_runtime_copy_matches_cloud_features():
 def test_runtime_vector_order_is_schema_order():
     features = _frame()["features"]
     assert runtime.features_vector(features) == contract.features_vector(features)
+    assert len(contract.features_vector(features)) == 5
     assert len(contract.coordinates_vector(_frame()["keypoints"])) == 132
+    assert runtime.UPPER_BODY_POINTS == contract.UPPER_BODY_POINTS
 
 
 def test_runtime_rejects_incomplete_input():
@@ -165,6 +195,7 @@ def test_dataset_check_accepts_valid_file(tmp_path):
     assert report.ok, report.errors
     assert report.frames == 2
     assert report.subjects == {"s1"}
+    assert report.framings == {"upper_body": 2}
 
 
 def test_dataset_check_flags_feature_drift(tmp_path):
@@ -203,12 +234,12 @@ def test_prelabel_policy_covers_four_classes():
         "shoulder_width": 0.2,
         "shoulder_visibility": 0.98,
         "head_forward_ratio": 0.0,
-        "torso_lean_deg": 0.0,
-        "visible_ratio": 1.0,
+        "upper_body_visibility": 1.0,
     }
     assert label_policy.prelabel(base) == "baseline"
     assert label_policy.prelabel({**base, "shoulder_tilt_deg": 12.0}) == "lateral_tilt"
     assert label_policy.prelabel({**base, "head_forward_ratio": 0.4}) == "forward_head"
     assert label_policy.prelabel({**base, "shoulder_tilt_deg": 7.0}) == "undetermined"
     assert label_policy.prelabel({**base, "shoulder_visibility": 0.3}) == "undetermined"
-    assert set(label_policy.describe()) >= {"version", "tilt_threshold_deg"}
+    assert label_policy.prelabel({**base, "upper_body_visibility": 0.3}) == "undetermined"
+    assert label_policy.describe()["version"] == "v2"

@@ -73,8 +73,10 @@ class Settings(BaseSettings):
     modelarts_endpoint: str | None = None
     modelarts_api_key: str | None = None
     modelarts_project_id: str | None = None
-    modelarts_model_name: str = "riseloop-posture-v0"
-    modelarts_auth_header: Literal["x-auth-token", "authorization", "x-api-key"] = "x-auth-token"
+    modelarts_model_name: str = "riseloop-posture-v1"
+    modelarts_auth_header: Literal[
+        "x-auth-token", "authorization", "x-api-key", "x-apig-appcode"
+    ] = "x-auth-token"
     modelarts_timeout_seconds: float = 2.5
 
     @property

@@ -4,6 +4,7 @@ import pytest
 from cryptography.exceptions import InvalidTag
 
 from app.cloud.kms import KmsService
+from app.cloud.modelarts import ModelArtsService
 from app.cloud.obs import ObsService
 from app.core.config import Settings
 
@@ -69,3 +70,17 @@ async def test_obs_requires_configuration_in_huawei_mode():
     service = ObsService(_settings(cloud_provider="huawei"))
     with pytest.raises(RuntimeError):
         await service.presign_get("videos/demo.mp4")
+
+
+def test_modelarts_apig_appcode_header():
+    service = ModelArtsService(
+        _settings(
+            cloud_provider="huawei",
+            modelarts_api_key="appcode-value",
+            modelarts_auth_header="x-apig-appcode",
+        )
+    )
+    assert service._headers() == {
+        "Content-Type": "application/json",
+        "X-Apig-AppCode": "appcode-value",
+    }

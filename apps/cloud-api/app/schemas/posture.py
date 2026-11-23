@@ -47,6 +47,11 @@ MEDIAPIPE_33: tuple[str, ...] = (
 
 KEYPOINT_INDEX: dict[str, int] = {name: index for index, name in enumerate(MEDIAPIPE_33)}
 
+# 久坐机位只看得到头肩：鼻、眼、耳、嘴共 11 点，加双肩 2 点。
+# 可见比例只按这 13 点统计，髋与腿出画不再拖垮门控。
+UPPER_BODY_NAMES: tuple[str, ...] = MEDIAPIPE_33[:13]
+UPPER_BODY_VISIBILITY_MIN = 0.5
+
 
 class Keypoint(BaseModel):
     """单个归一化关键点；坐标系 0–1，含可见度，不含像素。
@@ -69,8 +74,7 @@ class PostureFeatures(BaseModel):
     shoulder_width: float
     shoulder_visibility: float
     head_forward_ratio: float
-    torso_lean_deg: float
-    visible_ratio: float
+    upper_body_visibility: float
 
 
 class PostureContext(BaseModel):

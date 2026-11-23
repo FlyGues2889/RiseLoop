@@ -26,15 +26,17 @@ docker compose version
 
 ## 3. 传代码
 
-服务器只需要 `apps/cloud-api` 与 `infra/docker`，目录层级必须保持，compose 的构建上下文是 `../../apps/cloud-api`。
+服务器需要 `apps/cloud-api`（Dockerfile + app）、`packages/intervention-engine/src`、`infra/docker` 和根目录 `.dockerignore`。compose 的构建上下文是仓库根目录 `../..`，Dockerfile 在 `apps/cloud-api/Dockerfile`。
 
 ```bash
-# 本地
-scp -r apps/cloud-api infra/docker root@<公网IP>:~/riseloop-dist/
-# 服务器
-mkdir -p ~/riseloop/apps ~/riseloop/infra
-mv ~/riseloop-dist/cloud-api ~/riseloop/apps/
-mv ~/riseloop-dist/docker ~/riseloop/infra/
+# 服务器先建目录
+mkdir -p ~/riseloop/apps/cloud-api ~/riseloop/packages/intervention-engine ~/riseloop/infra
+
+# 本地：只传运行所需文件
+scp -r apps/cloud-api/Dockerfile apps/cloud-api/app root@<公网IP>:~/riseloop/apps/cloud-api/
+scp -r packages/intervention-engine/src root@<公网IP>:~/riseloop/packages/intervention-engine/
+scp -r infra/docker root@<公网IP>:~/riseloop/infra/
+scp .dockerignore root@<公网IP>:~/riseloop/
 ```
 
 ## 4. 配置 .env

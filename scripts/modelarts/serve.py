@@ -3,7 +3,7 @@
 Purpose: exercise exactly the same ``_preprocess`` / ``_inference`` /
 ``_postprocess`` chain as ModelArts before uploading the package.
 
-    python scripts/modelarts/serve.py --artifacts scripts/modelarts/artifacts/v0
+    python scripts/modelarts/serve.py --artifacts scripts/modelarts/artifacts/v1
 
 Endpoints:
     GET  /health
@@ -104,7 +104,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--artifacts",
         type=Path,
-        default=Path(__file__).resolve().parent / "artifacts" / "v0",
+        default=Path(__file__).resolve().parent / "artifacts" / "v1",
     )
     parser.add_argument("--model", default=None, help="override model.pt path")
     parser.add_argument("--host", default="127.0.0.1")
@@ -122,7 +122,7 @@ def main(argv: list[str] | None = None) -> int:
         handlers=handlers,
         force=True,
     )
-    service = Model("posture-v0", model_path)
+    service = Model("posture-v1", model_path)
     server = ThreadingHTTPServer((args.host, args.port), Handler)
     server.service = service  # type: ignore[attr-defined]
     logger.info(

@@ -1,4 +1,4 @@
-"""ModelArts custom inference script for the v0 posture classifier.
+"""ModelArts custom inference script for the v1 posture classifier.
 
 Deployment contract
 -------------------
@@ -52,7 +52,7 @@ except ImportError:  # local tests / serve.py
     class PTServingBaseService:  # type: ignore[no-redef]
         """Minimal local stand-in; never used on ModelArts."""
 
-        def __init__(self, model_name: str = "posture-v0", model_path: str = "") -> None:
+        def __init__(self, model_name: str = "posture-v1", model_path: str = "") -> None:
             self.model_name = model_name
             self.model_path = model_path
 
@@ -185,11 +185,11 @@ class Model(PTServingBaseService):
             y = _number(item.get("y"), f"keypoints[{index}].y")
             z = _number(item.get("z"), f"keypoints[{index}].z")
             visibility = _number(item.get("visibility"), f"keypoints[{index}].visibility")
-            if not (-0.5 <= x <= 1.5 and -0.5 <= y <= 1.5):
+            if not (-2.0 <= x <= 4.0 and -2.0 <= y <= 4.0):
                 raise InputContractError(
                     "invalid_keypoint_range", f"keypoints[{index}].x/y outside range"
                 )
-            if not (-2.0 <= z <= 2.0):
+            if not (-4.0 <= z <= 4.0):
                 raise InputContractError(
                     "invalid_keypoint_range", f"keypoints[{index}].z outside range"
                 )
@@ -209,7 +209,7 @@ class Model(PTServingBaseService):
         if set(raw.keys()) != set(runtime.FEATURE_ORDER):
             raise InputContractError(
                 "invalid_features_shape",
-                "features must contain exactly the six contract fields",
+                "features must contain exactly the contract fields",
             )
         return {
             name: _number(raw[name], f"features.{name}") for name in runtime.FEATURE_ORDER

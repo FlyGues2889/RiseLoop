@@ -33,7 +33,8 @@ services:
 
   api:
     build:
-      context: ../../apps/cloud-api
+      context: ../..
+      dockerfile: apps/cloud-api/Dockerfile
     container_name: riseloop-api
     env_file:
       - .env

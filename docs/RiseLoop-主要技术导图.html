@@ -127,7 +127,7 @@
     <rect x="100" y="636" width="500" height="84" rx="14" />
     <text class="h" x="126" y="670">执行</text>
     <text class="p" x="126" y="693">端侧倒计时 + 系统原生通知</text>
-    <text class="d" x="126" y="709">画面不出本机，只上传 33 个关键点和 6 个特征</text>
+    <text class="d" x="126" y="709">画面不出本机，只上传 33 个关键点和 5 个特征</text>
   </g>
 
   <!-- 07 反馈 -->
@@ -183,13 +183,13 @@
     <text class="ct" x="700" y="376">姿态旁路</text>
   </g>
   <text class="chain" x="700" y="410">摄像头 → MediaPipe Pose 33 点</text>
-  <text class="chain" x="700" y="432">→ 6 个派生特征 → MLP v0 四分类</text>
+  <text class="chain" x="700" y="432">→ 5 个派生特征 → MLP v1 四分类</text>
   <circle cx="706" cy="462" r="2.2" fill="var(--arrow)" />
-  <text class="b" x="718" y="466">置信度 &lt; 0.5 判 undetermined；画面不出本机</text>
+  <text class="b" x="718" y="466">头肩入画即可，画面不出本机</text>
   <circle cx="706" cy="486" r="2.2" fill="var(--arrow)" />
-  <text class="b" x="718" y="490">合成数据 test macro-F1 0.9546，非真实准确率</text>
+  <text class="b" x="718" y="490">置信度 &lt; 0.5 判 undetermined；endpoint 待开通</text>
   <circle cx="706" cy="510" r="2.2" fill="var(--arrow)" />
-  <text class="b" x="718" y="514">ModelArts endpoint 待开通；超时 503 降级</text>
+  <text class="b" x="718" y="514">合成数据 test macro-F1 0.9670，非真实准确率</text>
 
   <!-- 右侧：数据分工 -->
   <g class="box">

@@ -1,14 +1,14 @@
-# 端云姿态感知链路（11.10 路线决策，11.19 模型 v0）
+# 端云姿态感知链路（11.10 路线决策，11.23 模型 v1 / 特征契约 v2）
 
-> 2026-11-19：姿态模型 v0 训练包与离线报告已完成，真实 ModelArts endpoint 尚未开通；当前线上仍是 mock 几何规则。
+> 2026-11-23：姿态模型 v1（特征契约 v2）训练包与离线报告已完成；真实 ModelArts endpoint 尚未开通，当前线上仍是 mock 几何规则。
 
 ## 1. 目标与边界
 
 | 项 | 内容 |
 |---|---|
-| 目标 | 11.13 跑通“摄像头 → 本地关键点 → 云端推理 → 客户端提示”的最小链路；姿态模型 v0 已完成训练与离线评估（11.19），真实 endpoint 待开通 |
-| 输入 | 摄像头画面仅在本地处理；上传归一化骨骼关键点，不上传原始图像/视频 |
-| 云端 | ModelArts 在线推理（mock / huawei 双模式）：A 版 6 特征 MLP，四分类 + 置信度 <0.5 判 `undetermined` |
+| 目标 | 11.13 跑通“摄像头 → 本地关键点 → 云端推理 → 客户端提示”的最小链路；姿态模型 v1（特征契约 v2）已完成训练与离线评估（11.23），真实 endpoint 待开通 |
+| 输入 | 摄像头画面仅在本地处理；上传归一化骨骼关键点，不上传原始图像/视频；只要求头部与双肩清晰入画，不要求全身 |
+| 云端 | ModelArts 在线推理（mock / huawei 双模式）：A 版 5 个派生特征 MLP，四分类 + 置信度 <0.5 判 `undetermined` |
 | 客户端 | Tauri 2 + Vue 3；叠加姿态引导框、风险解释与回退提示 |
 | 边界 | 姿态识别只用于行为指导，不做医疗诊断；安全红线仍由 `safety-check` 中间件前置 |
 
@@ -32,7 +32,7 @@
 | 工作流 | 范围 | 当前状态 | 关键依赖 |
 |---|---|---|---|
 | 端侧与前端 | Tauri、摄像头、关键点提取、隐私开关、姿态引导 UI | spike 已完成；真人关键点/演示机性能待验证 | 演示机摄像头 |
-| 云端与模型 | ModelArts、ECS/FastAPI、APIG、模型部署、性能测试 | 训练包与离线报告已完成（6 特征 MLP，合成数据 test macro-F1 0.9546）；`/posture/infer` + 适配层就绪；真实 endpoint 待开通 | ModelArts endpoint（需付费开通）、真实采集数据 |
+| 云端与模型 | ModelArts、ECS/FastAPI、APIG、模型部署、性能测试 | 训练包与离线报告已完成（5 特征 MLP，合成数据 test macro-F1 0.9670）；`/posture/infer` + 适配层就绪；真实 endpoint 待开通 | ModelArts endpoint（需付费开通）、真实采集数据 |
 | 算法与运动健康 | 数据集、姿态分类评价、风险规则、循证 JSON、动作适配 | 证据台账已完成；规则草稿/姿态评价待做 | 运康专业审核 |
 | 集成与交付 | S0–S3 集成、DCS/RDS/ModelArts、自动化测试、文档与演示 | 状态机/动作库已有；真实 DCS/RDS/ModelArts 与端到端集成未开始 | 云端环境与演示机 |
 
@@ -52,7 +52,7 @@
 
 1. 浏览器/WebView 直接 `getUserMedia` + WASM，11.13 前最容易跑通，不需要 Rust/C++ FFI。
 2. 本地只跑“关键点感知模型”，不跑姿态决策/风险决策模型，符合“本地不使用决策 AI”的边界。
-3. 33 个关键点足够做基准、头前伸、明显侧倾、不可判定四类；躯干前倾等扩展项后置。
+3. 33 个关键点足够做基准、头前伸、明显侧倾、不可判定四类；坐姿机位只用头肩 13 点，躯干前倾、腰背等扩展项后置。
 4. 跨 Windows/macOS，演示机不需要额外原生依赖。
 5. MediaPipe 的 WASM 与 `pose_landmarker.task` 模型文件随客户端本地打包，不走 CDN，断网也能启动。
 
@@ -65,22 +65,32 @@
 **关键澄清：**
 
 > “本地不使用任何 AI 模型”应表述为“本地不运行姿态决策/风险决策模型”。  
-> 关键点提取本身就是轻量感知模型（MediaPipe / MindSpore Lite），否则普通 RGB 摄像头无法直接输出肩、颈、髋坐标。README 和答辩必须把这句话说清楚。
+> 关键点提取本身就是轻量感知模型（MediaPipe / MindSpore Lite），否则普通 RGB 摄像头无法直接输出头肩关键点。README 和答辩必须把这句话说清楚。
 
-### 姿态模型 v0（2026-11-19）
+### 姿态模型 v1（2026-11-23，特征契约 v2）
 
 | 项 | 现状 |
 |---|---|
 | 训练包 | `scripts/modelarts/`：数据校验 → 训练 → 独立评估 → 部署脚本，全部可复跑 |
-| 模型 | A 版 6 特征 MLP（64→32，2,660 参数），四分类 `baseline` / `forward_head` / `lateral_tilt` / `undetermined` |
+| 输入 | 33 点归一化关键点；模型只吃 5 个派生特征，端侧上传格式不变 |
+| 特征 | `shoulder_tilt_deg`、`shoulder_width`、`shoulder_visibility`、`head_forward_ratio`、`upper_body_visibility` |
+| 门控 | `shoulder_visibility ≥ 0.5` 且 `upper_body_visibility ≥ 0.5`；后者只统计头肩 13 点 |
+| 模型 | A 版 5 特征 MLP（64→32，2,596 参数），四分类 `baseline` / `forward_head` / `lateral_tilt` / `undetermined` |
 | 决策规则 | `argmax` 后 `confidence < 0.5` 改判 `undetermined`；训练、评估、serving 共用 `posture_runtime.decide_posture()` |
-| 数据 | 1440 帧合成关键点 / 12 受试者 / seed 20261117；标签 331 / 339 / 342 / 428 |
-| 选型 | 同 seed 对比 6 维 A 与 138 维 B，按验证集 macro-F1 选 A（0.9598 vs 0.8830） |
-| 离线指标 | 测试集 macro-F1 0.9546、accuracy 0.9542；低置信度改判 1 帧 |
-| 报告 | `scripts/modelarts/reports/v0/`：`metrics.json`、`feature_spec.json`、`split.json`、`smoke_test.json`、混淆矩阵 |
-| 端到端 | 本地 `serve.py` HTTP 冒烟通过（`s01-000001` → `baseline`，0.9951）；真实 ModelArts endpoint 未开通 |
+| 数据 | 1440 帧合成关键点 / 12 受试者 / seed 20261117 / 全部 `framing=upper_body`；标签 356 / 351 / 327 / 406 |
+| 选型 | 同 seed 对比 5 维 A 与 137 维 B，按验证集 macro-F1 选 A（0.9831 vs 0.8867） |
+| 离线指标 | 测试集 macro-F1 0.9670、accuracy 0.9667；低置信度改判 0 帧 |
+| 报告 | `scripts/modelarts/reports/v1/`：`metrics.json`、`feature_spec.json`、`split.json`、`smoke_test.json`、混淆矩阵 |
+| 端到端 | 本地 `serve.py` / `customize_service.Model` 冒烟通过；真实 ModelArts endpoint 未开通 |
 
-指标只证明特征契约、训练与部署脚本可复现，**不代表真实场景准确率**；对外不得把 0.9546 写成模型准确率。权重与原始数据不入库。
+机位口径：久坐人群面对笔记本摄像头时通常只有头部和双肩入画。v2 删除了依赖髋部的
+`torso_lean_deg` 和按 33 点统计的 `visible_ratio`，不再要求全身可见；采集记录增加
+`framing`（默认 `upper_body`），评估按机位分开统计。姿态能力边界仍是
+“头颈前伸与肩部不对称识别”，不宣称能测腰背或腿。
+
+版本关系：**特征契约 `v2`，模型与报告为 `v1`**；`reports/v0/` 只作历史保留，
+两代指标不可直接比较。指标只证明特征契约、训练与部署脚本可复现，
+**不代表真实场景准确率**；对外不得把 0.9670 写成模型准确率。权重与原始数据不入库。
 
 ## 3. 端到端链路
 
@@ -149,6 +159,7 @@ Tauri WebView
 约束：
 
 - 只传 33 个关键点的归一化坐标（0–1，保留 4 位小数）与可见度；不传像素、不传人脸特征。
+- 只要求头部与双肩清晰入画，距离约 40–70 cm；不为拍全身而后退。采集记录带 `framing`，评估按机位分层。
 - 服务端校验关键点数量、名称与顺序；缺项直接 422。
 - 不在 info 日志打印关键点原始数组；只记录 `user_id`、姿态类别、置信度、耗时。
 - 证据 id 必须能在 `data/knowledge/evidence.json` 中找到；没有证据的因子不写 `evidence_ids`，不编造。
@@ -166,7 +177,7 @@ Tauri WebView
 - [ ] Tauri 能打开摄像头，MediaPipe 在本地加载并输出 33 关键点。
 - [ ] 演示机连续 60 秒 ≥15 fps，关键点不中断。
 - [ ] 只上传关键点：抓包/日志检查无原始图像或视频。
-- [x] ModelArts 在线推理可调用（无 endpoint 时用 mock，并在界面标注“mock”）——mock 全链路已实测；训练包 v0 与离线报告已完成，真实 endpoint 待开通。
+- [x] ModelArts 在线推理可调用（无 endpoint 时用 mock，并在界面标注“mock”）——mock 全链路已实测；训练包 v1（特征契约 v2）与离线报告已完成，真实 endpoint 待开通。
 - [ ] 客户端可显示“基准 / 头前伸 / 明显侧倾 / 不可判定”四类结果与引导框；只做基准线与局部调整提示，不做 3D/复杂动效。
 - [ ] 关摄像头、断网、ModelArts 超时三种降级都能演示。
 - [ ] 姿态页有免责声明与隐私开关。
@@ -240,6 +251,18 @@ Tauri WebView
   `Keypoint` 边界由 `[-0.5,1.5]` 放宽到 `x/y ∈ [-2,4]`、`z ∈ [-4,4]`；
   超出按异常帧跳过，`collect_frames` 不再因单帧中断整批。
 - 仍未完成：真实受试者采集、人工标注、真实 ModelArts endpoint。
+
+**2026-11-23 特征契约 v2 / 模型 v1：**
+
+- 删除 `torso_lean_deg` 与 `visible_ratio`，新增 `upper_body_visibility`（头肩 13 点）；
+  门控改为 `shoulder_visibility` + `upper_body_visibility` 双阈值。
+- 云 API、ModelArts 运行时副本、标注口径、训练/评估脚本同步到 v2；
+  `FEATURE_SPEC_VERSION` 与 `POLICY_VERSION` 均为 `v2`，模型/报告为 `v1`。
+- 合成数据改为头肩机位：髋腿放在画面外，1440 帧全部 `framing=upper_body`。
+- 重训结果：A 版 5 维、2,596 参数，test macro-F1 0.9670、accuracy 0.9667；
+  B 版 137 维 0.8432。报告在 `scripts/modelarts/reports/v1/`。
+- 新增回归用例：只有头肩可见时仍能分类；头肩大部分不可见时判 `undetermined`。
+- 仍未完成：真实 endpoint、真实采集与人工标注、线上链路复测。
 
 ## 10. 摄像头姿态：记录与报告（不弹通知）
 
@@ -336,10 +359,10 @@ Tauri WebView
   "confidence": 0.95,
   "deviation_deg": 27.0,
   "source": "mock",
-  "model": "riseloop-posture-v0-mock",
+  "model": "riseloop-posture-v1-mock",
   "latency_ms": 0.01,
   "guidance": { "message": "检测到头前伸，收下巴并把屏幕上沿抬到视线高度。", "overlay": "align_guide", "disclaimer": "..." },
-  "features": { "shoulder_tilt_deg": 0.0, "shoulder_width": 0.2, "shoulder_visibility": 0.98, "head_forward_ratio": 0.6, "torso_lean_deg": 0.0, "visible_ratio": 1.0 },
+  "features": { "shoulder_tilt_deg": 0.0, "shoulder_width": 0.2, "shoulder_visibility": 0.98, "head_forward_ratio": 0.6, "upper_body_visibility": 1.0 },
   "risk": { "brli": 0.4862, "risk_level": "medium", "recommended_plan": "standard", "actions": ["..."], "factors": ["..."], "citations": ["..."] }
 }
 ```
@@ -389,14 +412,15 @@ Tauri WebView
 
 未验证项：**真实摄像头下的端到端**（本机摄像头物理挡板仍未打开），以及多摄像头设备的实际切换。
 
-### A.6 姿态模型 v0 部署包与验证（2026-11-19）
+### A.6 姿态模型 v1 部署包与验证（2026-11-23，特征契约 v2）
 
 | 项 | 内容 |
 |---|---|
-| 模型包 | `customize_service.py`（torch 前向 + 日志）、`posture_runtime.py`（6 特征、`decide_posture`）、`model.py`、`model.pt`、`feature_spec.json` |
+| 模型包 | `customize_service.py`（torch 前向 + 日志）、`posture_runtime.py`（5 特征、`decide_posture`）、`model.py`、`model.pt`、`feature_spec.json` |
+| 关键点边界 | `x/y ∈ [-2,4]`、`z ∈ [-4,4]`，与服务端 `Keypoint` 一致；坐姿腿部外推坐标不会被拒 |
 | 决策规则 | `argmax`，`confidence < 0.5` 输出 `undetermined`；训练、评估、serving 共用同一函数 |
 | 离线复跑 | `generate_synthetic_frames.py` → `dataset_check.py` → `train_posture.py` → `evaluate_posture.py`，命令见 `scripts/modelarts/README.md` |
-| 本机冒烟 | `serve.py` 对 `s01-000001` 返回 `baseline` / `0.995108`，与 `smoke_test.json` 一致；日志不含关键点数组 |
-| 测试 | `python -m pytest -q`：144 passed（含决策规则、生成器跨 hash seed 复现、采集链路） |
+| 本机冒烟 | `customize_service.Model` 对 `s01-000000` 返回 `forward_head` / `0.9862`，与样本标签一致；日志不含关键点数组 |
+| 测试 | `python -m pytest -q`：150 passed（含决策规则、生成器跨 hash seed 复现、采集链路、头肩受限视野回归） |
 | 未完成 | 真实 endpoint 未创建；未上传模型包；未用真实摄像头数据复评 |
 

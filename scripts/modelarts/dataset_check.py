@@ -22,6 +22,7 @@ ALLOWED_KEYS = REQUIRED_KEYS | {
     "ts",
     "device",
     "scene",
+    "framing",
     "label_source",
     "origin",
     "note",
@@ -50,6 +51,7 @@ class Report:
     frames: int = 0
     labels: Counter = field(default_factory=Counter)
     origins: Counter = field(default_factory=Counter)
+    framings: Counter = field(default_factory=Counter)
     subjects: set = field(default_factory=set)
     errors: list = field(default_factory=list)
     warnings: list = field(default_factory=list)
@@ -70,6 +72,7 @@ class Report:
             "frames": self.frames,
             "labels": dict(sorted(self.labels.items())),
             "origins": dict(sorted(self.origins.items())),
+            "framings": dict(sorted(self.framings.items())),
             "subjects": len(self.subjects),
             "errors": len(self.errors),
             "error_sample": self.errors[:limit],
@@ -105,6 +108,12 @@ def check_frame(frame: dict[str, Any], line: int, tolerance: float) -> tuple[lis
         errors.append(f"label_source 必须是 {sorted(VALID_LABEL_SOURCES)}，实际 {label_source!r}")
     if label_source != "human" and origin == "capture":
         warnings.append("真实采集帧不是人工标签")
+
+    framing = frame.get("framing")
+    if framing is None:
+        warnings.append("缺少 framing，按 upper_body 处理")
+    elif framing not in contract.FRAMINGS:
+        errors.append(f"framing 必须是 {sorted(contract.FRAMINGS)}，实际 {framing!r}")
 
     if not str(frame.get("subject", "")).strip():
         errors.append("subject 为空")
@@ -154,6 +163,7 @@ def check_dataset(path: Path, tolerance: float = DEFAULT_TOLERANCE) -> Report:
             report.frames += 1
             report.labels[frame.get("label")] += 1
             report.origins[frame.get("origin", "unknown")] += 1
+            report.framings[frame.get("framing") or "unspecified"] += 1
             report.subjects.add(frame.get("subject"))
 
             errors, warnings = check_frame(frame, line_number, tolerance)

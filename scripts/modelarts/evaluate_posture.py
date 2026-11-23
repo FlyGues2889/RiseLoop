@@ -40,7 +40,7 @@ from posture_runtime import decide_posture
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPT_DIR.parents[1]
-DEFAULT_ARTIFACTS = SCRIPT_DIR / "artifacts" / "v0"
+DEFAULT_ARTIFACTS = SCRIPT_DIR / "artifacts" / "v1"
 LABEL_TO_INDEX = {label: index for index, label in enumerate(LABEL_ORDER)}
 
 

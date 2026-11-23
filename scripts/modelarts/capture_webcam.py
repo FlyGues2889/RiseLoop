@@ -1,7 +1,7 @@
 """Capture MediaPipe Pose landmarks from a webcam into keypoints-only JSONL.
 
 The output is a raw capture file, not a training dataset. Feed it to
-``collect_frames.py`` to validate, recompute the six features and assign
+``collect_frames.py`` to validate, recompute the five features and assign
 ``frame_id``::
 
     python scripts/modelarts/collect_frames.py --input raw.jsonl --out frames.jsonl --append
@@ -34,6 +34,8 @@ from pathlib import Path
 from typing import Any, Iterable, Sequence
 
 from posture_contract import (
+    DEFAULT_FRAMING,
+    FRAMINGS,
     KEYPOINT_ORDER,
     LABELS,
     ContractError,
@@ -93,6 +95,7 @@ def make_record(
     device: str,
     scene: str,
     label: str,
+    framing: str = DEFAULT_FRAMING,
     note: str = "",
     ts: str | None = None,
 ) -> dict[str, Any]:
@@ -100,6 +103,8 @@ def make_record(
 
     if label not in LABELS:
         raise ContractError(f"未知类别：{label!r}")
+    if framing not in FRAMINGS:
+        raise ContractError(f"未知取景：{framing!r}")
     if not subject.strip():
         raise ContractError("subject 不能为空")
     validate_keypoint_ranges(points)
@@ -108,6 +113,7 @@ def make_record(
         "device": device,
         "subject": subject,
         "scene": scene,
+        "framing": framing,
         "label": label,
         "label_source": "human",
         "origin": "capture",
@@ -183,6 +189,7 @@ def run_self_test(args: argparse.Namespace) -> int:
             subject=args.subject,
             device=args.device,
             scene=args.scene,
+            framing=args.framing,
             label=args.label,
             note=args.note,
         )
@@ -196,6 +203,7 @@ def run_self_test(args: argparse.Namespace) -> int:
                 "out": str(args.out),
                 "written": written,
                 "label": args.label,
+                "framing": args.framing,
                 "subject": args.subject,
                 "media_written": False,
             },
@@ -382,6 +390,7 @@ def run_webcam(args: argparse.Namespace) -> int:
                                 subject=args.subject,
                                 device=args.device,
                                 scene=args.scene,
+                                framing=args.framing,
                                 label=args.label,
                                 note=args.note,
                             )
@@ -428,6 +437,7 @@ def run_webcam(args: argparse.Namespace) -> int:
                 "no_pose": no_pose,
                 "invalid": invalid,
                 "label": args.label,
+                "framing": args.framing,
                 "subject": args.subject,
                 "device": args.device,
                 "scene": args.scene,
@@ -449,6 +459,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--label", choices=LABELS, required=True, help="整段姿态标签")
     parser.add_argument("--device", default="unknown")
     parser.add_argument("--scene", default="unknown")
+    parser.add_argument(
+        "--framing",
+        choices=FRAMINGS,
+        default=DEFAULT_FRAMING,
+        help="取景范围；久坐机位用 upper_body",
+    )
     parser.add_argument("--note", default="")
     parser.add_argument("--camera", type=int, default=0)
     parser.add_argument("--width", type=int, default=1280)

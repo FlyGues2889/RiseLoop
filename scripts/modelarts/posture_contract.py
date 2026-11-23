@@ -24,18 +24,22 @@ from pydantic import ValidationError  # noqa: E402
 from app.schemas.posture import (  # noqa: E402
     KEYPOINT_INDEX,
     MEDIAPIPE_33,
+    UPPER_BODY_NAMES,
     Keypoint,
     PostureFeatures,
 )
 from app.services.posture_features import extract_features as _server_features  # noqa: E402
 from intervention_engine import PostureClass  # noqa: E402
 
-FEATURE_SPEC_VERSION = "v1"
+FEATURE_SPEC_VERSION = "v2"
 KEYPOINT_ORDER = MEDIAPIPE_33
+UPPER_BODY_POINTS = UPPER_BODY_NAMES
 FEATURE_ORDER = tuple(PostureFeatures.model_fields)
 COORDINATE_ORDER = ("x", "y", "z", "visibility")
 LABELS = tuple(label.value for label in PostureClass)
-MIN_VISIBILITY = 0.5
+FRAMINGS = ("upper_body", "full_body")
+DEFAULT_FRAMING = "upper_body"
+MIN_UPPER_BODY_VISIBILITY = 0.5
 
 
 class ContractError(ValueError):
@@ -110,10 +114,12 @@ def feature_spec() -> dict[str, Any]:
     return {
         "version": FEATURE_SPEC_VERSION,
         "keypoints": list(KEYPOINT_ORDER),
+        "upper_body_points": list(UPPER_BODY_POINTS),
         "features": list(FEATURE_ORDER),
         "labels": list(LABELS),
         "coordinates": list(COORDINATE_ORDER),
-        "min_visibility": MIN_VISIBILITY,
+        "framings": list(FRAMINGS),
+        "min_upper_body_visibility": MIN_UPPER_BODY_VISIBILITY,
     }
 
 

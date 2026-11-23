@@ -17,6 +17,11 @@ Rules:
 The geometry is intentionally varied across subjects: body scale, camera yaw
 (side cameras), image position, baseline head-forward/tilt offsets, visibility
 profiles, desk/hair occlusions and transition frames.
+
+The target setting is a seated laptop camera: only the head and both shoulders
+are in frame.  Frames therefore default to ``framing="upper_body"``; hip and
+leg landmarks sit outside the image with low visibility, matching what
+MediaPipe emits when the lower body is not visible.
 """
 
 from __future__ import annotations
@@ -42,6 +47,7 @@ DEVICES = (
     "phone-front-cam",
     "laptop-cam-side",
 )
+FRAMING = "upper_body"
 SCENES = (
     "office-chair-desk",
     "home-sofa",
@@ -104,11 +110,22 @@ def _clip(value: float, low: float, high: float) -> float:
     return max(low, min(high, value))
 
 
-def _point(name: str, x: float, y: float, z: float, visibility: float) -> dict[str, Any]:
+def _point(
+    name: str,
+    x: float,
+    y: float,
+    z: float,
+    visibility: float,
+    *,
+    clamp: bool = True,
+) -> dict[str, Any]:
+    if clamp:
+        x = _clip(x, -0.04, 1.04)
+        y = _clip(y, -0.04, 1.04)
     return {
         "name": name,
-        "x": round(_clip(x, -0.04, 1.04), 6),
-        "y": round(_clip(y, -0.04, 1.04), 6),
+        "x": round(x, 6),
+        "y": round(y, 6),
         "z": round(_clip(z, -2.0, 2.0), 6),
         "visibility": round(_clip(visibility, 0.0, 1.0), 6),
     }
@@ -122,6 +139,7 @@ def build_pose(
     head_forward_ratio: float,
     lean_deg: float,
     occlusion: str | None = None,
+    framing: str = "upper_body",
 ) -> list[dict[str, Any]]:
     """Build one canonical 33-landmark frame in image coordinates."""
 
@@ -215,6 +233,14 @@ def build_pose(
             nose_z + offset_z * scale,
         )
 
+    # Laptop framing: hips and legs fall below the image.  MediaPipe still
+    # returns extrapolated coordinates for them; keep them off-frame instead of
+    # clamping to the bottom edge.
+    if framing == "upper_body":
+        for name in LOWER:
+            x, y, z = raw[name]
+            raw[name] = (x, y + 0.55 * scale, z)
+
     # Visibility profile before occlusion.
     visibility: dict[str, float] = {}
     for name in MEDIAPIPE_33:
@@ -225,9 +251,9 @@ def build_pose(
         elif name in UPPER:
             base = 0.90
         elif name in ("left_hip", "right_hip"):
-            base = 0.94
+            base = 0.94 if framing == "full_body" else rng.uniform(0.03, 0.22)
         elif name in LOWER:
-            base = 0.84
+            base = 0.84 if framing == "full_body" else rng.uniform(0.02, 0.18)
         else:
             base = 0.90
         visibility[name] = _clip(base + rng.gauss(0.0, 0.012), 0.0, 1.0)
@@ -274,7 +300,10 @@ def build_pose(
         projected_x += rng.gauss(0.0, xy_sigma)
         projected_y += rng.gauss(0.0, xy_sigma)
         projected_z += rng.gauss(0.0, z_sigma)
-        points.append(_point(name, projected_x, projected_y, projected_z, visibility[name]))
+        clamp = not (framing == "upper_body" and name in LOWER)
+        points.append(
+            _point(name, projected_x, projected_y, projected_z, visibility[name], clamp=clamp)
+        )
     return points
 
 
@@ -404,6 +433,7 @@ def generate(
                 head_forward_ratio=params["ratio"],
                 lean_deg=params["lean"],
                 occlusion=params["occlusion"],
+                framing=FRAMING,
             )
             features = compute_features(points)
             label = prelabel(features)
@@ -417,6 +447,7 @@ def generate(
                     "device": device,
                     "subject": subject,
                     "scene": scene,
+                    "framing": FRAMING,
                     "keypoints": points,
                     "features": {name: round(value, 6) for name, value in features.items()},
                     "label": label,

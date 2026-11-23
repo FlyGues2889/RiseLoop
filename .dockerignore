@@ -1,0 +1,15 @@
+.git
+**/node_modules
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+**/.mypy_cache
+.venv*
+data/
+docs/
+infra/
+services/
+tests/
+apps/desktop-tauri/
+scripts/modelarts/artifacts/
+scripts/modelarts/reports/

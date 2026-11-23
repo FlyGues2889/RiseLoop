@@ -14,14 +14,14 @@
 
 | 检查 | 结果 |
 |---|---|
-| `python -m pytest -q` | ✅ 118 passed（含跨语言对拍 2 项、鉴权生命周期 8 项） |
+| `python -m pytest -q` | ✅ 150 passed（含跨语言对拍、鉴权生命周期、姿态契约与头肩机位回归） |
 | `packages/local-engine` `node --test` | ✅ 13 passed |
 | `packages/api-client` `node --test` | ✅ 8 passed |
 | `pnpm build` | ✅ 通过（有 chunk 体积告警） |
 | `cargo check --lib --tests` | ✅ 通过 |
 | `cargo test` | ✅ 20 passed（含摄像头日志追加测试、动作会话 7 项） |
 
-> 2026-11-23 复跑 `python -m pytest -q`：144 passed，0 skipped（Node 在 PATH）；本表其它项未重跑。
+> 2026-11-23 复跑：`python -m pytest -q` 150 passed、`local-engine` 13 passed、`api-client` 8 passed、`cargo test` 20 passed、`pnpm build` 通过。
 
 ## 2. 云端与算法
 
@@ -33,7 +33,7 @@
 | 跨语言一致性测试 | ✅ | `packages/intervention-engine/tests/test_cross_language.py`：25 个场景 Python/JS 全字段对拍，桥接脚本 `scripts/engine_dump.mjs` |
 | 安全中间件（8 类红旗短路） | ✅ | `app/core/safety.py`，命中直接 403 + 就医提示 |
 | BRLI 风险指数 | 🟡 | 规则版 V1 有单测，已接 `/posture/risk`，未校准 |
-| 姿态分类推理（ModelArts） | 🟡 | v0 训练包与离线报告已完成（6 特征 MLP，合成数据 test macro-F1 0.9546）；调用链、超时、降级已写；**没有真实 endpoint**，现走 mock + 端侧降级 |
+| 姿态分类推理（ModelArts） | 🟡 | v1 训练包与离线报告已完成（特征契约 v2，5 个派生特征 MLP，只要求头肩入画；合成数据 test macro-F1 0.9670）；调用链、超时、降级已写；**没有真实 endpoint**，现走 mock + 端侧降级 |
 | 循证知识库 | ✅ | 39 条证据台账（PubMed 36 / WHO 1 / CDC 1 / NIOSH 1，共 40 个主题归属）+ `articles.json` 8 条问答语料，`scripts/validate_evidence.py` 0 error |
 | 知识库问答 | ✅ | 本地检索 + citations（`data/knowledge/articles.json` 8 条）；无命中明确回答“资料中没有”。AgentArts 增强为可选，未接入 |
 | 限流 | ✅ | `app/core/ratelimit.py`：按 token 指纹或 IP 滑动窗口，登录类接口单独更严；超限 429 + `Retry-After` |
@@ -75,7 +75,7 @@
 | 架构图 / 演示素材 | ⬜ | 目录已删除，图未画；logo 现成：`apps/desktop-tauri/src-tauri/icons/appIcon.{ico,svg}` |
 | 演示数据脚本 | ⬜ | 未生成；落地时新建 `data/seeds` |
 | `docs/demo` 录屏脚本 | 🟡 | 有 1 份，需对齐最新界面 |
-| `docs/submission` | 🟡 | 作品信息收集表草稿已提交，**尚未逐节评审**，与实现的表述未核对 |
+| `docs/submission` | 🟡 | 已成文并提交；草稿按实现口径修订过一轮，仍待团队终审 |
 | `packages/shared-types`、`packages/ui-kit` | ⬜ | 目录已删除；类型由 OpenAPI 生成，组件仍手写 |
 | `tests/unit`、`tests/integration` | ⬜ | 目录已删除；测试分散在各包内运行 |
 

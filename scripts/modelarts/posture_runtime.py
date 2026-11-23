@@ -9,18 +9,32 @@ from __future__ import annotations
 from math import atan2, degrees, hypot
 from typing import Any, Mapping, Sequence
 
-FEATURE_SPEC_VERSION = "v1"
+FEATURE_SPEC_VERSION = "v2"
 FEATURE_ORDER = (
     "shoulder_tilt_deg",
     "shoulder_width",
     "shoulder_visibility",
     "head_forward_ratio",
-    "torso_lean_deg",
-    "visible_ratio",
+    "upper_body_visibility",
 )
 LABELS = ("baseline", "forward_head", "lateral_tilt", "undetermined")
-VISIBILITY_MIN = 0.5
-REQUIRED_POINTS = ("nose", "left_shoulder", "right_shoulder", "left_hip", "right_hip")
+UPPER_BODY_POINTS = (
+    "nose",
+    "left_eye_inner",
+    "left_eye",
+    "left_eye_outer",
+    "right_eye_inner",
+    "right_eye",
+    "right_eye_outer",
+    "left_ear",
+    "right_ear",
+    "mouth_left",
+    "mouth_right",
+    "left_shoulder",
+    "right_shoulder",
+)
+UPPER_BODY_VISIBILITY_MIN = 0.5
+REQUIRED_POINTS = ("nose", "left_shoulder", "right_shoulder")
 MIN_MODEL_CONFIDENCE = 0.5
 
 
@@ -54,7 +68,6 @@ def _number(point: Mapping[str, Any], key: str) -> float:
 def features_from_keypoints(keypoints: Sequence[Mapping[str, Any]]) -> dict[str, float]:
     points = _index(keypoints)
     left, right = points["left_shoulder"], points["right_shoulder"]
-    left_hip, right_hip = points["left_hip"], points["right_hip"]
     nose = points["nose"]
 
     width = hypot(_number(right, "x") - _number(left, "x"), _number(right, "y") - _number(left, "y"))
@@ -72,16 +85,10 @@ def features_from_keypoints(keypoints: Sequence[Mapping[str, Any]]) -> dict[str,
         shoulder_mid_z = (_number(left, "z") + _number(right, "z")) / 2
         head_forward = round((shoulder_mid_z - _number(nose, "z")) / width, 3)
 
-    shoulder_mid_x = (_number(left, "x") + _number(right, "x")) / 2
-    shoulder_mid_y = (_number(left, "y") + _number(right, "y")) / 2
-    hip_mid_x = (_number(left_hip, "x") + _number(right_hip, "x")) / 2
-    hip_mid_y = (_number(left_hip, "y") + _number(right_hip, "y")) / 2
-    lean = 0.0
-    if hypot(shoulder_mid_x - hip_mid_x, hip_mid_y - shoulder_mid_y) > 0.02:
-        lean = round(degrees(atan2(shoulder_mid_x - hip_mid_x, hip_mid_y - shoulder_mid_y)), 2)
-
-    visible = sum(
-        1 for point in keypoints if _number(point, "visibility") >= VISIBILITY_MIN
+    visible_upper = sum(
+        1
+        for name in UPPER_BODY_POINTS
+        if _number(points[name], "visibility") >= UPPER_BODY_VISIBILITY_MIN
     )
 
     return {
@@ -89,8 +96,7 @@ def features_from_keypoints(keypoints: Sequence[Mapping[str, Any]]) -> dict[str,
         "shoulder_width": round(width, 4),
         "shoulder_visibility": round(min(_number(left, "visibility"), _number(right, "visibility")), 3),
         "head_forward_ratio": head_forward,
-        "torso_lean_deg": lean,
-        "visible_ratio": round(visible / max(1, len(keypoints)), 3),
+        "upper_body_visibility": round(visible_upper / len(UPPER_BODY_POINTS), 3),
     }
 
 

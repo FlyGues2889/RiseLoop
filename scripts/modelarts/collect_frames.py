@@ -4,7 +4,7 @@ The collector is deliberately keypoint-only:
 
 * it rejects any record containing image / video / base64 / pixel fields;
 * it never writes frames, crops or screenshots;
-* it recomputes the six features with the contract module (a supplied value
+* it recomputes the five features with the contract module (a supplied value
   that disagrees is counted, never logged);
 * ``--append`` adds to an existing dataset without rewriting it.
 
@@ -29,7 +29,9 @@ from typing import Any, Iterable, TextIO
 
 from label_policy import prelabel
 from posture_contract import (
+    DEFAULT_FRAMING,
     FEATURE_ORDER,
+    FRAMINGS,
     LABELS as LABEL_ORDER,
     ContractError,
     features_from_keypoints as compute_features,
@@ -58,7 +60,7 @@ def _validate_features(raw) -> dict[str, float]:
     if not isinstance(raw, dict):
         raise ContractError("features must be an object")
     if set(raw.keys()) != set(FEATURE_ORDER):
-        raise ContractError("features must contain exactly the six contract fields")
+        raise ContractError("features must contain exactly the contract fields")
     return {name: float(raw[name]) for name in FEATURE_ORDER}
 
 
@@ -131,7 +133,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--label", choices=LABEL_ORDER, default=None)
     parser.add_argument("--label-source", choices=("human", "prelabel"), default=None)
     parser.add_argument("--origin", choices=("capture", "synthetic"), default=None)
-    parser.add_argument("--prelabel", action="store_true", help="derive a draft label with the v0 rubric")
+    parser.add_argument("--framing", choices=FRAMINGS, default=None)
+    parser.add_argument("--prelabel", action="store_true", help="derive a draft label with the v2 rubric")
     parser.add_argument("--note", default="")
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args(argv)
@@ -238,6 +241,11 @@ def main(argv: list[str] | None = None) -> int:
                 skipped["invalid_origin"] = skipped.get("invalid_origin", 0) + 1
                 continue
 
+            framing = record.get("framing") or args.framing or DEFAULT_FRAMING
+            if framing not in FRAMINGS:
+                skipped["invalid_framing"] = skipped.get("invalid_framing", 0) + 1
+                continue
+
             frame_id = record.get("frame_id")
             if frame_id is None:
                 if subject not in counters:
@@ -266,6 +274,7 @@ def main(argv: list[str] | None = None) -> int:
                 "device": str(record.get("device") or args.device),
                 "subject": subject,
                 "scene": str(record.get("scene") or args.scene),
+                "framing": framing,
                 "keypoints": points,
                 "features": {
                     name: round(float(value), 6) for name, value in features.items()

@@ -12,7 +12,10 @@ RUN pip install --no-cache-dir \
     "asyncpg>=0.29" \
     "redis>=5.0"
 
-COPY app ./app
+COPY apps/cloud-api/app ./app
+COPY packages/intervention-engine/src ./packages/intervention-engine/src
+
+ENV PYTHONPATH=/app/packages/intervention-engine/src
 
 EXPOSE 8000
 

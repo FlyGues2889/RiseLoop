@@ -16,7 +16,7 @@ import httpx
 from pydantic import BaseModel
 
 from ..core.config import Settings
-from ..schemas.posture import PostureFeatures
+from ..schemas.posture import UPPER_BODY_VISIBILITY_MIN, PostureFeatures
 from .base import ServiceStatus
 from intervention_engine import PostureClass
 
@@ -44,9 +44,16 @@ class PosturePrediction(BaseModel):
 
 def mock_predict(features: PostureFeatures) -> tuple[PostureClass, float]:
     """mock 模式的几何启发式：只保证链路可跑，不保证分类质量。"""
-    if features.shoulder_visibility < 0.5 or features.shoulder_width <= 0:
-        confidence = max(0.0, min(1.0, features.shoulder_visibility))
+    if (
+        features.upper_body_visibility < UPPER_BODY_VISIBILITY_MIN
+        or features.shoulder_visibility < UPPER_BODY_VISIBILITY_MIN
+    ):
+        confidence = min(
+            features.upper_body_visibility, features.shoulder_visibility
+        )
         return PostureClass.UNDETERMINED, round(confidence, 3)
+    if features.shoulder_width <= 0:
+        return PostureClass.UNDETERMINED, 0.0
 
     if abs(features.shoulder_tilt_deg) >= TILT_THRESHOLD_DEG:
         confidence = min(0.95, 0.6 + abs(features.shoulder_tilt_deg) / 45)
@@ -110,6 +117,8 @@ class ModelArtsService:
             headers["Authorization"] = f"Bearer {key}"
         elif header == "x-api-key":
             headers["X-Api-Key"] = key
+        elif header == "x-apig-appcode":
+            headers["X-Apig-AppCode"] = key
         else:
             headers["X-Auth-Token"] = key
         return headers

@@ -115,6 +115,30 @@ def test_infer_marks_undetermined_when_shoulders_hidden(client, auth_headers):
     assert body["guidance"]["overlay"] == "undetermined_guide"
 
 
+def test_infer_works_when_only_head_and_shoulders_are_visible(client, auth_headers):
+    points = _pose()
+    upper = set(MEDIAPIPE_33[:13])
+    for point in points:
+        point["visibility"] = 0.95 if point["name"] in upper else 0.0
+    response = _infer(client, auth_headers, keypoints=points)
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["posture"] == "baseline"
+    assert body["features"]["upper_body_visibility"] == 1.0
+
+
+def test_infer_marks_undetermined_when_upper_body_is_mostly_hidden(client, auth_headers):
+    points = _pose()
+    for point in points:
+        if point["name"] in MEDIAPIPE_33[3:11]:
+            point["visibility"] = 0.1
+    response = _infer(client, auth_headers, keypoints=points)
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["features"]["upper_body_visibility"] < 0.5
+    assert body["posture"] == "undetermined"
+
+
 def test_infer_rejects_wrong_keypoint_count(client, auth_headers):
     response = _infer(client, auth_headers, keypoints=_pose()[:-1])
     assert response.status_code == 422
@@ -153,6 +177,22 @@ def test_infer_returns_503_when_modelarts_unavailable(client, auth_headers):
 def test_infer_in_openapi(client):
     schema = client.get("/openapi.json").json()
     assert "/posture/infer" in schema["paths"]
+
+
+def test_mock_predict_zero_shoulder_width_is_undetermined():
+    from app.cloud.modelarts import mock_predict
+    from app.schemas.posture import PostureFeatures
+
+    features = PostureFeatures(
+        shoulder_tilt_deg=0.0,
+        shoulder_width=0.0,
+        shoulder_visibility=1.0,
+        head_forward_ratio=0.0,
+        upper_body_visibility=1.0,
+    )
+    posture, confidence = mock_predict(features)
+    assert posture.value == "undetermined"
+    assert confidence == 0.0
 
 
 def test_extract_features_rejects_nothing_but_is_deterministic():

@@ -119,10 +119,12 @@ def test_self_test_to_collect_and_dataset_check(tmp_path):
     assert report.ok
     assert report.frames == 3
     assert report.origins == {"capture": 3}
+    assert report.framings == {"upper_body": 3}
     assert report.labels == {"baseline": 3}
     assert report.subjects == {"s01"}
 
     first = json.loads(raw.read_text(encoding="utf-8").splitlines()[0])
+    assert first["framing"] == "upper_body"
     assert first["label_source"] == "human"
     assert first["origin"] == "capture"
     assert len(first["keypoints"]) == 33
@@ -163,12 +165,26 @@ def test_make_record_has_no_media_fields():
         "device",
         "subject",
         "scene",
+        "framing",
         "label",
         "label_source",
         "origin",
         "note",
         "keypoints",
     }
+    assert record["framing"] == "upper_body"
     assert record["label_source"] == "human"
     assert record["origin"] == "capture"
     assert len(record["keypoints"]) == 33
+
+
+def test_make_record_rejects_unknown_framing():
+    with pytest.raises(contract.ContractError):
+        capture_webcam.make_record(
+            capture_webcam.self_test_pose("baseline"),
+            subject="s02",
+            device="laptop-cam",
+            scene="office",
+            framing="close_up",
+            label="baseline",
+        )
