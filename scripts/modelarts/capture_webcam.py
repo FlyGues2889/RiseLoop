@@ -33,7 +33,13 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Iterable, Sequence
 
-from posture_contract import KEYPOINT_ORDER, LABELS, ContractError, validate_keypoints
+from posture_contract import (
+    KEYPOINT_ORDER,
+    LABELS,
+    ContractError,
+    validate_keypoint_ranges,
+    validate_keypoints,
+)
 
 DEFAULT_MODEL = (
     Path(__file__).resolve().parents[2]
@@ -76,7 +82,7 @@ def normalise_landmarks(landmarks: Sequence[Any]) -> list[dict[str, Any]]:
                 "visibility": round(visibility, 3),
             }
         )
-    validate_keypoints(points)
+    validate_keypoint_ranges(points)
     return points
 
 
@@ -96,7 +102,7 @@ def make_record(
         raise ContractError(f"未知类别：{label!r}")
     if not subject.strip():
         raise ContractError("subject 不能为空")
-    validate_keypoints(points)
+    validate_keypoint_ranges(points)
     return {
         "ts": ts or datetime.now().astimezone().isoformat(timespec="seconds"),
         "device": device,
@@ -281,6 +287,27 @@ def _draw_preview(
         )
 
 
+BLACK_FRAME_MEAN = 5.0
+
+
+def frame_is_black(frame: Any) -> bool:
+    return float(frame.mean()) < BLACK_FRAME_MEAN
+
+
+def prime_camera(camera: Any, cv2: Any, *, timeout: float = 8.0) -> float:
+    """Drain black frames that virtual cameras emit until their source attaches."""
+
+    started = time.monotonic()
+    if timeout <= 0:
+        return 0.0
+    deadline = started + timeout
+    while time.monotonic() < deadline:
+        ok, frame = camera.read()
+        if ok and frame is not None and not frame_is_black(frame):
+            return time.monotonic() - started
+    return time.monotonic() - started
+
+
 def run_webcam(args: argparse.Namespace) -> int:
     try:
         import cv2
@@ -302,6 +329,8 @@ def run_webcam(args: argparse.Namespace) -> int:
         camera.set(cv2.CAP_PROP_FRAME_WIDTH, args.width)
     if args.height > 0:
         camera.set(cv2.CAP_PROP_FRAME_HEIGHT, args.height)
+
+    prime_camera(camera, cv2, timeout=args.prime)
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
     output = args.out.open("a" if args.append else "w", encoding="utf-8", newline="\n")
@@ -427,6 +456,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--duration", type=float, default=30.0, help="0 = until q/Ctrl+C")
     parser.add_argument("--interval", type=float, default=0.5, help="seconds between samples")
     parser.add_argument("--warmup", type=float, default=2.0, help="discard seconds before writing")
+    parser.add_argument(
+        "--prime",
+        type=float,
+        default=8.0,
+        help="seconds to wait for a non-black frame before the timeline starts",
+    )
     parser.add_argument("--model", type=Path, default=DEFAULT_MODEL)
     parser.add_argument("--append", action="store_true")
     parser.add_argument("--no-preview", action="store_true")
@@ -444,6 +479,8 @@ def main(argv: Iterable[str] | None = None) -> int:
         parser.error("--duration 不能为负数")
     if args.warmup < 0:
         parser.error("--warmup 不能为负数")
+    if args.prime < 0:
+        parser.error("--prime 不能为负数")
     if args.self_test_frames < 1:
         parser.error("--self-test-frames 必须大于 0")
 

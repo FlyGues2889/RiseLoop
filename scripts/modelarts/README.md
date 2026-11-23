@@ -13,6 +13,7 @@
 | `dataset_check.py` | jsonl 校验：契约、特征一致性、标签、禁止字段 | 否 |
 | `collect_frames.py` | 原始关键点 → 训练集：重算 6 特征、分配 `frame_id`、拒绝画面字段 | 否 |
 | `capture_webcam.py` | 摄像头采集：MediaPipe 33 点 → 仅关键点 jsonl，不写画面 | 否 |
+| `list_cameras.py` | 列出 DirectShow 摄像头序号，对应 `--camera N` | 否 |
 
 `posture_runtime.py` 是唯一允许的重复，因为 ModelArts 只能上传模型目录。
 `apps/cloud-api/tests/test_modelarts_contract_parity.py` 用 300 组随机关键点
@@ -46,6 +47,20 @@ py -3.11 -m venv .venv-capture
 
 `cv2` 由 mediapipe 自带的 `opencv-contrib-python` 提供，不要再单独装
 `opencv-python`，否则两份 `cv2` 会互相覆盖。
+
+先确认 `--camera` 序号对应哪台设备：
+
+```powershell
+.venv-capture\Scripts\python.exe scripts/modelarts/list_cameras.py
+```
+
+```
+0   Integrated Camera
+1   FlyGues 的 Turbo 6V (Windows 虚拟摄像头)
+```
+
+虚拟摄像头（OBS、FlyGues 等）打开后有数秒黑屏，等投喂源接上才出画面。
+脚本默认先等最多 8 秒的非黑帧（`--prime`），不计入采集时长。
 
 先无摄像头自测：
 
@@ -82,6 +97,8 @@ py -3.11 -m venv .venv-capture
 - 模型路径含中文时，脚本先复制到 `%TEMP%\riseloop-capture-models\`；
   MediaPipe 的 C++ 加载器读不了非 ASCII 路径。
 - `written: 0` 且 `no_pose > 0` 表示镜头里没人或光线不足，不是脚本故障。
+- MediaPipe 会给画面外关节外推坐标，坐着时腿部常到 `y≈2.8`；契约允许
+  `x/y ∈ [-2,4]`、`z ∈ [-4,4]`，超出按异常帧跳过，不中断整批转换。
 
 ## 合并训练包的规则
 
@@ -199,8 +216,8 @@ python scripts/modelarts/evaluate_posture.py --artifacts scripts/modelarts/artif
 python -m pytest -q
 ```
 
-- 本分支：**141 passed，0 skipped**（Node 在 PATH）；上游基线 129，新增 12 个用例
-  （决策规则、生成器跨 `PYTHONHASHSEED` 复现、采集脚本 10 项）。
+- 本分支：**144 passed，0 skipped**（Node 在 PATH）；上游基线 129，新增 15 个用例
+  （决策规则、生成器跨 `PYTHONHASHSEED` 复现、采集脚本 13 项）。
 - 其余使用上游 `apps/cloud-api/tests/test_modelarts_contract_parity.py`
   的 11 个用例（含 300 组随机关键点 parity、dataset_check、label_policy）。
 - `dataset_check` 输出：`ok: true`，`frames: 1440`，`subjects: 12`，`errors: 0`。

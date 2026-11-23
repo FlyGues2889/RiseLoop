@@ -228,9 +228,18 @@ Tauri WebView
 **2026-11-19 进展：**
 
 - 训练包 v0 完成：6 特征 MLP、四分类、低置信度改判，报告在 `scripts/modelarts/reports/v0/`；`evaluate_posture.py` 复算 A/B/chosen 全部一致。
-- `/posture/infer` 的 mock 全链路与本地 `serve.py` 冒烟均通过；141 个 Python 测试全绿。
+- `/posture/infer` 的 mock 全链路与本地 `serve.py` 冒烟均通过；144 个 Python 测试全绿。
 - 仍未完成：真实 ModelArts endpoint、真实摄像头采集与人工标注、真实包络确认、线上 503/超时/断网回退实测。
 - 合成数据指标只验证链路，不能作为泛化准确率或答辩效果数据。
+
+**2026-11-23 采集链路验证：**
+
+- `capture_webcam.py` 在 CPython 3.11 64 位 + MediaPipe 0.10.35 下跑通，
+  用 FlyGues 虚拟摄像头（DirectShow 索引 1）采到 20 帧，`no_pose=0`。
+- 契约修正：MediaPipe 对画面外关节会给外推坐标（坐姿腿部到 `y≈2.8`），
+  `Keypoint` 边界由 `[-0.5,1.5]` 放宽到 `x/y ∈ [-2,4]`、`z ∈ [-4,4]`；
+  超出按异常帧跳过，`collect_frames` 不再因单帧中断整批。
+- 仍未完成：真实受试者采集、人工标注、真实 ModelArts endpoint。
 
 ## 10. 摄像头姿态：记录与报告（不弹通知）
 
@@ -388,6 +397,6 @@ Tauri WebView
 | 决策规则 | `argmax`，`confidence < 0.5` 输出 `undetermined`；训练、评估、serving 共用同一函数 |
 | 离线复跑 | `generate_synthetic_frames.py` → `dataset_check.py` → `train_posture.py` → `evaluate_posture.py`，命令见 `scripts/modelarts/README.md` |
 | 本机冒烟 | `serve.py` 对 `s01-000001` 返回 `baseline` / `0.995108`，与 `smoke_test.json` 一致；日志不含关键点数组 |
-| 测试 | `python -m pytest -q`：141 passed（含决策规则、生成器跨 hash seed 复现、采集链路） |
+| 测试 | `python -m pytest -q`：144 passed（含决策规则、生成器跨 hash seed 复现、采集链路） |
 | 未完成 | 真实 endpoint 未创建；未上传模型包；未用真实摄像头数据复评 |
 

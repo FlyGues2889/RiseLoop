@@ -49,12 +49,16 @@ KEYPOINT_INDEX: dict[str, int] = {name: index for index, name in enumerate(MEDIA
 
 
 class Keypoint(BaseModel):
-    """单个归一化关键点；坐标 0–1，含可见度，不含像素。"""
+    """单个归一化关键点；坐标系 0–1，含可见度，不含像素。
+
+    MediaPipe 对画面外的关节会给外推坐标，坐着时腿部常到 y≈2.8，
+    因此边界留到 [-2, 4]；超出即视为异常帧。
+    """
 
     name: str
-    x: float = Field(ge=-0.5, le=1.5)
-    y: float = Field(ge=-0.5, le=1.5)
-    z: float = Field(ge=-2.0, le=2.0)
+    x: float = Field(ge=-2.0, le=4.0)
+    y: float = Field(ge=-2.0, le=4.0)
+    z: float = Field(ge=-4.0, le=4.0)
     visibility: float = Field(ge=0.0, le=1.0)
 
 

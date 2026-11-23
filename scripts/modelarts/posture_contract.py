@@ -41,6 +41,10 @@ MIN_VISIBILITY = 0.5
 class ContractError(ValueError):
     """输入不符合端云契约。"""
 
+    def __init__(self, message: str = "", code: str = "contract_error") -> None:
+        super().__init__(message)
+        self.code = code
+
 
 def keypoint_names(keypoints: Sequence[dict[str, Any]]) -> list[str]:
     return [str(point.get("name", "")).strip().lower() for point in keypoints]
@@ -61,11 +65,21 @@ def _to_keypoint(index: int, raw: dict[str, Any]) -> Keypoint:
     try:
         fields = {name: raw[name] for name in ("name", "x", "y", "z", "visibility")}
     except KeyError as exc:
-        raise ContractError(f"关键点 {index} 缺字段 {exc.args[0]}") from exc
+        raise ContractError(f"关键点 {index} 缺字段 {exc.args[0]}", code="missing_field") from exc
     try:
         return Keypoint(**fields)
     except ValidationError as exc:
-        raise ContractError(f"关键点 {index} 数值越界") from exc
+        raise ContractError(
+            f"关键点 {index} 数值越界", code="keypoint_out_of_range"
+        ) from exc
+
+
+def validate_keypoint_ranges(keypoints: Sequence[dict[str, Any]]) -> None:
+    """MediaPipe can emit landmarks outside the frame; the contract cannot."""
+
+    validate_keypoints(keypoints)
+    for index, raw in enumerate(keypoints):
+        _to_keypoint(index, raw)
 
 
 def features_from_keypoints(keypoints: Sequence[dict[str, Any]]) -> dict[str, float]:

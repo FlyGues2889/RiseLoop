@@ -33,13 +33,14 @@ from posture_contract import (
     LABELS as LABEL_ORDER,
     ContractError,
     features_from_keypoints as compute_features,
+    validate_keypoint_ranges,
     validate_keypoints,
 )
 
 
 def _normalise_points(raw) -> list[dict[str, float]]:
     validate_keypoints(raw)
-    return [
+    points = [
         {
             "name": str(point["name"]).strip().lower(),
             "x": float(point["x"]),
@@ -49,6 +50,8 @@ def _normalise_points(raw) -> list[dict[str, float]]:
         }
         for point in raw
     ]
+    validate_keypoint_ranges(points)
+    return points
 
 
 def _validate_features(raw) -> dict[str, float]:
@@ -196,7 +199,11 @@ def main(argv: list[str] | None = None) -> int:
             except ContractError as exc:
                 skipped[exc.code] = skipped.get(exc.code, 0) + 1
                 continue
-            features = compute_features(points)
+            try:
+                features = compute_features(points)
+            except ContractError as exc:
+                skipped[exc.code] = skipped.get(exc.code, 0) + 1
+                continue
             supplied = record.get("features")
             if supplied is not None:
                 try:

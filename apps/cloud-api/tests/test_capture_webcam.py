@@ -39,6 +39,41 @@ def test_normalise_landmarks_rejects_wrong_count():
         capture_webcam.normalise_landmarks(_landmarks()[:32])
 
 
+def test_normalise_landmarks_accepts_off_frame_joints():
+    points = capture_webcam.normalise_landmarks(_landmarks(y=2.86, z=-1.4))
+    assert points[0]["y"] == 2.86
+    assert points[0]["z"] == -1.4
+
+
+def test_normalise_landmarks_rejects_extreme_values():
+    with pytest.raises(contract.ContractError):
+        capture_webcam.normalise_landmarks(_landmarks(y=4.4))
+
+
+def test_collect_skips_out_of_range_row_without_aborting(tmp_path):
+    good = capture_webcam.make_record(
+        capture_webcam.self_test_pose("baseline"),
+        subject="s01",
+        device="unit-cam",
+        scene="desk",
+        label="baseline",
+    )
+    bad = json.loads(json.dumps(good))
+    bad["keypoints"][0]["y"] = 9.0
+
+    raw = tmp_path / "raw.jsonl"
+    raw.write_text(
+        "\n".join(json.dumps(row) for row in (good, bad)) + "\n", encoding="utf-8"
+    )
+    frames = tmp_path / "frames.jsonl"
+
+    assert collect_frames.main(["--input", str(raw), "--out", str(frames)]) == 0
+
+    report = dataset_check.check_dataset(frames)
+    assert report.ok
+    assert report.frames == 1
+
+
 @pytest.mark.parametrize(
     ("label", "check"),
     [
