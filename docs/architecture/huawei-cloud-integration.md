@@ -34,7 +34,7 @@
 
 ## 3. 接入前置条件
 
-**Region 与网络**：云主机、DCS、RDS、ModelArts 放同一 Region。DCS 与 RDS 默认只有内网入口，必须与云主机同 VPC 同子网，否则云主机连不上。云主机入站放行 TCP 8000。
+**Region 与网络**：云主机、DCS、RDS、ModelArts 放同一 Region。DCS 与 RDS 默认只有内网入口，必须与云主机同 VPC 同子网，否则云主机连不上。云主机入站放行 TCP 8000——Flexus L 在实例自己的防火墙里放行，不在 VPC 安全组里。
 
 ### 3.1 DCS for Redis
 
@@ -50,6 +50,7 @@
 - 需要记录：内网地址、端口 5432、库名 `riseloop`、账号、口令。
 - 连通性验证：`psql "host=<内网地址> port=5432 dbname=riseloop user=<用户>" -c "select 1"`。
 - 表结构在服务启动时由 `create_schema` 建（`app/main.py`），无需手工建表。
+- `cloud_provider=huawei` 但 RDS 配置缺失时进程启动即失败，不退回内存存储（`app/main.py`）。
 
 ### 3.3 ModelArts 在线服务
 
@@ -98,6 +99,8 @@ RISELOOP_MODELARTS_MODEL_NAME=riseloop-posture-v1
 
 其余 `RISELOOP_OBS_*`、`RISELOOP_KMS_*`、`RISELOOP_JWT_SECRET` 见 `apps/cloud-api/.env.example`。`.env` 不进仓库、不打进镜像。
 
+`huawei` 模式下 `RISELOOP_RDS_DSN` 是硬前置：缺失则启动失败（`RuntimeError`，退出码非 0），不退回内存存储。只缺 DCS 时可以启动，实时状态落进程内存，重启即丢。
+
 ## 6. 验证
 
 | 端点 | 看什么 |
@@ -108,6 +111,8 @@ RISELOOP_MODELARTS_MODEL_NAME=riseloop-posture-v1
 | `POST /posture/infer` | 返回真实 `posture` + `confidence` + `source=huawei` |
 
 就绪口径：`/health/ready` 只要求 `rds` + `redis`（`app/api/routes/health.py:13`）。ModelArts 未配置不阻塞启动，但 `/posture/infer` 会明确返回 503——这是有意的分离，避免模型没就绪就整体不可用。
+
+RDS 运行中失联时，`/health/ready` 返回 503，业务请求返回 `503 {"detail":"store_unavailable"}`，客户端按 ready 状态判定即可；不会返回带堆栈的 500，也不会把 DSN 写进响应。
 
 ## 7. 接入阶段
 
