@@ -1,8 +1,10 @@
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from sqlalchemy.exc import SQLAlchemyError
 
 from .api.routes.assessment import router as assessment_router
 from .api.routes.auth import router as auth_router
@@ -20,12 +22,28 @@ from .repositories.store import build_store
 
 logger = logging.getLogger("riseloop.cloud")
 
+STORE_ERRORS = (SQLAlchemyError, ConnectionError, TimeoutError)
+
+
+async def _store_unavailable(request: Request, exc: Exception) -> JSONResponse:
+    logger.error("store unavailable: %s", type(exc).__name__)
+    return JSONResponse(status_code=503, content={"detail": "store_unavailable"})
+
 
 def create_app(settings: Settings | None = None) -> FastAPI:
     app_settings = settings or get_settings()
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
+        if app_settings.cloud_provider == "huawei" and app_settings.resolved_rds_dsn() is None:
+            logger.error(
+                "refusing to start: RISELOOP_CLOUD_PROVIDER=huawei requires RISELOOP_RDS_DSN"
+            )
+            raise RuntimeError(
+                "RISELOOP_CLOUD_PROVIDER=huawei requires RISELOOP_RDS_DSN "
+                "(or RISELOOP_RDS_HOST + RISELOOP_RDS_USER + RISELOOP_RDS_DB); "
+                "in-memory store is not allowed in huawei mode"
+            )
         app.state.settings = app_settings
         app.state.cloud = build_registry(app_settings)
         store = build_store(app_settings)
@@ -49,6 +67,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         version=app_settings.version,
         lifespan=lifespan,
     )
+    for error in STORE_ERRORS:
+        app.add_exception_handler(error, _store_unavailable)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=app_settings.cors_origins,
