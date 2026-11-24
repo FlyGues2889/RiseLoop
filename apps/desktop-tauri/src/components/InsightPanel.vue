@@ -82,7 +82,7 @@ watch(
 
       <EvidenceCallout v-if="hasNotes" v-bind="REVIEW_SOURCE" />
 
-      <m3e-list variant="segmented" v-if="aiEnabled">
+      <m3e-list variant="segmented" v-if="aiEnabled" class="qa">
         <m3e-list-item>
           <span class="material-symbols-rounded" slot="leading">chat</span>
           问答
@@ -124,6 +124,10 @@ watch(
 .body {
   padding: 0.25rem 0 1.125rem;
   border-top: 0.2rem solid var(--md-sys-color-outline-variant);
+}
+
+.qa {
+  margin-top: 1rem;
 }
 
 .ask {
