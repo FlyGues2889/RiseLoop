@@ -123,6 +123,8 @@ pnpm dev
 pnpm tauri build
 ```
 
+产出免安装单文件 `apps/desktop-tauri/src-tauri/target/release/rise-loop.exe`，双击即用，不生成 msi / setup.exe。目标机需要 WebView2 运行时（Windows 11 自带，Windows 10 一般随 Edge 预装）。
+
 ---
 
 ## 🧪 测试与部署复现
