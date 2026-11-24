@@ -330,7 +330,7 @@ Tauri WebView
 | 本地资源 | 已打包，不走 CDN | `public/models/pose_landmarker_lite.task`（5.5 MB）、`public/mediapipe/wasm/*`（14.6 MB + 334 KB），本地 200 可访问 |
 | 测试 | 102 passed（11-09 快照） | `python -m pytest -q`；前端 `pnpm build` 通过；当前为 131 passed |
 
-真实 ModelArts endpoint 尚未开通（**需付费**），因此当前所有推理结果都带 `source: "mock"`，界面显示“mock 模型”，不得对外表述为“已接入华为云推理”。
+真实 ModelArts endpoint 尚未开通（**需付费**），因此当前所有推理结果都带 `source: "mock"`，界面显示「演示模型」，不得对外表述为「已接入华为云推理」。
 
 ### A.2 请求/响应（实现后的精确契约）
 
@@ -393,7 +393,7 @@ Tauri WebView
    - **推理来源**应为“华为云 ModelArts”或“mock 模型”；
    - **实时风险**在 2 秒内出现 BRLI 与推荐方案。
 4. 做三个动作验证分类：正常坐 → “基准姿态”；肩一高一低 → “明显侧倾”；头前伸 → 云端返回“头前伸”。
-5. 拔网线或停掉 cloud-api，确认提示“无法连接云服务，已切到端侧兜底”，且不出现任何编造的云端结论。
+5. 拔网线或停掉 cloud-api，确认提示「连不上云服务」，且不出现任何编造的云端结论。
 
 记录到验收表：fps、关键点数、单次上传字节数（约 33 × 5 字段 ≈ 1–2 KB）、端到端延迟。
 
