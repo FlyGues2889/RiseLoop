@@ -29,7 +29,7 @@ const TABLE = {
   "s0-shoulder-roll": { framing: "upper", scene: "seated", focus: ARMS, hint: "让两侧肩膀和肘部都在画面里" },
   "s1-seated-knee": { framing: "none", scene: "seated", focus: [], hint: "腿在桌下，边做边看，不要求对齐" },
   "s1-stand-break": { framing: "full", scene: "standing", focus: STANDING, hint: "起身后往后退半步，让膝盖进画面" },
-  "s1-hip-flexor": { framing: "full", scene: "standing", focus: STANDING, hint: "往后退一点，让髋和膝盖都在画面里" },
+  "s1-hip-flexor": { framing: "full", scene: "standing", focus: STANDING, hint: "请后退少许，使髋部与膝盖位于画面内" },
   "s2-core-activation": { framing: "none", scene: "seated", focus: [], hint: "边做边看，不要求对齐" },
   "s2-band-row": { framing: "upper", scene: "seated", focus: ARMS, hint: "让肩膀到手腕都在画面里" },
   "s3-posture-reset": { framing: "full", scene: "standing", focus: [JOINT.left_ear, JOINT.right_ear, ...STANDING], hint: "靠墙站好后，让头和髋都在画面里" },

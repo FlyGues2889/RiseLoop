@@ -76,7 +76,7 @@ watch(
             <li v-for="item in state.weekly.suggestions" :key="`s-${item}`" class="muted">{{ item }}</li>
           </ul>
           <p class="placeholder" v-else-if="state.weeklyBusy">正在生成建议…</p>
-          <p class="placeholder" v-else>做完一次活动后，这里会出现建议。</p>
+          <p class="placeholder" v-else>完成一次活动后，此处将显示建议。</p>
         </m3e-list-item>
       </m3e-list>
 
@@ -95,7 +95,7 @@ watch(
                 placeholder="例如：开会时颈肩紧张，怎么快速缓解？" @keyup.enter="askQuestion" />
               <m3e-button slot="suffix" variant="text" size="small"
                 :disabled.prop="state.ai.busy || !state.ai.question.trim()" @click="askQuestion">
-                {{ state.ai.busy ? "回答中…" : "提问" }}
+                提问
               </m3e-button>
             </m3e-form-field>
 

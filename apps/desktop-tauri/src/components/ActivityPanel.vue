@@ -279,7 +279,7 @@ async function submit(completion) {
     stopTick();
     disarmAutoStart();
   } catch {
-    error.value = "提交没成功，请再试一次。";
+    error.value = "提交未成功，请重试。";
   } finally {
     submitting.value = false;
   }
@@ -406,7 +406,7 @@ onBeforeUnmount(() => {
 
         <div class="feedback-grid">
           <div class="field">
-            <span class="field-label">做完的感觉</span>
+            <span class="field-label">完成后的感受</span>
             <m3e-button-group class="segments">
               <m3e-button v-for="option in feelingOptions" :key="option.value" toggle variant="outlined"
                 :selected.prop="feeling === option.value" @click="pickField($event, feeling, option.value)">
@@ -416,7 +416,7 @@ onBeforeUnmount(() => {
           </div>
 
           <div class="field">
-            <span class="field-label">如果跳过，主要阻碍</span>
+            <span class="field-label">跳过原因</span>
             <m3e-button-group class="segments">
               <m3e-button v-for="option in obstacleOptions" :key="option.value" toggle variant="outlined"
                 :selected.prop="obstacle === option.value" @click="pickField($event, obstacle, option.value)">

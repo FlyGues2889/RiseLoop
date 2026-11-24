@@ -69,8 +69,8 @@ fn notify_break(app: &tauri::AppHandle, snapshot: &TimerSnapshot) {
     let _ = app
         .notification()
         .builder()
-        .title("该活动一下了")
-        .body(format!("已连续久坐 {minutes} 分钟，起来做一个最短有效动作。"))
+        .title("久坐提醒")
+        .body(format!("已连续久坐 {minutes} 分钟，请起身完成一个最短有效动作。"))
         .show();
 }
 
@@ -111,8 +111,8 @@ pub fn run() {
                     notice::show(
                         &demo,
                         notice::NoticePayload {
-                            title: "该活动一下了".to_string(),
-                            body: "已经连续久坐 46 分钟。".to_string(),
+                            title: "久坐提醒".to_string(),
+                            body: "已连续久坐 46 分钟，请起身活动。".to_string(),
                             sitting_minutes: 46,
                             action: Some(notice::NoticeAction {
                                 id: Some("s1-stand-break".to_string()),
@@ -214,8 +214,8 @@ pub fn run() {
                     let shown = notice::show(
                         &handle,
                         notice::NoticePayload {
-                            title: "该活动一下了".to_string(),
-                            body: format!("已经连续久坐 {minutes} 分钟。"),
+                            title: "久坐提醒".to_string(),
+                            body: format!("已连续久坐 {minutes} 分钟，请起身活动。"),
                             sitting_minutes: minutes,
                             action: None,
                         },

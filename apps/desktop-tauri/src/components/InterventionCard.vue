@@ -144,7 +144,7 @@ function pickField(event, field, value) {
       <article v-else class="idle">
         <header class="page-head">
           <h2>久坐计时</h2>
-          <p class="lead">连续坐着达到提醒间隔，就按当前阶段推一个最短有效的动作；中断后计时会自己归零。</p>
+          <p class="lead">连续久坐达到提醒间隔后，将按当前阶段推荐一个最短有效动作；起身后计时重新开始。</p>
         </header>
 
         <div class="timer-slot">

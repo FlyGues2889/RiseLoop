@@ -494,14 +494,14 @@ onBeforeUnmount(() => {
           </p>
           <p class="risk-line muted" v-else>{{ risk.reason }}</p>
           <p class="risk-line muted" v-if="guidanceText">{{ guidanceText }}</p>
-          <p class="risk-line danger" v-if="risk.needs_medical_advice">出现明显不适，建议暂停并就医。</p>
+          <p class="risk-line danger" v-if="risk.needs_medical_advice">如出现明显不适，请暂停并就医。</p>
           <m3e-button v-if="risk.actions?.length && !props.inline" class="risk-action" variant="outlined" size="small"
             @click="adoptRisk">
             采用推荐方案
           </m3e-button>
         </template>
         <p v-else class="risk-line muted">
-          {{ inferBusy ? "正在识别…" : "保持姿势稳定就会开始评估。云端不可用时不做姿态判定。" }}
+          {{ inferBusy ? "正在识别…" : "保持姿势稳定后将开始评估；云端不可用时暂不做姿态判定。" }}
         </p>
         <p v-if="cloudError" class="risk-line warn-line">{{ cloudError }}</p>
       </section>
@@ -513,7 +513,7 @@ onBeforeUnmount(() => {
           {{ loading ? "加载中…" : "开启摄像头" }}
         </m3e-button>
         <m3e-button v-else variant="outlined" size="small" @click="stop">关闭摄像头</m3e-button>
-        <span class="hint">关键点在本机提取，姿态和风险来自云端模型。</span>
+        <span class="hint">关键点在本机提取，姿态与风险来自云端模型。</span>
       </footer>
     </section>
   </div>

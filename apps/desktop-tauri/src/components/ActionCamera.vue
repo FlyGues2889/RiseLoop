@@ -40,7 +40,7 @@ const focus = computed(() => props.framing?.focus ?? []);
 const needAlign = computed(() => mode.value !== "none");
 const hint = computed(() => {
   if (props.framing?.hint) return props.framing.hint;
-  return mode.value === "full" ? "往后退半步，让膝盖进画面" : "坐直，让头和双肩在画面里";
+  return mode.value === "full" ? "请后退半步，使膝盖进入画面" : "请坐直，使头部与双肩位于画面内";
 });
 
 // 久坐场景默认只框上半身；只有站立动作才要求膝盖以下
@@ -60,12 +60,12 @@ const guideStyle = computed(() => (box.value ? {
 
 const label = computed(() => {
   if (!needAlign.value) return hint.value;
-  return aligned.value ? "对齐了" : hint.value;
+  return aligned.value ? "已对齐" : hint.value;
 });
 
 const placeholder = computed(() => {
   if (status.value === "starting") return "正在打开摄像头";
-  if (status.value === "error") return "摄像头不可用，先按文字做";
+  if (status.value === "error") return "摄像头不可用，请按文字步骤练习";
   return "摄像头已暂停";
 });
 

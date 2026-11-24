@@ -133,7 +133,7 @@ async function expireSession(error) {
   await clearToken();
   resetViewState();
   state.error = view;
-  pushLog("登录状态已失效，请重新登录");
+  pushLog("登录状态已失效，请重新登录。");
 }
 
 export async function applyToken(response) {
@@ -142,7 +142,7 @@ export async function applyToken(response) {
     try {
       await invoke("store_session_token", { token: response.access_token });
     } catch (error) {
-      pushLog("这次登录只在本次运行有效，重启后需要重新登录");
+      pushLog("本次登录仅在本次运行期间有效，重启后需重新登录。");
     }
   }
   state.phase = "assessment";
@@ -221,12 +221,12 @@ export async function enterDemo() {
       await refreshTimer();
       await startTimer();
       pushLog(
-        `本地模式：已恢复上次评估（当前阶段 ${snapshot.assessment.state_name}）`
+        `本地模式：已恢复上次评估（当前阶段：${snapshot.assessment.state_name}）。`
       );
     } else {
-      pushLog("本地模式：数据只保存在本机，不连网络");
+      pushLog("本地模式：数据仅保存在本机，不连接网络。");
     }
-    pushLog(`本地模式不连云端，${DEMO_UNAVAILABLE.join("、")}用不了`);
+    pushLog(`本地模式不连接云端，${DEMO_UNAVAILABLE.join("、")} 暂不可用。`);
   } catch (error) {
     useCloud();
     state.error = describeError(error);
@@ -239,7 +239,7 @@ export async function exitDemo() {
   await clearToken();
   useCloud();
   resetViewState();
-  pushLog("已回到云端模式");
+  pushLog("已切换回云端模式。");
 }
 
 export async function register() {
@@ -248,7 +248,7 @@ export async function register() {
   state.error = null;
   try {
     await applyToken(await activeApi.register(state.email, state.password));
-    pushLog("账号已创建，已登录");
+    pushLog("账号已创建，已完成登录。");
   } catch (error) {
     handleError(error);
   } finally {
@@ -262,7 +262,7 @@ export async function login() {
   state.error = null;
   try {
     await applyToken(await activeApi.login(state.email, state.password));
-    pushLog("登录成功");
+    pushLog("登录成功。");
   } catch (error) {
     handleError(error);
   } finally {
@@ -277,7 +277,7 @@ export async function logout() {
   }
   await clearToken();
   resetViewState();
-  pushLog("已退出登录");
+  pushLog("已退出登录。");
 }
 
 export async function submitAssessment(form) {
@@ -290,7 +290,7 @@ export async function submitAssessment(form) {
     state.phase = "main";
     await refreshTimer();
     await startTimer();
-    pushLog(`评估完成，当前阶段：${result.state_name}`);
+    pushLog(`评估完成，当前阶段：${result.state_name}。`);
   } catch (error) {
     handleError(error);
   } finally {
@@ -415,7 +415,7 @@ export async function resetTimer({ silent = false } = {}) {
   if (restarted) state.timer = restarted;
   state.pending = null;
   state.pendingActions = [];
-  if (!silent) pushLog(`久坐计时已重新开始（${state.timer.threshold_minutes} 分钟提醒）`);
+  if (!silent) pushLog(`久坐计时已重新开始（每 ${state.timer.threshold_minutes} 分钟提醒一次）。`);
 }
 
 export async function setThreshold(minutes) {
@@ -426,7 +426,7 @@ export async function setThreshold(minutes) {
 export async function fastForward(minutes) {
   const next = await timerCommand("timer_seed_elapsed", { minutes });
   if (next) state.timer = next;
-  pushLog(`手动开始一次活动：久坐计时推进到 ${minutes} 分钟`);
+  pushLog(`已手动开始活动：久坐计时推进至 ${minutes} 分钟。`);
   await tickHeartbeat({ force: true });
 }
 
@@ -450,7 +450,7 @@ export async function tickHeartbeat({ force = false } = {}) {
       const paused = await timerCommand("timer_pause");
       if (paused) state.timer = paused;
       await pushNoticeAction(preferred);
-      pushLog(`该起来活动了：${actions.length} 个动作可选，推荐「${preferred.name}」`);
+      pushLog(`到达提醒时间：共 ${actions.length} 个动作可选，推荐「${preferred.name}」。`);
     } else if (state.heartbeat.reason === "cooldown" && force) {
       // 手动“立即开始活动”：即使后端还在冷却期，也直接取动作让用户开始
       const fallback = await activeApi.actions(state.heartbeat.state ?? state.currentState);
@@ -461,19 +461,19 @@ export async function tickHeartbeat({ force = false } = {}) {
         const paused = await timerCommand("timer_pause");
         if (paused) state.timer = paused;
         await pushNoticeAction(preferred);
-        pushLog(`手动开始：${state.pendingActions.length} 个动作可选，推荐「${preferred.name}」`);
+        pushLog(`已手动开始：共 ${state.pendingActions.length} 个动作可选，推荐「${preferred.name}」。`);
         return;
       }
-      pushLog("刚提醒过，暂时没有可做的动作");
+      pushLog("刚刚已提醒过，暂无可执行的动作。");
     } else if (state.heartbeat.reason === "cooldown") {
-      pushLog("刚提醒过，10 分钟内不再提醒；要现在做，点「现在开始」");
+      pushLog("刚刚已提醒过，10 分钟内不再重复提醒；若要立即开始活动，请点击「现在开始」按钮。");
     } else if (!state.heartbeat.triggered) {
       // 便于排查“点了没反应”：把云端判定写进会话记录
       pushLog(
-        `还没到提醒时间：已坐 ${sittingMinutes.value} 分钟，${state.timer.threshold_minutes} 分钟提醒一次`
+        `未到提醒时间：已连续久坐 ${sittingMinutes.value} 分钟，提醒间隔 ${state.timer.threshold_minutes} 分钟。`
       );
     } else {
-      pushLog("到提醒时间了，但没有拿到可用动作");
+      pushLog("已到达提醒时间，但当前没有可用的动作。");
     }
   } catch (error) {
     handleError(error);
@@ -491,7 +491,7 @@ export async function submitFeedback(payload) {
     state.pendingActions = [];
     await resetTimer({ silent: true });
     pushLog(
-      `${result.from_state} → ${result.to_state}：${result.reason}`
+      `阶段已迁移：${result.from_state} → ${result.to_state}（${result.reason}）。`
     );
   } catch (error) {
     handleError(error);
@@ -614,7 +614,7 @@ export function applyPostureRecommendation(result) {
     state.planPreference = result.recommended_plan;
     savePlanPreference(result.recommended_plan);
   }
-  pushLog(`姿势检查已更新（久坐负荷 ${result.brli.toFixed(2)}），推荐动作已调整`);
+  pushLog(`姿势检查结果已更新（久坐负荷 ${result.brli.toFixed(2)}），推荐动作已相应调整。`);
   return true;
 }
 

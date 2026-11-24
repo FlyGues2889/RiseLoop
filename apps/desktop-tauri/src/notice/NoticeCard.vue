@@ -320,7 +320,7 @@ onBeforeUnmount(() => {
                 <div class="run-top">
                   <img v-if="refImage" class="run-ref" :src="refImage" alt="" @load="scheduleGrow" />
                   <div class="run-copy">
-                    <p class="run-step">{{ done ? "这一组做完了" : stepText }}</p>
+                    <p class="run-step">{{ done ? "本组动作已完成" : stepText }}</p>
                     <p class="run-meta">
                       {{ actionSession.name || action.name }}
                       <template v-if="!done"> · 第 {{ actionSession.index + 1 }} / {{ actionSession.steps.length }}
@@ -360,7 +360,7 @@ onBeforeUnmount(() => {
               {{ action.caution }}
             </m3e-callout>
 
-            <p v-if="done" class="run-hint">做完回主界面记一下感受。</p>
+            <p v-if="done" class="run-hint">完成后请返回主界面记录感受。</p>
           </template>
 
           <template v-else-if="action">
@@ -405,7 +405,7 @@ onBeforeUnmount(() => {
       <footer v-if="!expanded" class="foot">
         <m3e-button variant="filled" size="small" @click="expand">
           <span class="material-symbols-rounded" slot="icon">expand_less</span>
-          看看动作
+          查看动作
         </m3e-button>
         <span class="countdown">{{ secondsLeft() }} 秒后收起</span>
       </footer>

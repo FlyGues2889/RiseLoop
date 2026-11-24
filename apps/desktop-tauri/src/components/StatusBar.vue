@@ -16,7 +16,7 @@ const profileLabel = computed(() => {
 const confirmOpen = ref(false);
 const clearing = ref(false);
 
-const trainingHint = "坐在摄像头前采集几分钟，数据存在本机";
+const trainingHint = "受试者坐在摄像头前采集数分钟，数据仅保存在本机";
 
 function openTraining() {
   state.experimentalOpen = false;

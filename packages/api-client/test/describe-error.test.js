@@ -11,8 +11,8 @@ test("密码错误说密码错误，不说会话过期", () => {
   const view = describeError(
     apiError(401, "invalid_credentials", { detail: "invalid_credentials" }, "http://c/auth/login")
   );
-  assert.equal(view.title, "邮箱或密码不对");
-  assert.match(view.hint, /邮箱拼写和密码大小写/);
+  assert.equal(view.title, "邮箱或密码不正确");
+  assert.match(view.hint, /邮箱拼写与密码大小写/);
   assert.ok(!/失效/.test(view.hint));
 });
 
@@ -34,16 +34,16 @@ test("登录接口的 401 不算会话过期", () => {
 });
 
 test("邮箱已注册、待办缺失都有各自的说法", () => {
-  assert.equal(describeError(apiError(409, "email_exists")).title, "这个邮箱已经注册过");
+  assert.equal(describeError(apiError(409, "email_exists")).title, "该邮箱已注册");
   assert.equal(
     describeError(apiError(404, "no_pending_intervention")).title,
-    "现在没有待完成的动作"
+    "当前没有待完成的动作"
   );
-  assert.equal(describeError(apiError(404, "action_not_found")).title, "动作库里没找到这个动作");
+  assert.equal(describeError(apiError(404, "action_not_found")).title, "动作库中未找到该动作");
 });
 
 test("未开放能力不再显示裸状态码", () => {
-  assert.equal(describeError(apiError(501, "not_implemented")).title, "这项能力还没开放");
+  assert.equal(describeError(apiError(501, "not_implemented")).title, "该能力尚未开放");
   assert.equal(describeError(apiError(501, "local_mode_unavailable")).title, "本地模式没有这项能力");
 });
 
@@ -76,7 +76,7 @@ test("本机命令的英文错误被翻译", () => {
 
 test("未知错误保留一行技术细节但不裸露成正文", () => {
   const view = describeError(new Error("boom"));
-  assert.equal(view.title, "这一步没完成");
+  assert.equal(view.title, "操作未完成");
   assert.match(view.hint, /再试一次/);
   assert.equal(view.detail, "boom");
 });

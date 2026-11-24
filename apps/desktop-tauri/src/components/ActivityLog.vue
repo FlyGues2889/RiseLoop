@@ -17,10 +17,10 @@ const cameraLabel = computed(() => {
 });
 
 const cameraHint = computed(() => {
-  if (camera.mode === "live") return "动作页正在用画面，离开动作页即释放。";
-  if (camera.mode === "preview") return "设置页正在预览画面，关掉预览即释放。";
-  if (camera.mode === "sampling") return "正在采一帧算姿态，采完立刻关。";
-  return "空闲时不占用摄像头，到点才打开，采完立刻关。";
+  if (camera.mode === "live") return "动作页正在使用画面，离开动作页后释放。";
+  if (camera.mode === "preview") return "设置页正在预览画面，关闭预览后释放。";
+  if (camera.mode === "sampling") return "正在采集一帧用于姿态识别，采集完成后立即关闭。";
+  return "空闲时不占用摄像头；到达提醒时间后打开，采集完成后立即关闭。";
 });
 
 const cameraDuration = computed(() => {
@@ -97,7 +97,7 @@ onBeforeUnmount(stopTicker);
               <span class="text">{{ item.message }}</span>
             </m3e-list-item>
           </m3e-list>
-          <p v-else class="empty">还没有记录，操作之后会显示在这里。</p>
+          <p v-else class="empty">暂无记录，操作后将显示在此处。</p>
         </div>
       </m3e-tab-panel>
 
@@ -121,7 +121,7 @@ onBeforeUnmount(stopTicker);
               <span class="kind" :class="item.kind">{{ item.text }}</span>
             </m3e-list-item>
           </m3e-list>
-          <p v-else class="empty">还没有记录。</p>
+          <p v-else class="empty">暂无记录。</p>
 
           <p v-if="logPath" class="path">日志文件：{{ logPath }}</p>
         </div>

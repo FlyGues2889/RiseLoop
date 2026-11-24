@@ -166,11 +166,11 @@ function onClosed() {
     <h2 slot="header">{{ wasRunning ? "姿势监测" : "开启姿势监测" }}</h2>
 
     <template v-if="wasRunning">
-      <p>开启后，应用会在后台识别你的坐姿。</p>
+      <p>开启后，应用将在后台识别坐姿。</p>
     </template>
     <template v-else>
-      <p>开启后，应用会在后台识别你的坐姿。</p>
-      <p class="hint">画面只在本机处理，只有 33 个关键点坐标会发到云端。</p>
+      <p>开启后，应用将在后台识别坐姿。</p>
+      <p class="hint">画面仅在本机处理，仅 33 个关键点坐标将发送至云端。</p>
     </template>
 
     <div class="picker-row">
@@ -191,7 +191,7 @@ function onClosed() {
       <video ref="videoEl" class="preview-video" autoplay muted playsinline></video>
       <div v-if="!previewStream" class="preview-empty">
         <span class="material-symbols-rounded">videocam_off</span>
-        <span>还没有画面</span>
+        <span>暂无画面</span>
       </div>
     </div>
 

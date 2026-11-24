@@ -341,7 +341,7 @@ onBeforeUnmount(() => {
             </m3e-icon-button>
             <h1>采集训练数据</h1>
           </div>
-          <p class="lead">朋友坐到摄像头前，按提示采集几分钟；只记录 33 个关键点，数据留在本机。</p>
+          <p class="lead">受试者坐在摄像头前，按提示采集数分钟；仅记录 33 个关键点，数据保存在本机。</p>
         </header>
 
         <template v-if="phase === 'setup'">

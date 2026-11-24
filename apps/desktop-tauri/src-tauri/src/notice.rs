@@ -210,8 +210,8 @@ pub fn notice_set_action(
             if current.is_none() {
                 let sitting = minutes.unwrap_or(0);
                 *current = Some(NoticePayload {
-                    title: "该活动一下了".to_string(),
-                    body: format!("已经连续久坐 {sitting} 分钟。"),
+                    title: "久坐提醒".to_string(),
+                    body: format!("已连续久坐 {sitting} 分钟，请起身活动。"),
                     sitting_minutes: sitting,
                     action: Some(action.clone()),
                 });
