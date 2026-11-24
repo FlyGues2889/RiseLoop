@@ -55,12 +55,12 @@ const CODE_VIEWS = {
     hint: "换了设备或点了退出，重新登录就能继续。",
   },
   invalid_refresh_token: {
-    title: "续期凭证对不上",
+    title: "登录状态需要重新确认",
     hint: "重新登录一次就好，本机的评估和记录不受影响。",
   },
   refresh_expired: {
-    title: "续期期限到了",
-    hint: "长时间没打开过，重新登录就能接着用。",
+    title: "很久没登录了",
+    hint: "重新登录就能接着用。",
   },
   rate_limited: {
     title: "请求有点频繁",
@@ -83,8 +83,8 @@ const CODE_VIEWS = {
     hint: "不影响评估、计时、干预、反馈这条主线。",
   },
   local_mode_unavailable: {
-    title: "这项能力暂未开放",
-    hint: "当前版本没有提供这项能力。",
+    title: "本地模式没有这项能力",
+    hint: "切回云端模式后可以使用。",
   },
   modelarts_unavailable: {
     title: "云端姿态模型暂时不可用",
@@ -103,7 +103,7 @@ const STATUS_VIEWS = {
   },
   403: {
     title: "这一步被安全策略拦下",
-    hint: "确认账号没错；反复出现就把这条提示发给我们。",
+    hint: "确认账号没错；反复出现就重启应用。",
   },
   404: {
     title: "找不到要用的数据",
@@ -162,7 +162,7 @@ export function describeError(error) {
     return finish(
       {
         title: `服务端暂时出错（${error.status}）`,
-        hint: "稍等再试；一直失败就把时间点告诉我们。",
+        hint: "稍等再试；一直失败就重启应用。",
       },
       error,
       code
@@ -175,7 +175,7 @@ export function describeError(error) {
   return finish(
     {
       title: `请求没成功（${error.status}）`,
-      hint: "服务端返回了没预料到的结果，重试一次；反复出现就把这条提示发给我们。",
+      hint: "服务端返回了没预料到的结果，重试一次；反复出现就重启应用。",
     },
     error,
     code
@@ -209,7 +209,7 @@ function describePlainError(error) {
   }
   return {
     title: "这一步没完成",
-    hint: "本机操作没有执行成功，再试一次；反复失败就把这条提示发给我们。",
+    hint: "本机操作没有执行成功，再试一次；反复失败就重启应用。",
     message: null,
     detail: text || null,
   };

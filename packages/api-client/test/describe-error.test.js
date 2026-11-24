@@ -44,7 +44,7 @@ test("邮箱已注册、待办缺失都有各自的说法", () => {
 
 test("未开放能力不再显示裸状态码", () => {
   assert.equal(describeError(apiError(501, "not_implemented")).title, "这项能力还没开放");
-  assert.equal(describeError(apiError(501, "local_mode_unavailable")).title, "这项能力暂未开放");
+  assert.equal(describeError(apiError(501, "local_mode_unavailable")).title, "本地模式没有这项能力");
 });
 
 test("对象型 detail 不会渲染成 [object Object]", async () => {
