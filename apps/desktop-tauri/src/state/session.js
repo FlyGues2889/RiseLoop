@@ -154,9 +154,17 @@ export async function restoreSession() {
     const token = await invoke("load_session_token");
     if (!token) return false;
     memoryToken = token;
+    // 钥匙串里的令牌可能已经过期，或后端换过签名密钥：先确认它还能用。
+    // 否则用户会先看到评估页，填完提交时才被踢回登录。
+    await activeApi.weeklyReview(7);
     state.phase = "assessment";
     return true;
-  } catch {
+  } catch (error) {
+    memoryToken = null;
+    if (error instanceof ApiError && error.isSessionExpired) {
+      await clearToken();
+      state.error = describeError(error);
+    }
     return false;
   }
 }
