@@ -5,6 +5,8 @@ import { clearAllData, logout, state } from "../state/session.js";
 import { monitor, ui as cameraUi } from "../state/postureMonitor.js";
 
 const isSignedIn = computed(() => state.phase !== "auth");
+// 采集训练数据是开发工具，只在开发构建里露出，发行包不带这个入口
+const showExperimental = import.meta.env.DEV;
 
 const profileLabel = computed(() => {
   if (!isSignedIn.value) return "未登录";
@@ -73,7 +75,7 @@ async function confirmClear() {
       姿势监测设置
       <span class="menu-status">{{ monitorStatus }}</span>
     </m3e-menu-item>
-    <m3e-menu-item @click="state.experimentalOpen = true">
+    <m3e-menu-item v-if="showExperimental" @click="state.experimentalOpen = true">
       <span slot="icon" class="material-symbols-rounded">science</span>
       实验性功能
     </m3e-menu-item>
@@ -88,6 +90,7 @@ async function confirmClear() {
   </m3e-menu>
 
   <m3e-dialog
+    v-if="showExperimental"
     class="experimental"
     dismissible
     :open.prop="state.experimentalOpen"

@@ -4,6 +4,7 @@ import ActionCamera from "./ActionCamera.vue";
 import ErrorBanner from "./ErrorBanner.vue";
 import EvidenceCallout from "./EvidenceCallout.vue";
 import LoadingOverlay from "./LoadingOverlay.vue";
+import MedicalNote from "./MedicalNote.vue";
 import { resolveFraming } from "../data/actionFraming.js";
 import { actionImage } from "../data/actionImages.js";
 import { sourceForAction } from "../data/actionSources.js";
@@ -383,6 +384,8 @@ onBeforeUnmount(() => {
       <span slot="label">提示</span>
       {{ action.caution }}
     </m3e-callout>
+
+    <MedicalNote v-if="action && !feedbackOpen" />
 
     <m3e-dialog :open.prop="refOpen" class="ref-dialog" @closed="refOpen = false">
       <h2 slot="header">{{ action?.name }}</h2>

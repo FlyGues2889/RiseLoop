@@ -3,6 +3,7 @@ import { computed, onMounted, watch } from "vue";
 import ErrorBanner from "./ErrorBanner.vue";
 import EvidenceCallout from "./EvidenceCallout.vue";
 import LoadingOverlay from "./LoadingOverlay.vue";
+import MedicalNote from "./MedicalNote.vue";
 import { REVIEW_SOURCE } from "../data/actionSources.js";
 import { aiEnabled, askQuestion, loadWeeklyReview, state } from "../state/session.js";
 
@@ -40,7 +41,7 @@ watch(
     <div class="surface-body">
       <header class="page-head">
         <h2>近 7 天</h2>
-        <p class="lead">完成率、疼痛趋势和安全中断的变化，不替代医疗建议。</p>
+        <p class="lead">完成率、疼痛趋势和安全中断的变化。</p>
       </header>
 
       <m3e-list variant="segmented">
@@ -103,10 +104,13 @@ watch(
               <p class="cites" v-if="state.ai.citations.length">
                 参考 {{ state.ai.citations.length }} 条文献
               </p>
+              <p class="disclaimer" v-if="state.ai.disclaimer">{{ state.ai.disclaimer }}</p>
             </div>
           </div>
         </m3e-list-item>
       </m3e-list>
+
+      <MedicalNote />
     </div>
     <LoadingOverlay v-if="state.weeklyBusy || state.ai.busy" :label="loadingLabel" />
   </m3e-card>
@@ -141,6 +145,13 @@ watch(
   margin-top: 0.375rem;
   color: var(--md-sys-color-outline);
   font-size: 0.688rem;
+}
+
+.disclaimer {
+  margin-top: 0.375rem;
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.688rem;
+  line-height: 1.6;
 }
 
 .label {

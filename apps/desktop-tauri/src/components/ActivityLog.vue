@@ -97,7 +97,7 @@ onBeforeUnmount(stopTicker);
               <span class="text">{{ item.message }}</span>
             </m3e-list-item>
           </m3e-list>
-          <p v-else class="empty">还没有记录。操作之后，这里会留下时间线。</p>
+          <p v-else class="empty">还没有记录，操作之后会显示在这里。</p>
         </div>
       </m3e-tab-panel>
 

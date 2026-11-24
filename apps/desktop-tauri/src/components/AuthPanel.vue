@@ -1,7 +1,6 @@
 <script setup>
 import ErrorBanner from "./ErrorBanner.vue";
 import LoadingOverlay from "./LoadingOverlay.vue";
-import MedicalNote from "./MedicalNote.vue";
 import { login, register, state } from "../state/session.js";
 </script>
 
@@ -36,7 +35,6 @@ import { login, register, state } from "../state/session.js";
         </m3e-button>
       </form>
 
-      <MedicalNote />
     </div>
     <LoadingOverlay v-if="state.busy" label="正在登录…" />
   </m3e-card>
