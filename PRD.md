@@ -123,7 +123,7 @@
 |---|---|---|
 | POST | `/auth/register`、`/auth/login` | 注册/登录 |
 | POST | `/assessment` | 首次评估，返回初始状态 |
-| POST | `/sitting/heartbeat` | 久坐心跳，返回是否触发及动作 |
+| POST | `/sitting/heartbeat` | 上报久坐时间，返回是否触发及动作 |
 | GET | `/intervention/current` | 当前待执行干预 |
 | POST | `/intervention/feedback` | 提交反馈，返回下一状态 |
 | GET | `/review/weekly` | 周度回顾洞察 |

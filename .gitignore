@@ -12,6 +12,12 @@ __pycache__/
 #个人todo
 FlyTodo.md
 
+*.egg-info/
+
 # 姿态训练产物与采集数据（只提交脚本与指标）
 scripts/modelarts/artifacts/
 data/posture/
+
+# 视频剪辑和截图等相关产物
+promo/
+docs/submission

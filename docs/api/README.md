@@ -16,7 +16,7 @@ Base URL：本地 `http://127.0.0.1:8000`，线上为 ELB 绑定的 HTTPS 域名
 | POST | `/auth/register` | 注册并返回 token |
 | POST | `/auth/login` | 登录并返回 token |
 | POST | `/assessment` | 首次评估，返回初始状态与两周计划 |
-| POST | `/sitting/heartbeat` | 久坐心跳，返回是否触发及最多 3 个自动匹配动作 |
+| POST | `/sitting/heartbeat` | 上报久坐时间，返回是否触发及最多 3 个自动匹配动作 |
 | POST | `/posture/risk` | 姿态特征 + 久坐/症状 → BRLI、风险等级、方案匹配动作 |
 | GET | `/intervention/current` | 当前待执行干预 |
 | POST | `/intervention/feedback` | 提交反馈，返回下一状态 |
