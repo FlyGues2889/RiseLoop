@@ -51,14 +51,12 @@ function choose(planId) {
 
 .title {
   margin: 0 0 0.375rem;
-  font-size: 1rem;
-  font-weight: 600;
 }
 
 .plan-card .lead {
   margin-bottom: 1rem;
-  font-size: 0.75rem;
-  line-height: 1.65;
+  font-size: 0.813rem;
+  line-height: 1.7;
 }
 
 .plans {
@@ -73,7 +71,6 @@ function choose(planId) {
 
 .two-week h3 {
   margin: 0 0 0.4rem;
-  font-size: 0.95rem;
 }
 
 .two-week p {
