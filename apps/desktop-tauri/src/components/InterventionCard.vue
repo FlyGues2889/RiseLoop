@@ -105,7 +105,7 @@ function pickField(event, field, value) {
       <article v-if="result">
         <header class="page-head">
           <h2>本次结果</h2>
-          <p class="lead">状态按最近几次的完成度、感受和疼痛自动迁移，下面是接下来的建议。</p>
+          <p class="lead">按最近几次的完成情况调整了阶段，下面是接下来的动作。</p>
         </header>
 
         <div class="result-head">
@@ -127,7 +127,7 @@ function pickField(event, field, value) {
           <m3e-list-item>
             <div class="facts item-left-margin">
               <div>
-                <small>建议时长</small>
+                <small>阶段目标</small>
                 <span class="mono">{{ result.duration_range }}</span>
               </div>
               <div>

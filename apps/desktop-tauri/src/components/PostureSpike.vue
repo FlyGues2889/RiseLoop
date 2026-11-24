@@ -46,9 +46,9 @@ const RISK_LABELS = {
 
 const PLAN_LABELS = {
   maintain: "维持",
-  quick: "快速",
-  standard: "标准",
-  intense: "强化",
+  quick: "快速缓解",
+  standard: "标准干预",
+  intense: "强化训练",
 };
 
 const SOURCE_LABELS = {
@@ -465,11 +465,11 @@ onBeforeUnmount(() => {
           <strong>{{ postureLabel }}</strong>
         </div>
         <div>
-          <span>推理来源</span>
+          <span>识别来源</span>
           <strong>{{ sourceLabel }}</strong>
         </div>
         <div>
-          <span>云端耗时</span>
+          <span>识别耗时</span>
           <strong>{{ latency ? latency + " ms" : "—" }}</strong>
         </div>
         <div>
@@ -487,7 +487,7 @@ onBeforeUnmount(() => {
         </div>
         <template v-if="risk">
           <p class="risk-line">
-            负荷指数 <b class="mono">{{ risk.brli.toFixed(2) }}</b> · 建议方案：{{ riskPlanLabel }}
+            负荷 <b class="mono">{{ risk.brli.toFixed(2) }}</b> · 建议方案：{{ riskPlanLabel }}
           </p>
           <p class="risk-line" v-if="risk.actions?.length">
             首选动作：{{ risk.actions[0].name }}（{{ risk.actions[0].duration_minutes }} 分钟）
@@ -513,7 +513,7 @@ onBeforeUnmount(() => {
           {{ loading ? "加载中…" : "开启摄像头" }}
         </m3e-button>
         <m3e-button v-else variant="outlined" size="small" @click="stop">关闭摄像头</m3e-button>
-        <span class="hint">关键点在本地提取，姿态类别与风险由云端模型给出；端侧不做分类。</span>
+        <span class="hint">关键点在本机提取，姿态和风险来自云端模型。</span>
       </footer>
     </section>
   </div>

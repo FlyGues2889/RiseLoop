@@ -296,7 +296,7 @@ onBeforeUnmount(() => {
       <div class="surface-body">
         <header class="page-head action-head">
           <h2>接下来的动作</h2>
-          <p class="lead">跟着步骤做，倒计时结束会自动进入下一步；中途不舒服就点「结束运动」，直接记感受。</p>
+          <p class="lead">跟着步骤做，倒计时结束自动进下一步；不舒服就结束，直接记感受。</p>
         </header>
 
         <div class="step-head">

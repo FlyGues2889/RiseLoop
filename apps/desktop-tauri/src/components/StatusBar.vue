@@ -125,7 +125,7 @@ async function confirmClear() {
     <div slot="actions" end class="dialog-actions">
       <m3e-button variant="text" @click="confirmOpen = false">取消</m3e-button>
       <m3e-button variant="filled" :disabled.prop="clearing" @click="confirmClear">
-        {{ clearing ? "清除中…" : "确认清除" }}
+        确认清除
       </m3e-button>
     </div>
   </m3e-dialog>

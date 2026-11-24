@@ -9,8 +9,7 @@ import { login, register, state } from "../state/session.js";
   <m3e-card variant="elevated" class="surface-card">
     <div class="surface-body">
       <header class="page-head">
-        <h1>登录 Rise Loop</h1>
-        <p class="lead">用邮箱登录，记录同步到云端。</p>
+        <h1>登录</h1>
       </header>
 
       <form @submit.prevent="login">
@@ -30,7 +29,7 @@ import { login, register, state } from "../state/session.js";
         <ErrorBanner :error="state.error" />
 
         <m3e-button class="primary-action" variant="filled" :disabled.prop="state.busy" @click="login">
-          {{ state.busy ? "登录中…" : "登录" }}
+          登录
         </m3e-button>
         <m3e-button class="register" variant="text" size="small" :disabled.prop="state.busy" @click="register">
           创建账号

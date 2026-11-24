@@ -360,7 +360,7 @@ onBeforeUnmount(() => {
               {{ action.caution }}
             </m3e-callout>
 
-            <p v-if="done" class="run-hint">做完就到主界面记录一下感受吧。</p>
+            <p v-if="done" class="run-hint">做完回主界面记一下感受。</p>
           </template>
 
           <template v-else-if="action">

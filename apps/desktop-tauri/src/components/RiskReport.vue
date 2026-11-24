@@ -19,9 +19,9 @@ const RISK_LABELS = {
 
 const PLAN_LABELS = {
   maintain: "维持",
-  quick: "快速",
-  standard: "标准",
-  intense: "强化",
+  quick: "快速缓解",
+  standard: "标准干预",
+  intense: "强化训练",
 };
 
 const report = computed(() => state.postureReport);
@@ -66,7 +66,7 @@ function formatTime(value) {
   <section class="risk-report">
     <header class="page-head">
       <h2>姿势与风险</h2>
-      <p class="lead">把坐姿、久坐时长和主观感受合在一起估负荷；等级偏高时才会打断你。</p>
+      <p class="lead">坐姿、久坐时长和不舒服的程度合起来算一个分数，分数偏高时才会打断你。</p>
     </header>
 
     <div v-if="report" class="status">
@@ -75,7 +75,7 @@ function formatTime(value) {
         <strong class="level" :class="report.risk_level">{{ riskLabel }}</strong>
       </div>
       <div>
-        <small>负荷指数</small>
+        <small>久坐负荷</small>
         <strong class="mono">{{ report.brli.toFixed(2) }}</strong>
       </div>
       <div>

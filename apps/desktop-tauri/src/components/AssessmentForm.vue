@@ -41,7 +41,7 @@ function onPainChange(event) {
     <div class="surface-body">
       <header class="page-head">
         <h1>你的情况</h1>
-        <p class="lead">花一分钟填完这几项，方案会按你每天能坐多久、每次能挤出多少时间来匹配。</p>
+        <p class="lead">填完这几项，方案会按你的久坐时长和能挤出的空档来配。</p>
       </header>
 
       <MedicalNote />
@@ -106,7 +106,7 @@ function onPainChange(event) {
 
       <m3e-button class="primary-action" variant="filled" size="medium" :disabled.prop="state.busy"
         @click="submitAssessment(form)">
-        {{ state.busy ? "提交中…" : "生成方案" }}
+        生成方案
       </m3e-button>
     </div>
     <LoadingOverlay v-if="state.busy" label="正在生成方案…" />

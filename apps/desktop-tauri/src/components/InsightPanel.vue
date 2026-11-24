@@ -40,7 +40,7 @@ watch(
     <div class="surface-body">
       <header class="page-head">
         <h2>近 7 天</h2>
-        <p class="lead">每周自动汇总完成率、疼痛趋势和安全中断，用来看趋势，不替代医疗建议。</p>
+        <p class="lead">完成率、疼痛趋势和安全中断的变化，不替代医疗建议。</p>
       </header>
 
       <m3e-list variant="segmented">
@@ -84,7 +84,7 @@ watch(
       <m3e-list variant="segmented" v-if="aiEnabled">
         <m3e-list-item>
           <span class="material-symbols-rounded" slot="leading">chat</span>
-          智能问答
+          问答
         </m3e-list-item>
         <m3e-list-item>
           <div class="body">

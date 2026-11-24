@@ -166,11 +166,11 @@ function onClosed() {
     <h2 slot="header">{{ wasRunning ? "姿势监测" : "开启姿势监测" }}</h2>
 
     <template v-if="wasRunning">
-      <p>开启摄像头以保证应用程序能够在始终检测人体姿势变化。</p>
+      <p>开启后，应用会在后台识别你的坐姿。</p>
     </template>
     <template v-else>
-      <p>开启摄像头以保证应用程序能够在始终检测人体姿势变化。</p>
-      <p class="hint">画面只在本地处理，最后将标记的 33 个骨骼坐标点上传，不会侵犯隐私。若不同意开启摄像头，可以点击 “稍后再说” 按钮。</p>
+      <p>开启后，应用会在后台识别你的坐姿。</p>
+      <p class="hint">画面只在本机处理，只有 33 个关键点坐标会发到云端。</p>
     </template>
 
     <div class="picker-row">
@@ -207,7 +207,7 @@ function onClosed() {
     <div v-else slot="actions" end class="dialog-actions">
       <m3e-button variant="text" @click="later">稍后再说</m3e-button>
       <m3e-button variant="filled" :disabled.prop="busy" @click="turnOn">
-        {{ busy ? "正在开启…" : "开启监测" }}
+        开启监测
       </m3e-button>
     </div>
   </m3e-dialog>
