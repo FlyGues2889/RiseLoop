@@ -75,7 +75,7 @@ def test_qa_red_flag_short_circuits(client, auth_headers):
 
 
 def test_qa_requires_auth(client):
-    response = client.post("/qa/ask", json={"question": "久坐腰酸怎么办"})
+    response = client.post("/qa/ask", json={"question": "久坐颈肩发酸怎么办"})
     assert response.status_code == 401
 
 

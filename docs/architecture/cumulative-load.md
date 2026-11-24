@@ -26,7 +26,7 @@ BRLI(t) = α·P(t) + β·T(t) − γ·R(t) + δ·S(t)
 - `P(t)`：姿态负荷。由姿态类别、异常幅度、持续性与模型置信度生成。
 - `T(t)`：时间负荷。由连续久坐、当日累计久坐、距上次中断时长生成。
 - `R(t)`：恢复抵扣。由起身活动、微运动完成度、休息持续时间抵扣。
-- `S(t)`：症状修正。由颈肩/腰背不适、疲劳评分修正。
+- `S(t)`：症状修正。由颈肩不适、疲劳评分修正。
 - `α/β/γ/δ`：可配置权重；V1 默认值见第 5 节，需小样本校准。
 
 当日累积负荷与短时风险：
@@ -72,9 +72,9 @@ RW     = 近 30–60 分钟加权平均
   "short_term_risk": 0.58,
   "daily_load": 4.2,
   "factors": [
-    { "code": "posture", "value": 0.72, "weight": 0.35, "contribution": 0.252, "evidence_ids": ["pmid-40111906"] },
+    { "code": "posture", "value": 0.72, "weight": 0.35, "contribution": 0.252, "evidence_ids": ["pmid-37775083"] },
     { "code": "sitting", "value": 0.85, "weight": 0.35, "contribution": 0.298, "evidence_ids": ["pmid-35147898"] },
-    { "code": "recovery", "value": 0.20, "weight": -0.10, "contribution": -0.020, "evidence_ids": ["pmid-33906239"] },
+    { "code": "recovery", "value": 0.20, "weight": -0.10, "contribution": -0.020, "evidence_ids": ["pmid-35147898"] },
     { "code": "symptom", "value": 0.40, "weight": 0.20, "contribution": 0.080, "evidence_ids": ["pmid-38219373"] }
   ],
   "needs_medical_advice": false,

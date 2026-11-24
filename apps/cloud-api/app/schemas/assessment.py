@@ -2,7 +2,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-BodyPart = Literal["neck", "shoulder", "upper_back", "low_back", "hip", "core"]
+BodyPart = Literal["neck", "shoulder"]
 
 
 class AssessmentRequest(BaseModel):

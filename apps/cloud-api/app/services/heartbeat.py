@@ -7,10 +7,6 @@ from ..schemas.sitting import ActionPayload, HeartbeatRequest, HeartbeatResponse
 BODY_PART_LABELS = {
     "neck": "颈部",
     "shoulder": "肩部",
-    "upper_back": "上背",
-    "low_back": "腰背",
-    "hip": "髋部",
-    "core": "核心",
 }
 
 LOWER_STATE: dict[State, State | None] = {

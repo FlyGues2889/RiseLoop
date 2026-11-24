@@ -22,7 +22,7 @@ async def list_actions(
     state: State,
     store: StoreDep,
     user_id: UserIdDep,
-    body_part: Literal["neck", "shoulder", "upper_back", "low_back", "hip", "core"] | None = None,
+    body_part: Literal["neck", "shoulder"] | None = None,
     max_minutes: int | None = None,
 ) -> list[ActionPayload]:
     assessment = await store.latest_assessment(user_id)

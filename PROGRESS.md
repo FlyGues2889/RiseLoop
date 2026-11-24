@@ -32,7 +32,7 @@
 | 安全中间件（8 类红旗短路） | ✅ | `app/core/safety.py`，命中直接 403 + 就医提示 |
 | BRLI 风险指数 | 🟡 | 规则版 V1 有单测，已接 `/posture/risk`，未校准 |
 | 姿态分类推理（ModelArts） | 🟡 | v1 训练包与离线报告已完成（特征契约 v2，5 个派生特征 MLP，只要求头肩入画；合成数据 test macro-F1 0.9670）；调用链、超时、降级已写；**没有真实 endpoint**，现走 mock + 端侧降级 |
-| 循证知识库 | ✅ | 39 条证据台账（PubMed 36 / WHO 1 / CDC 1 / NIOSH 1，共 40 个主题归属）+ `articles.json` 8 条问答语料，`scripts/validate_evidence.py` 0 error |
+| 循证知识库 | ✅ | 39 条证据台账（PubMed 36 / WHO 1 / CDC 1 / NIOSH 1，共 40 个主题归属）+ `articles.json` 7 条问答语料，`scripts/validate_evidence.py` 0 error |
 | 知识库问答 | ✅ | 本地检索 + citations（`data/knowledge/articles.json` 8 条）；无命中明确回答“资料中没有”。AgentArts 增强为可选，未接入 |
 | 限流 | ✅ | `app/core/ratelimit.py`：按 token 指纹或 IP 滑动窗口，登录类接口单独更严；超限 429 + `Retry-After` |
 | JWT 刷新 / 吊销 | ✅ | `/auth/refresh` 轮换刷新令牌、`/auth/logout` 吊销 jti；黑名单只存 jti 与到期时间，到期自动清理。**客户端续期接入未做**（要 Rust 钥匙串加一个槽位） |

@@ -18,9 +18,9 @@ DISCLAIMER = (
     "如出现持续疼痛、放射痛、麻木加重、肢体无力或外伤后剧痛，请及时就医。"
 )
 
-POSTURE_EVIDENCE = ("pmid-40111906", "pmid-37775083")
+POSTURE_EVIDENCE = ("pmid-37775083", "pmid-25780258")
 SITTING_EVIDENCE = ("pmid-35147898", "pmid-22374636", "pmid-33054341")
-RECOVERY_EVIDENCE = ("pmid-33906239", "pmid-31742666")
+RECOVERY_EVIDENCE = ("pmid-35147898", "pmid-31742666")
 SYMPTOM_EVIDENCE = ("pmid-38219373", "pmid-32438853")
 
 class PostureClass(StrEnum):

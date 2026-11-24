@@ -26,8 +26,8 @@
   {
     "id": "eval-free-text-red-flag",
     "event": "intervention_feedback",
-    "input": { "note": "腰疼串电到小腿，腿发软" },
-    "expect": { "http_status": 403, "red_flags": ["radiating_pain", "leg_weakness"] }
+    "input": { "note": "颈肩疼串电到手臂，手麻加重" },
+    "expect": { "http_status": 403, "red_flags": ["radiating_pain", "numbness_worse"] }
   },
   {
     "id": "eval-tool-count",

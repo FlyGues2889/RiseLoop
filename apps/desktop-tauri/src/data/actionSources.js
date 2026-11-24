@@ -11,41 +11,11 @@ export const ACTION_SOURCES = {
     url: "https://pubmed.ncbi.nlm.nih.gov/25780258/",
     evidenceId: "pmid-25780258",
   },
-  "s1-stand-break": {
-    title: "动作依据 · 主动休息",
-    source: "主动休息或姿势变换可降低高风险办公人群 6 个月内颈痛与腰痛新发（3 臂集群随机对照试验）。",
-    url: "https://pubmed.ncbi.nlm.nih.gov/33906239/",
-    evidenceId: "pmid-33906239",
-  },
-  "s1-seated-knee": {
-    title: "动作依据 · 主动休息",
-    source: "主动休息或姿势变换可降低高风险办公人群 6 个月内颈痛与腰痛新发；本动作是坐姿可做的下肢激活版本（3 臂集群随机对照试验）。",
-    url: "https://pubmed.ncbi.nlm.nih.gov/33906239/",
-    evidenceId: "pmid-33906239",
-  },
-  "s1-hip-flexor": {
-    title: "动作依据 · 拉伸训练",
-    source: "拉伸训练在 6 个月内改善办公人群颈肩腰疼痛，效果优于单纯工位改造（随机对照试验）。",
-    url: "https://pubmed.ncbi.nlm.nih.gov/28939263/",
-    evidenceId: "pmid-28939263",
-  },
-  "s2-core-activation": {
-    title: "动作依据 · 主动休息",
-    source: "12 周主动休息干预改善年轻人非特异性下背痛与功能障碍（随机对照试验）。",
-    url: "https://pubmed.ncbi.nlm.nih.gov/39707287/",
-    evidenceId: "pmid-39707287",
-  },
   "s2-band-row": {
     title: "动作依据 · 肌力训练",
     source: "颈肩胛肌力训练可减轻办公人群慢性颈痛与失能（系统综述/Meta 分析，证据确定性低）。",
     url: "https://pubmed.ncbi.nlm.nih.gov/38219373/",
     evidenceId: "pmid-38219373",
-  },
-  "s3-posture-reset": {
-    title: "动作依据 · 姿势行为",
-    source: "办公人群久坐时间、姿势与行为均与下背痛相关，其中久坐行为证据最强（范围综述）。",
-    url: "https://pubmed.ncbi.nlm.nih.gov/40111906/",
-    evidenceId: "pmid-40111906",
   },
   "s3-breathe": {
     title: "动作依据 · 微休息",
@@ -70,24 +40,6 @@ export const ACTION_SOURCES = {
     source: "颈肩胛肌力训练可减轻办公人群慢性颈痛与失能（系统综述/Meta 分析，证据确定性低）；靠墙俯卧撑是低负荷入门版本。",
     url: "https://pubmed.ncbi.nlm.nih.gov/38219373/",
     evidenceId: "pmid-38219373",
-  },
-  "s1-calf-pump": {
-    title: "动作依据 · 主动休息",
-    source: "主动休息或姿势变换可降低高风险办公人群 6 个月内颈痛与腰痛新发；小腿泵是坐姿可做的下肢激活版本。",
-    url: "https://pubmed.ncbi.nlm.nih.gov/33906239/",
-    evidenceId: "pmid-33906239",
-  },
-  "s2-wall-sit": {
-    title: "动作依据 · 拉伸训练",
-    source: "拉伸与规律运动训练在 6 个月内改善办公人群颈肩腰疼痛，效果优于单纯工位改造（随机对照试验）；静蹲为下肢等长负荷版本。",
-    url: "https://pubmed.ncbi.nlm.nih.gov/28939263/",
-    evidenceId: "pmid-28939263",
-  },
-  "s3-seated-hip-circle": {
-    title: "动作依据 · 姿势行为",
-    source: "办公人群久坐时间、姿势与行为均与下背痛相关，其中久坐行为证据最强（范围综述）；髋绕环用于打断固定坐姿。",
-    url: "https://pubmed.ncbi.nlm.nih.gov/40111906/",
-    evidenceId: "pmid-40111906",
   },
 };
 

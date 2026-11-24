@@ -1,10 +1,6 @@
 export const BODY_PART_LABELS = {
   neck: "颈部",
   shoulder: "肩部",
-  upper_back: "上背",
-  low_back: "腰背",
-  hip: "髋部",
-  core: "核心",
 };
 
 const LOWER_STATE = { S0: null, S1: "S0", S2: "S1", S3: "S2" };

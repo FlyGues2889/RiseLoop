@@ -8,10 +8,6 @@ import { state, submitAssessment } from "../state/session.js";
 const bodyPartOptions = [
   { value: "neck", label: "颈部" },
   { value: "shoulder", label: "肩部" },
-  { value: "upper_back", label: "上背" },
-  { value: "low_back", label: "腰背" },
-  { value: "hip", label: "髋部" },
-  { value: "core", label: "核心" },
 ];
 
 const form = reactive({
