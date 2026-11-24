@@ -10,10 +10,10 @@ const logPath = ref("");
 let ticker = null;
 
 const cameraLabel = computed(() => {
-  if (camera.mode === "live") return "动作页占用";
-  if (camera.mode === "preview") return "设置页预览";
+  if (camera.mode === "live") return "动作页使用中";
+  if (camera.mode === "preview") return "设置页预览中";
   if (camera.mode === "sampling") return "采样中";
-  return "摄像头关闭";
+  return "摄像头已关闭";
 });
 
 const cameraHint = computed(() => {

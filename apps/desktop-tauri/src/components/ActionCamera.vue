@@ -232,7 +232,7 @@ async function start() {
     await video.play().catch(() => { });
     status.value = "ready";
     setLiveCamera(true);
-    record("open", "动作页打开摄像头", "live");
+    record("open", "动作页已打开摄像头", "live");
     resizeCanvas();
     landmarker = await createPoseLandmarker().catch(() => null);
     tick();
@@ -249,7 +249,7 @@ function release() {
     stream.getTracks().forEach((track) => track.stop());
     stream = null;
     setLiveCamera(false);
-    record("close", "动作页关闭摄像头", "off");
+    record("close", "动作页已关闭摄像头", "off");
   }
   if (videoEl.value) videoEl.value.srcObject = null;
   if (landmarker) {

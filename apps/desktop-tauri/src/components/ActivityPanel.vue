@@ -61,7 +61,7 @@ const obstacle = ref(null);
 
 const feelingOptions = [
   { value: "better", label: "好转" },
-  { value: "same", label: "没变化" },
+  { value: "same", label: "无变化" },
   { value: "worse", label: "更不舒服" },
 ];
 

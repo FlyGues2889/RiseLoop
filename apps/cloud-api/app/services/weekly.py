@@ -33,9 +33,9 @@ def _pain_trend(scores: list[int]) -> str:
 def _build_highlights(review: WeeklyReview) -> list[str]:
     highlights: list[str] = []
     if review.interventions.total == 0:
-        highlights.append(f"过去 {review.days} 天还没有干预记录，先完成一次评估即可开始。")
+        highlights.append(f"过去 {review.days} 天暂无干预记录，完成一次评估后即可开始。")
     elif review.interventions.completion_rate >= 80:
-        highlights.append(f"完成率 {review.interventions.completion_rate}%，节奏保持得很好。")
+        highlights.append(f"完成率 {review.interventions.completion_rate}%，节奏保持良好。")
     if review.pain.trend == "improving":
         highlights.append("疼痛评分在下降，当前动作强度是合适的。")
     elif review.pain.trend == "worsening":
@@ -45,7 +45,7 @@ def _build_highlights(review: WeeklyReview) -> list[str]:
     if review.posture.samples and review.posture.high_risk_ratio >= 0.3:
         ratio = round(review.posture.high_risk_ratio * 100)
         highlights.append(
-            f"近 {review.days} 天约 {ratio}% 的姿态采样处于高风险，先缩短单次久坐时长。"
+            f"近 {review.days} 天约 {ratio}% 的姿态采样处于高风险，建议缩短单次久坐时长。"
         )
     return highlights
 
@@ -68,14 +68,14 @@ def _build_suggestions(review: WeeklyReview) -> list[str]:
     suggestions: list[str] = []
     rate = review.interventions.completion_rate
     if review.interventions.total and rate < 50:
-        suggestions.append("完成率偏低，把单次可用时间调到 3 分钟以内更容易坚持。")
+        suggestions.append("完成率偏低，将单次可用时间调整到 3 分钟以内更易坚持。")
     if review.top_obstacles:
         top = review.top_obstacles[0]
         mapping = {
-            "busy": "主要阻碍是太忙，建议把动作绑定到接水、开会结束等固定触发点。",
-            "too_hard": "主要阻碍是动作太难，可切换到更温和的动作。",
-            "no_space": "主要阻碍是没地方做，优先选择坐姿或站姿动作。",
-            "forgot": "主要阻碍是忘记，保持 45 分钟提醒并允许托盘常驻。",
+            "busy": "主要阻碍为太忙，建议将动作绑定到接水、会议结束等固定触发点。",
+            "too_hard": "主要阻碍为动作太难，可切换至更温和的动作。",
+            "no_space": "主要阻碍为没有场地，优先选择坐姿或站姿动作。",
+            "forgot": "主要阻碍为遗忘，请保持 45 分钟提醒并允许托盘常驻。",
         }
         if top.obstacle in mapping:
             suggestions.append(mapping[top.obstacle])

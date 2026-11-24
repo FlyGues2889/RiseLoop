@@ -38,7 +38,7 @@ function stopPreview() {
   if (previewStream.value) {
     previewStream.value.getTracks().forEach((track) => track.stop());
     previewStream.value = null;
-    record("close", "设置页关闭预览", "off");
+    record("close", "设置页已关闭预览", "off");
   }
   if (videoEl.value) videoEl.value.srcObject = null;
 }
@@ -54,7 +54,7 @@ async function openPreview(deviceId) {
       audio: false,
     });
     if (!videoEl.value) return;
-    record("open", "设置页打开预览", "preview");
+    record("open", "设置页已打开预览", "preview");
     videoEl.value.srcObject = previewStream.value;
     await videoEl.value.play().catch(() => { });
     await refreshDevices();
@@ -205,7 +205,7 @@ function onClosed() {
       <m3e-button variant="filled" :disabled.prop="busy" @click="keepRunning">完成</m3e-button>
     </div>
     <div v-else slot="actions" end class="dialog-actions">
-      <m3e-button variant="text" @click="later">稍后再说</m3e-button>
+      <m3e-button variant="text" @click="later">暂不开启</m3e-button>
       <m3e-button variant="filled" :disabled.prop="busy" @click="turnOn">
         开启监测
       </m3e-button>

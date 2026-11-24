@@ -62,10 +62,10 @@ export function savePrefs() {
 
 export function cameraErrorMessage(err) {
   const name = err?.name ?? "";
-  if (name === "NotAllowedError" || name === "SecurityError") return "没拿到摄像头权限，可以在系统设置里允许后重试。";
-  if (name === "NotFoundError" || name === "OverconstrainedError") return "没找到可用的摄像头。";
-  if (name === "NotReadableError" || name === "AbortError") return "摄像头被其他程序占用了。";
-  return "摄像头没能打开，稍后再试一次。";
+  if (name === "NotAllowedError" || name === "SecurityError") return "未获得摄像头权限，请在系统设置中允许后重试。";
+  if (name === "NotFoundError" || name === "OverconstrainedError") return "未找到可用的摄像头。";
+  if (name === "NotReadableError" || name === "AbortError") return "摄像头正被其他程序占用。";
+  return "摄像头未能打开，请稍后重试。";
 }
 
 export async function refreshDevices() {
@@ -85,12 +85,12 @@ export async function refreshDevices() {
 }
 
 export async function requestPermission() {
-  record("open", "申请摄像头权限", "sampling");
+  record("open", "请求摄像头权限", "sampling");
   try {
     const probe = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
     probe.getTracks().forEach((track) => track.stop());
     await refreshDevices();
-    record("close", "权限申请完成，摄像头已关闭", "off");
+    record("close", "权限请求已完成，摄像头已关闭", "off");
     return true;
   } catch (err) {
     record("error", cameraErrorMessage(err), "off");
@@ -143,7 +143,7 @@ async function report(keypoints, frameCount) {
       duration: 0,
     };
     monitor.latest = null;
-    monitor.error = "这一分钟没识别到人，保持上半身在画面内。";
+    monitor.error = "本分钟未识别到人，请保持上半身位于画面内。";
     return;
   }
 
@@ -174,7 +174,7 @@ async function report(keypoints, frameCount) {
         duration: 0,
       };
       monitor.latest = null;
-      monitor.error = "本地模式不连接云端，姿态由云端判定。";
+      monitor.error = "本地模式不连接云端，姿态判定需在云端模式下使用。";
       return;
     }
     if (!result) {
@@ -215,7 +215,7 @@ async function report(keypoints, frameCount) {
     };
     monitor.latest = null;
     // 失败原因要照实说：网络断了和被云端拦下不是一回事。
-    monitor.error = describeError(err).hint ?? "这一分钟没能拿到云端结果，稍后自动重试。";
+    monitor.error = describeError(err).hint ?? "本分钟未获取到云端结果，将稍后自动重试。";
   }
 }
 
@@ -298,14 +298,14 @@ async function sample() {
   if (liveCameraBusy()) {
     if (lastSkip !== "busy") {
       lastSkip = "busy";
-      record("skip", "动作页正在用摄像头，暂停采样");
+      record("skip", "动作页正在使用摄像头，已暂停采样");
     }
     return;
   }
   if (document.hidden) {
     if (lastSkip !== "hidden") {
       lastSkip = "hidden";
-      record("skip", "窗口在后台，暂停采样");
+      record("skip", "窗口位于后台，已暂停采样");
     }
     return;
   }
@@ -313,7 +313,7 @@ async function sample() {
     await ensureLandmarker();
   } catch (err) {
     monitor.status = "error";
-    monitor.error = "姿势模型没能加载，稍后再试。";
+    monitor.error = "姿势模型加载失败，请稍后重试。";
     record("error", `姿势模型加载失败（${err?.name ?? "unknown"}）`, "off");
     await release();
     return;
@@ -322,7 +322,7 @@ async function sample() {
   monitor.lastSampleAt = performance.now();
   sampling = true;
   const startedAt = performance.now();
-  record("open", "打开摄像头采样", "sampling");
+  record("open", "打开摄像头进行采样", "sampling");
   try {
     const { landmarks, frames, deviceId } = await capture(prefs.deviceId);
     if (monitor.status !== "running") return;

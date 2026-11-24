@@ -17,7 +17,7 @@ _DEFAULT_ACTIONS: list[dict] = [
             "回正后倒向右侧，同样停 5 秒",
             "抬头回正，做 3 次自然深呼吸收尾",
         ],
-        "caution": "出现眩晕、放射痛立即停止并就医",
+        "caution": "如出现眩晕或放射痛，请立即停止并就医",
     },
     {
         "id": "s1-stand-break",
@@ -49,7 +49,7 @@ _DEFAULT_ACTIONS: list[dict] = [
             "吸气放松，再做 8 次这样的收腹呼吸",
             "最后做骨盆前后倾 10 次，幅度小一点",
         ],
-        "caution": "出现锐痛立即停止",
+        "caution": "出现锐痛时，请立即停止",
     },
     {
         "id": "s3-posture-reset",

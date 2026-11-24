@@ -9,10 +9,10 @@ const view = computed(() => {
   const error = props.error;
   if (!error) return null;
   if (typeof error === "string") {
-    return { title: "这一步没完成", message: error, detail: null, hint: null };
+    return { title: "操作未完成", message: error, detail: null, hint: null };
   }
   return {
-    title: error.title || "这一步没完成",
+    title: error.title || "操作未完成",
     message: error.message || "",
     detail: error.detail || null,
     hint: error.hint || null,

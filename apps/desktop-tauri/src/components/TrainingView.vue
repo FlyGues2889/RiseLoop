@@ -8,10 +8,10 @@ import { createPoseLandmarker, monitor } from "../state/postureMonitor.js";
 const emit = defineEmits(["close"]);
 
 const SEGMENTS = [
-  { label: "baseline", title: "自然坐正", hint: "双肩放平，头不要往前探" },
-  { label: "forward_head", title: "头往前探", hint: "下巴向前伸，保持住不要低头" },
-  { label: "lateral_tilt", title: "肩部侧倾", hint: "压低一侧肩膀，另一边自然抬起" },
-  { label: "undetermined", title: "侧身或遮挡", hint: "侧过身，或用手挡住一侧肩膀" },
+  { label: "baseline", title: "自然坐正", hint: "保持双肩水平，头部不要前伸" },
+  { label: "forward_head", title: "头部前伸", hint: "下巴前伸并保持，不要低头" },
+  { label: "lateral_tilt", title: "肩部侧倾", hint: "压低一侧肩部，另一侧自然抬起" },
+  { label: "undetermined", title: "侧身或遮挡", hint: "侧身，或用手遮挡一侧肩部" },
 ];
 
 const LEAD_SECONDS = 3;
@@ -41,8 +41,8 @@ const segment = computed(() => SEGMENTS[index.value] ?? SEGMENTS[0]);
 const totalSeconds = computed(() => segmentSeconds.value * SEGMENTS.length);
 const poseHint = computed(() => {
   if (poseState.value === "ok") return "已识别，正在记录";
-  if (poseState.value === "partial") return "关键点不稳，让双肩完整入画";
-  return "未检测到人，请坐到镜头前、上半身入画";
+  if (poseState.value === "partial") return "关键点不稳定，请让双肩完整入画";
+  return "未检测到人，请坐在镜头前，使上半身入画";
 });
 
 let landmarker = null;
@@ -193,13 +193,13 @@ async function openFolder() {
   try {
     await revealItemInDir(savedPath.value);
   } catch {
-    error.value = "打不开文件夹，路径可能还没生成。";
+    error.value = "无法打开文件夹，文件路径可能尚未生成。";
   }
 }
 
 async function start() {
   if (!tauri) {
-    error.value = "采集只在桌面应用里可用。";
+    error.value = "采集功能仅在桌面应用中可用。";
     return;
   }
   error.value = "";
@@ -211,7 +211,7 @@ async function start() {
   try {
     landmarker = await createPoseLandmarker();
   } catch {
-    error.value = "姿态模型没加载成功，重开应用再试。";
+    error.value = "姿态模型加载失败，请重启应用后重试。";
     await cleanup();
     phase.value = "setup";
     return;
@@ -250,7 +250,7 @@ async function start() {
     beginSegment(0);
     rafId = requestAnimationFrame(tick);
   } catch (err) {
-    error.value = "打不开摄像头，检查系统权限或是否被其他程序占用。";
+    error.value = "无法打开摄像头，请检查系统权限，并确认是否被其他程序占用。";
     await cleanup();
     phase.value = "setup";
   }
@@ -262,7 +262,7 @@ async function finish() {
   try {
     await flush();
   } catch (err) {
-    error.value = "写入本机文件失败。";
+    error.value = "写入本机文件失败，请重试。";
   } finally {
     await cleanup();
     phase.value = "done";
@@ -275,7 +275,7 @@ async function stop() {
   try {
     await flush();
   } catch {
-    error.value = "写入本机文件失败。";
+    error.value = "写入本机文件失败，请重试。";
   }
   await cleanup();
   phase.value = "done";

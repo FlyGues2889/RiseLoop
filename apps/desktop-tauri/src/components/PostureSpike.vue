@@ -194,11 +194,11 @@ function describeInferError(err) {
   if (err?.status === 503) {
     const reason = err.payload?.detail?.reason ?? "";
     const detail = REASON_TEXT[reason] ? `（${REASON_TEXT[reason]}）` : "";
-    return `云端暂时不可用${detail}，暂不判定姿态`;
+    return `云端暂时不可用${detail}，暂不进行姿态判定`;
   }
-  if (err?.status === 0) return "连不上云端，暂不判定姿态";
-  if (err?.status === 422) return "关键点数据有误，暂不判定姿态";
-  return "云端识别没成功，暂不判定姿态";
+  if (err?.status === 0) return "无法连接云端，暂不进行姿态判定";
+  if (err?.status === 422) return "关键点数据有误，暂不进行姿态判定";
+  return "云端识别未成功，暂不进行姿态判定";
 }
 
 async function maybeInfer() {
@@ -276,7 +276,7 @@ function tick() {
       void maybeInfer();
       frames += 1;
     } catch (err) {
-      error.value = "识别中断了，请重新开启摄像头。";
+      error.value = "识别已中断，请重新开启摄像头。";
       stop();
       return;
     }
@@ -306,12 +306,12 @@ async function start() {
     try {
       await ensureLandmarker();
     } catch (err) {
-      error.value = "姿势模型没加载成功。刷新页面再试一次。";
+      error.value = "姿势模型加载失败，请重启应用后重试。";
       status.value = "模型未加载";
       return;
     }
     if (!navigator.mediaDevices?.getUserMedia) {
-      error.value = "这个环境打不开摄像头，请在桌面应用里试。";
+      error.value = "当前环境无法打开摄像头，请在桌面应用中使用。";
       status.value = "摄像头未开启";
       return;
     }
@@ -334,7 +334,7 @@ async function start() {
           audio: false,
         });
       } catch (err2) {
-        error.value = "打不开摄像头。先看系统权限，再确认是否被别的程序占用。";
+        error.value = "无法打开摄像头，请检查系统权限，并确认是否被其他程序占用。";
         status.value = "摄像头未开启";
         return;
       }
@@ -357,11 +357,11 @@ async function start() {
     guidanceText.value = "";
     cloudError.value = "";
     source.value = "unavailable";
-    status.value = "画面不上传，每 2 秒上传一次关键点";
+    status.value = "画面不上传，每 2 秒上传一次关键点坐标";
     tick();
   } catch (err) {
     // 走到这里说明已经拿到摄像头，只是画面没能渲染出来
-    error.value = "摄像头已连接，但画面没能显示。重试一次，或换个摄像头。";
+    error.value = "摄像头已连接，但画面未能显示，请重试或更换摄像头。";
     status.value = "画面未显示";
     stop();
   } finally {
@@ -510,7 +510,7 @@ onBeforeUnmount(() => {
 
       <footer v-if="!props.minimal" class="actions">
         <m3e-button v-if="!running" variant="filled" size="small" :disabled.prop="loading" @click="start">
-          {{ loading ? "加载中…" : "开启摄像头" }}
+          开启摄像头
         </m3e-button>
         <m3e-button v-else variant="outlined" size="small" @click="stop">关闭摄像头</m3e-button>
         <span class="hint">关键点在本机提取，姿态与风险来自云端模型。</span>

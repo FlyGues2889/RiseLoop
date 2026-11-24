@@ -253,5 +253,5 @@ test("周复盘无记录时给出提示", async () => {
   const review = await instance.weeklyReview(7);
   assert.equal(review.interventions.total, 0);
   assert.equal(review.interventions.completion_rate, 0);
-  assert.match(review.highlights[0], /还没有干预记录/);
+  assert.match(review.highlights[0], /暂无干预记录/);
 });

@@ -18,7 +18,7 @@ async def posture_risk(
 @router.post(
     "/posture/infer",
     response_model=PostureInferResponse,
-    responses={503: {"description": "ModelArts 不可用，端侧需显式降级"}},
+    responses={503: {"description": "姿态模型暂时不可用，客户端需降级处理"}},
 )
 async def posture_infer(
     payload: PostureInferRequest,

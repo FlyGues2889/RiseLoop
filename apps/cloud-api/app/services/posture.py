@@ -7,7 +7,7 @@ from ..schemas.sitting import ActionPayload
 from .guidelines import citations_for
 from .heartbeat import LOWER_STATE, _match_reason, _rank_actions, _to_payload
 
-PLAN_LABELS = {"quick": "快速", "standard": "标准", "intense": "强化"}
+PLAN_LABELS = {"quick": "快速缓解", "standard": "标准干预", "intense": "强化训练"}
 
 
 def _sort_for_plan(actions: list[ActionPayload], plan: str) -> list[ActionPayload]:
@@ -82,7 +82,7 @@ async def handle_posture_risk(
             factors=list(result.factors),
             citations=citations,
             needs_medical_advice=False,
-            reason="当前负荷不高，先不打断你继续工作。",
+            reason="当前负荷不高，暂不打断工作。",
             disclaimer=DISCLAIMER,
         )
 
@@ -96,7 +96,7 @@ async def handle_posture_risk(
             factors=list(result.factors),
             citations=citations,
             needs_medical_advice=result.needs_medical_advice,
-            reason="这个阶段暂时没有合适的动作，过一会儿可以再检查一次。",
+            reason="当前阶段暂无合适的动作，请稍后再检查。",
             disclaimer=DISCLAIMER,
         )
 
@@ -119,7 +119,7 @@ async def handle_posture_risk(
         for action, source_state in ranked
     ]
     payloads = _sort_for_plan(payloads, request.plan)[:3]
-    plan_label = PLAN_LABELS.get(request.plan, "标准")
+    plan_label = PLAN_LABELS.get(request.plan, "标准干预")
 
     return PostureRiskResponse(
         brli=result.brli,
@@ -130,7 +130,7 @@ async def handle_posture_risk(
         citations=citations,
         needs_medical_advice=result.needs_medical_advice,
         reason=(
-            f"按{plan_label}方案挑了 {len(payloads)} 个动作，先做第一个就好。"
+            f"已按{plan_label}方案选取 {len(payloads)} 个动作，建议先完成第一个。"
         ),
         disclaimer=DISCLAIMER,
     )

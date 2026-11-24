@@ -27,7 +27,7 @@ const completionOptions = [
 
 const feelingOptions = [
   { value: "better", label: "好转" },
-  { value: "same", label: "没变化" },
+  { value: "same", label: "无变化" },
   { value: "worse", label: "更不舒服" },
 ];
 
@@ -39,8 +39,8 @@ const obstacleOptions = [
 ];
 
 const transitionMeta = {
-  upgrade: { label: "进阶", tone: "up" },
-  rollback: { label: "回退一档", tone: "back" },
+  upgrade: { label: "升级", tone: "up" },
+  rollback: { label: "回退一级", tone: "back" },
   degrade: { label: "强度下调", tone: "down" },
   hold: { label: "保持", tone: "hold" },
   short_circuit: { label: "安全中断", tone: "stop" },

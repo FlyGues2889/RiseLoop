@@ -54,9 +54,9 @@ function painTrend(scores) {
 function buildHighlights(review) {
   const highlights = [];
   if (review.interventions.total === 0) {
-    highlights.push(`过去 ${review.days} 天还没有干预记录，先完成一次评估即可开始。`);
+    highlights.push(`过去 ${review.days} 天暂无干预记录，完成一次评估后即可开始。`);
   } else if (review.interventions.completion_rate >= 80) {
-    highlights.push(`完成率 ${review.interventions.completion_rate}%，节奏保持得很好。`);
+    highlights.push(`完成率 ${review.interventions.completion_rate}%，节奏保持良好。`);
   }
   if (review.pain.trend === "improving") {
     highlights.push("疼痛评分在下降，当前动作强度是合适的。");
@@ -73,14 +73,14 @@ function buildSuggestions(review) {
   const suggestions = [];
   const rate = review.interventions.completion_rate;
   if (review.interventions.total && rate < 50) {
-    suggestions.push("完成率偏低，把单次可用时间调到 3 分钟以内更容易坚持。");
+    suggestions.push("完成率偏低，将单次可用时间调整到 3 分钟以内更易坚持。");
   }
   const top = review.top_obstacles[0];
   const mapping = {
-    busy: "主要阻碍是太忙，建议把动作绑定到接水、开会结束等固定触发点。",
-    too_hard: "主要阻碍是动作太难，可切换到更温和的动作。",
-    no_space: "主要阻碍是没地方做，优先选择坐姿或站姿动作。",
-    forgot: "主要阻碍是忘记，保持 45 分钟提醒并允许托盘常驻。",
+    busy: "主要阻碍为太忙，建议将动作绑定到接水、会议结束等固定触发点。",
+    too_hard: "主要阻碍为动作太难，可切换至更温和的动作。",
+    no_space: "主要阻碍为没有场地，优先选择坐姿或站姿动作。",
+    forgot: "主要阻碍为遗忘，请保持 45 分钟提醒并允许托盘常驻。",
   };
   if (top && mapping[top.obstacle]) {
     suggestions.push(mapping[top.obstacle]);

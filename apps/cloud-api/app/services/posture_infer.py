@@ -35,11 +35,11 @@ logger = logging.getLogger("riseloop.posture")
 GUIDANCE: dict[PostureClass, tuple[str, str]] = {
     PostureClass.BASELINE: ("姿态接近基准线，保持当前坐姿即可。", "baseline_guide"),
     PostureClass.LATERAL_TILT: (
-        "肩线有倾斜，调整坐高或重心，让双肩回到水平位置。",
+        "肩线存在倾斜，请调整坐高或重心，使双肩回到水平位置。",
         "tilt_guide",
     ),
     PostureClass.FORWARD_HEAD: (
-        "检测到头前伸，收下巴并把屏幕上沿抬到视线高度。",
+        "检测到头前伸，请收下巴，并将屏幕上沿抬至视线高度。",
         "align_guide",
     ),
     PostureClass.UNDETERMINED: (

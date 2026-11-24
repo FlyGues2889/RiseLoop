@@ -10,7 +10,7 @@ from ..schemas.qa import QaRequest, QaResponse
 
 KNOWLEDGE_PATH = Path(__file__).resolve().parents[4] / "data" / "knowledge" / "articles.json"
 NO_MATCH_ANSWER = (
-    "资料中没有直接对应的条目。可以先起身走动 30 秒并观察变化；若症状持续加重请就医。"
+    "资料中没有直接对应的条目。建议先起身走动 30 秒并观察变化；若症状持续加重，请及时就医。"
 )
 MAX_ANSWER_CHARS = 150
 
