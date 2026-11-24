@@ -9,6 +9,8 @@ use crate::timer::{SittingTimer, TimerSnapshot};
 
 const KEYRING_SERVICE: &str = "com.riseloop.app";
 const KEYRING_ACCOUNT: &str = "session-token";
+/// 访问令牌一小时过期，刷新令牌单独一格，续期时只换访问令牌
+const KEYRING_ACCOUNT_REFRESH: &str = "refresh-token";
 
 #[tauri::command]
 pub fn timer_state(timer: State<'_, Arc<SittingTimer>>) -> TimerSnapshot {
@@ -45,30 +47,58 @@ pub fn timer_set_threshold(minutes: u64, timer: State<'_, Arc<SittingTimer>>) ->
     timer.set_threshold(minutes)
 }
 
-#[tauri::command]
-pub fn store_session_token(token: String) -> Result<(), String> {
-    let entry = keyring::Entry::new(KEYRING_SERVICE, KEYRING_ACCOUNT).map_err(|error| error.to_string())?;
-    entry.set_password(&token).map_err(|error| error.to_string())
+fn keyring_entry(account: &str) -> Result<keyring::Entry, String> {
+    keyring::Entry::new(KEYRING_SERVICE, account).map_err(|error| error.to_string())
 }
 
-#[tauri::command]
-pub fn load_session_token() -> Result<Option<String>, String> {
-    let entry = keyring::Entry::new(KEYRING_SERVICE, KEYRING_ACCOUNT).map_err(|error| error.to_string())?;
-    match entry.get_password() {
-        Ok(token) => Ok(Some(token)),
+fn store_secret(account: &str, secret: &str) -> Result<(), String> {
+    keyring_entry(account)?.set_password(secret).map_err(|error| error.to_string())
+}
+
+fn load_secret(account: &str) -> Result<Option<String>, String> {
+    match keyring_entry(account)?.get_password() {
+        Ok(secret) => Ok(Some(secret)),
         Err(keyring::Error::NoEntry) => Ok(None),
         Err(error) => Err(error.to_string()),
     }
 }
 
-#[tauri::command]
-pub fn clear_session_token() -> Result<(), String> {
-    let entry = keyring::Entry::new(KEYRING_SERVICE, KEYRING_ACCOUNT).map_err(|error| error.to_string())?;
-    match entry.delete_credential() {
+fn clear_secret(account: &str) -> Result<(), String> {
+    match keyring_entry(account)?.delete_credential() {
         Ok(()) => Ok(()),
         Err(keyring::Error::NoEntry) => Ok(()),
         Err(error) => Err(error.to_string()),
     }
+}
+
+#[tauri::command]
+pub fn store_session_token(token: String) -> Result<(), String> {
+    store_secret(KEYRING_ACCOUNT, &token)
+}
+
+#[tauri::command]
+pub fn load_session_token() -> Result<Option<String>, String> {
+    load_secret(KEYRING_ACCOUNT)
+}
+
+#[tauri::command]
+pub fn clear_session_token() -> Result<(), String> {
+    clear_secret(KEYRING_ACCOUNT)
+}
+
+#[tauri::command]
+pub fn store_refresh_token(token: String) -> Result<(), String> {
+    store_secret(KEYRING_ACCOUNT_REFRESH, &token)
+}
+
+#[tauri::command]
+pub fn load_refresh_token() -> Result<Option<String>, String> {
+    load_secret(KEYRING_ACCOUNT_REFRESH)
+}
+
+#[tauri::command]
+pub fn clear_refresh_token() -> Result<(), String> {
+    clear_secret(KEYRING_ACCOUNT_REFRESH)
 }
 
 fn camera_log_path_of(app: &tauri::AppHandle) -> Result<PathBuf, String> {

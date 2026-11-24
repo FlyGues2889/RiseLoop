@@ -205,7 +205,7 @@ pub fn run() {
             thread::spawn(move || loop {
                 thread::sleep(Duration::from_secs(1));
                 let snapshot = tick_timer.snapshot();
-                // 前端按钮、心跳自动暂停也会改状态，这里兜住托盘文字
+                // 前端按钮、久坐计时自动暂停也会改状态，这里兜住托盘文字
                 sync_tray_menu(&handle, &tick_pause_item, snapshot.running, &tick_running);
                 let _ = handle.emit(TICK_EVENT, &snapshot);
                 if let Some(triggered) = tick_timer.tick() {
@@ -246,6 +246,9 @@ pub fn run() {
             commands::store_session_token,
             commands::load_session_token,
             commands::clear_session_token,
+            commands::store_refresh_token,
+            commands::load_refresh_token,
+            commands::clear_refresh_token,
             commands::camera_log,
             commands::camera_log_path,
             commands::capture_append,

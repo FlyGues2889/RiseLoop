@@ -35,7 +35,7 @@
 | 循证知识库 | ✅ | 39 条证据台账（PubMed 36 / WHO 1 / CDC 1 / NIOSH 1，共 40 个主题归属）+ `articles.json` 7 条问答语料，`scripts/validate_evidence.py` 0 error |
 | 知识库问答 | ✅ | 本地检索 + citations（`data/knowledge/articles.json` 8 条）；无命中明确回答“资料中没有”。AgentArts 增强为可选，未接入 |
 | 限流 | ✅ | `app/core/ratelimit.py`：按 token 指纹或 IP 滑动窗口，登录类接口单独更严；超限 429 + `Retry-After` |
-| JWT 刷新 / 吊销 | ✅ | `/auth/refresh` 轮换刷新令牌、`/auth/logout` 吊销 jti；黑名单只存 jti 与到期时间，到期自动清理。**客户端续期接入未做**（要 Rust 钥匙串加一个槽位） |
+| JWT 刷新 / 吊销 | ✅ | `/auth/refresh` 轮换刷新令牌、`/auth/logout` 吊销 jti；黑名单只存 jti 与到期时间，到期自动清理。客户端撞到 401 先用刷新令牌换新的一对再重放请求（并发只换一次），退出时连带服务端吊销；钥匙串用访问令牌 + 刷新令牌两个槽位 |
 | 账户删除 | ✅ | `DELETE /auth/account`：内存态与 SQL 态都清用户及其全部数据 |
 | 接口清单 | ✅ | `docs/architecture/api-surface.md`：全量路由、错误码、mock/真机切换、待开通资源清单；`/health/capabilities` 可自查 |
 
@@ -91,7 +91,7 @@
 - [x] 云端接口补全：限流、刷新令牌、登出吊销、账户删除、能力自查（第 7 条）
 - [x] 动作库补到 15 条（收下巴、胸椎旋转、靠墙俯卧撑、坐姿小腿泵、靠墙静蹲、坐姿髋绕环）
 - [x] 动作示意图接入主窗与通知窗（双窗同图、点开放大）
-- [ ] 客户端接入刷新令牌（Rust 钥匙串加槽位 + api-client 自动续期）
+- [x] 客户端接入刷新令牌（Rust 钥匙串加槽位 + api-client 自动续期）
 
 ### 11.17 姿态识别 + 风险融合
 - [ ] 开通 ModelArts 在线服务，上传 v0 模型包（`customize_service.py` / `posture_runtime.py` / `model.py` / `model.pt` / `feature_spec.json`）

@@ -228,10 +228,24 @@ function normalizeCode(payload) {
   return typeof payload.error === "string" ? payload.error : null;
 }
 
-export function createApiClient({ baseUrl, getBaseUrl, getToken }) {
+export function createApiClient({ baseUrl, getBaseUrl, getToken, onRefresh }) {
   const resolveBaseUrl = getBaseUrl ?? (() => baseUrl);
+  // 后台心跳、周报、反馈可能同时撞上过期的访问令牌，只换一次，
+  // 否则轮换出来的刷新令牌会被后一次覆盖
+  let refreshing = null;
 
-  async function request(path, { method = "GET", body, auth = true } = {}) {
+  function refreshSession() {
+    if (!onRefresh) return null;
+    refreshing ??= Promise.resolve()
+      .then(() => onRefresh())
+      .finally(() => {
+        refreshing = null;
+      });
+    return refreshing;
+  }
+
+  async function request(path, options = {}, retried = false) {
+    const { method = "GET", body, auth = true } = options;
     const headers = { Accept: "application/json" };
     if (body !== undefined) headers["Content-Type"] = "application/json";
     if (auth) {
@@ -254,7 +268,14 @@ export function createApiClient({ baseUrl, getBaseUrl, getToken }) {
     const text = await response.text();
     const payload = text ? safeParse(text) : null;
     if (!response.ok) {
-      throw new ApiError(response.status, normalizeCode(payload), payload, { method, url });
+      const error = new ApiError(response.status, normalizeCode(payload), payload, { method, url });
+      // 访问令牌只有一个小时寿命，久坐提醒一次就是 45 分钟：
+      // 撞上过期就用刷新令牌续期，再放一遍原请求，不让用户掉登录
+      if (auth && !retried && error.isSessionExpired && onRefresh) {
+        const token = await refreshSession();
+        if (token) return request(path, options, true);
+      }
+      throw error;
     }
     return payload;
   }
@@ -265,6 +286,13 @@ export function createApiClient({ baseUrl, getBaseUrl, getToken }) {
       request("/auth/register", { method: "POST", body: { email, password }, auth: false }),
     login: (email, password) =>
       request("/auth/login", { method: "POST", body: { email, password }, auth: false }),
+    refresh: (refreshToken) =>
+      request("/auth/refresh", { method: "POST", body: { refresh_token: refreshToken }, auth: false }),
+    logout: (refreshToken) =>
+      request("/auth/logout", {
+        method: "POST",
+        body: refreshToken ? { refresh_token: refreshToken } : {},
+      }),
     assessment: (payload) => request("/assessment", { method: "POST", body: payload }),
     heartbeat: (payload) => request("/sitting/heartbeat", { method: "POST", body: payload }),
     postureRisk: (payload) => request("/posture/risk", { method: "POST", body: payload }),

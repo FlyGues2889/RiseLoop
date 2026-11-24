@@ -62,6 +62,8 @@ const remoteApi = createApiClient({
       return null;
     }
   },
+  // 访问令牌一小时就过期，久坐提醒一轮 45 分钟，挂后台很容易撞上过期
+  onRefresh: () => refreshAccessToken(),
 });
 
 let activeApi = remoteApi;
@@ -141,12 +143,38 @@ export async function applyToken(response) {
   if (state.mode === MODES.cloud.id) {
     try {
       await invoke("store_session_token", { token: response.access_token });
+      if (response.refresh_token) {
+        await invoke("store_refresh_token", { token: response.refresh_token });
+      }
     } catch (error) {
       pushLog("本次登录仅在本次运行期间有效，重启后需重新登录。");
     }
   }
   state.phase = "assessment";
   state.error = null;
+}
+
+// 用刷新令牌换一对新令牌；后端会立刻作废旧刷新令牌，所以新的那份必须存回钥匙串
+async function refreshAccessToken() {
+  let refreshToken = null;
+  try {
+    refreshToken = await invoke("load_refresh_token");
+  } catch {
+    return null;
+  }
+  if (!refreshToken) return null;
+  const tokens = await remoteApi.refresh(refreshToken);
+  if (!tokens?.access_token) return null;
+  memoryToken = tokens.access_token;
+  try {
+    await invoke("store_session_token", { token: tokens.access_token });
+    if (tokens.refresh_token) {
+      await invoke("store_refresh_token", { token: tokens.refresh_token });
+    }
+  } catch {
+    /* 写不进钥匙串只影响下次启动，本次运行已有的令牌仍然有效 */
+  }
+  return memoryToken;
 }
 
 export async function restoreSession() {
@@ -171,7 +199,10 @@ export async function restoreSession() {
 
 function clearToken() {
   memoryToken = null;
-  return invoke("clear_session_token").catch(() => {});
+  return Promise.all([
+    invoke("clear_session_token").catch(() => {}),
+    invoke("clear_refresh_token").catch(() => {}),
+  ]);
 }
 
 function resetViewState() {
@@ -282,6 +313,13 @@ export async function logout() {
   if (state.mode === MODES.demo.id) {
     await exitDemo();
     return;
+  }
+  // 主动退出要连服务端一起吊销，否则刷新令牌还能再换一对访问令牌
+  try {
+    const refreshToken = await invoke("load_refresh_token");
+    await remoteApi.logout(refreshToken || null);
+  } catch {
+    /* 断网时照样退出本机 */
   }
   await clearToken();
   resetViewState();

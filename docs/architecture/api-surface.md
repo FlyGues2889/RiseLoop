@@ -26,7 +26,7 @@
 | POST | `/auth/logout` | 吊销当前访问令牌；body 带 `refresh_token` 时一并吊销 | `token_revoked`(401) |
 | DELETE | `/auth/account` | 删除账号与其全部数据 | `user_not_found`(404) |
 | POST | `/assessment` | 评估，产出初始状态与两周方案；红旗命中直接 403 | `safety_short_circuit`(403) |
-| POST | `/sitting/heartbeat` | 久坐心跳，到阈值推最多 3 个动作 | — |
+| POST | `/sitting/heartbeat` | 上报久坐时间，到阈值推最多 3 个动作 | — |
 | GET | `/actions/{state}` | 按状态取动作，可加 `body_part`、`max_minutes` | — |
 | POST | `/ingest/wearable` | 穿戴设备上报，**未实现**，固定 501 | `not_implemented`(501) |
 | POST | `/posture/risk` | 姿态特征 + 久坐/疼痛 → BRLI 风险与推荐动作、 citations | — |
@@ -47,6 +47,7 @@ access 过期(401 token_expired) → POST /auth/refresh（换新一对，旧的�
 ```
 
 - 令牌是自签 HS256 JWT，claims：`sub / typ(access|refresh) / iat / exp / jti`。
+- 客户端收到 401 后自动用刷新令牌换新的一对并重放原请求（`api-client` 内建，业务调用方无感）；并发的多个 401 只续期一次。
 - 吊销只存 `jti` 与到期时间（`revoked_tokens` 表 / 内存字典），到期自动清理，不存用户内容。
 - 刷新令牌不能当访问令牌用（`typ` 校验），避免登出后仍能续期。
 
@@ -96,7 +97,7 @@ access 过期(401 token_expired) → POST /auth/refresh（换新一对，旧的�
 | 能力 | 状态 |
 |---|---|
 | 注册 / 登录 / 凭证进钥匙串 | ✅ 已接 |
-| 评估、心跳、动作、姿态、反馈、问答、周复盘 | ✅ 已接 |
+| 评估、久坐时间、动作、姿态、反馈、问答、周复盘 | ✅ 已接 |
 | 错误码 → 人话 | ✅ `packages/api-client` 的 `CODE_VIEWS`，新增 `token_revoked`、`rate_limited` 等 |
 | 刷新令牌自动续期 | ⬜ 服务端已就绪；客户端要 Rust 钥匙串加一个槽位 + 401 时重试一次 |
 | 登出 / 删账号 | ⬜ 服务端已就绪；界面只有"清除本机数据"，未调这两个接口 |
