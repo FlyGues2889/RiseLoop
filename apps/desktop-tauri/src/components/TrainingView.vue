@@ -232,6 +232,21 @@ async function start() {
     const video = videoEl.value;
     video.srcObject = stream;
     await video.play();
+
+    // 摄像头启动有数秒黑屏，先等到第一帧有效关键点再开始计时。
+    const deadline = performance.now() + 8000;
+    while (!latest && performance.now() < deadline) {
+      if (video.readyState >= 2 && video.videoWidth) {
+        try {
+          const found = landmarker.detectForVideo(video, performance.now())?.landmarks?.[0] ?? [];
+          if (found.length) latest = toContractKeypoints(found);
+        } catch {
+          /* 预热期识别失败直接跳过 */
+        }
+      }
+      if (!latest) await new Promise((resolve) => setTimeout(resolve, 300));
+    }
+
     beginSegment(0);
     rafId = requestAnimationFrame(tick);
   } catch (err) {

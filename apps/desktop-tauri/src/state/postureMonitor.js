@@ -1,4 +1,5 @@
-// 常驻姿势监测：到点才打开摄像头，采一帧、算关键点，然后立刻关掉。
+// 常驻姿势监测：每分钟开一次摄像头，连续取 10 秒，挑可见度最好的一帧上传关键点。
+// 摄像头启动有数秒黑屏，单帧采样会拿到空帧，所以按窗口取帧。
 // 画面只在本机处理，出网的只有 33 个归一化关键点。
 import { reactive } from "vue";
 import { describeError } from "@riseloop/api-client";
@@ -8,9 +9,10 @@ import { liveCameraBusy, record } from "./cameraLog.js";
 import { evaluatePostureInfer, state } from "./session.js";
 
 const PREFS_KEY = "riseloop.posture.prefs.v1";
-const SAMPLE_INTERVAL_MS = 10_000;
-const WINDOW_MS = 60_000;
-const GAP_FACTOR = 3;
+// 每一分钟开一次摄像头，窗口内连续取帧；摄像头启动有数秒黑屏，单帧采样拿不到人。
+const SAMPLE_INTERVAL_MS = 60_000;
+const CAPTURE_WINDOW_MS = 10_000;
+const SAMPLE_STEP_MS = 1_000;
 
 export const prefs = reactive(loadPrefs());
 
@@ -24,7 +26,6 @@ export const monitor = reactive({
   deviceId: null,
   points: 0,
   samples: 0,
-  gaps: 0,
   lastSampleAt: null,
   window: null, // { at, samples, posture, duration }；posture 只来自云端结果
   latest: null, // { at, posture, confidence, risk, source }
@@ -33,9 +34,6 @@ export const monitor = reactive({
 let landmarker = null;
 let timer = null;
 let sampling = false;
-let windowStart = 0;
-let windowSamples = [];
-let bestSample = null;
 let lastSkip = "";
 // 姿态类别只认云端结果；这里记录云端最近一次判定，用来累计异常时长。
 let confirmedPosture = null;
@@ -124,51 +122,30 @@ async function ensureLandmarker() {
   return landmarker;
 }
 
-// 端侧只量肩线角度和可见度，不判断姿态类别；类别由云端模型给。
-function measure(landmarks) {
-  const left = landmarks[11];
-  const right = landmarks[12];
-  const visibility = Math.min(left?.visibility ?? 0, right?.visibility ?? 0);
-  if (!left || !right) return { tilt: 0, visibility };
-  let degrees = (Math.atan2(right.y - left.y, right.x - left.x) * 180) / Math.PI;
-  if (degrees > 90) degrees -= 180;
-  if (degrees < -90) degrees += 180;
-  return { tilt: Math.round(Math.abs(degrees) * 10) / 10, visibility };
-}
-
+// 端侧只负责把关键点交给云端，不做姿态判定。
 function confirmedDuration(now) {
   if (!confirmedPosture || confirmedPosture === "baseline") return 0;
   return Math.round(((now - confirmedSince) / 60000) * 10) / 10;
 }
 
-function resetWindow(now) {
-  windowStart = now;
-  windowSamples = [];
-  bestSample = null;
-}
-
-function ingest(landmarks, now) {
+function ingest(landmarks, samples = 0) {
   monitor.points = landmarks?.length ?? 0;
-  if (!landmarks || landmarks.length !== 33) return;
-
-  const keypoints = toContractKeypoints(landmarks);
-  if (!keypoints) return;
-
-  const local = measure(landmarks);
-  monitor.samples += 1;
-  windowSamples.push({ ...local, at: now });
-  if (!bestSample || local.visibility > bestSample.visibility) {
-    bestSample = { ...local, keypoints };
-  }
-
-  if (now - windowStart >= WINDOW_MS) void flushWindow();
+  monitor.samples += samples;
+  return toContractKeypoints(landmarks);
 }
 
-async function flushWindow() {
-  const collected = windowSamples.slice();
-  const best = bestSample;
-  resetWindow(performance.now());
-  if (collected.length < 2 || !best) return;
+async function report(keypoints, frameCount) {
+  if (!keypoints) {
+    monitor.window = {
+      at: new Date().toISOString(),
+      samples: frameCount,
+      posture: null,
+      duration: 0,
+    };
+    monitor.latest = null;
+    monitor.error = "这一分钟没识别到人，保持上半身在画面内。";
+    return;
+  }
 
   const now = performance.now();
   const duration = confirmedDuration(now);
@@ -176,7 +153,7 @@ async function flushWindow() {
   const sittingMinutes = Math.floor((state.timer?.sitting_seconds ?? 0) / 60);
   try {
     const result = await evaluatePostureInfer({
-      keypoints: best.keypoints,
+      keypoints,
       source: "mediapipe-pose-33",
       captured_at: new Date().toISOString(),
       posture_duration_minutes: duration,
@@ -192,7 +169,7 @@ async function flushWindow() {
       // 本地模式不连云端，也就没有姿态类别可显示。
       monitor.window = {
         at: new Date().toISOString(),
-        samples: collected.length,
+        samples: frameCount,
         posture: null,
         duration: 0,
       };
@@ -203,7 +180,7 @@ async function flushWindow() {
     if (!result) {
       monitor.window = {
         at: new Date().toISOString(),
-        samples: collected.length,
+        samples: frameCount,
         posture: null,
         duration: 0,
       };
@@ -217,7 +194,7 @@ async function flushWindow() {
     }
     monitor.window = {
       at: new Date().toISOString(),
-      samples: collected.length,
+      samples: frameCount,
       posture: result.posture,
       duration: duration,
     };
@@ -232,7 +209,7 @@ async function flushWindow() {
   } catch (err) {
     monitor.window = {
       at: new Date().toISOString(),
-      samples: collected.length,
+      samples: frameCount,
       posture: null,
       duration: 0,
     };
@@ -254,7 +231,8 @@ function waitFrame(el) {
   });
 }
 
-// 一次采样：开摄像头 → 取一帧 → 关摄像头。任何分支都必须把轨道停掉。
+// 一轮采样：开摄像头 → 连续取 10 秒 → 选可见度最好的一帧 → 关摄像头。
+// 摄像头启动有数秒黑屏，单帧采样会拿到空帧，所以窗口内按秒重复取。
 async function capture(deviceId) {
   const constraints = deviceId
     ? {
@@ -281,13 +259,31 @@ async function capture(deviceId) {
     await waitFrame(el);
 
     const settings = stream.getVideoTracks()[0]?.getSettings?.() ?? {};
-    let landmarks = null;
-    try {
-      landmarks = landmarker?.detectForVideo(el, performance.now())?.landmarks?.[0] ?? null;
-    } catch {
-      landmarks = null;
+    let best = null;
+    let frames = 0;
+    const startedAt = performance.now();
+
+    while (performance.now() - startedAt < CAPTURE_WINDOW_MS) {
+      if (el.readyState >= 2 && el.videoWidth) {
+        let landmarks = null;
+        try {
+          landmarks = landmarker?.detectForVideo(el, performance.now())?.landmarks?.[0] ?? null;
+        } catch {
+          landmarks = null;
+        }
+        if (landmarks) {
+          frames += 1;
+          const visibility = Math.min(
+            landmarks[11]?.visibility ?? 0,
+            landmarks[12]?.visibility ?? 0
+          );
+          if (!best || visibility > best.visibility) best = { visibility, landmarks };
+        }
+      }
+      await new Promise((resolve) => setTimeout(resolve, SAMPLE_STEP_MS));
     }
-    return { landmarks, deviceId: settings.deviceId ?? null };
+
+    return { landmarks: best?.landmarks ?? null, frames, deviceId: settings.deviceId ?? null };
   } finally {
     stream.getTracks().forEach((track) => track.stop());
     el.srcObject = null;
@@ -323,19 +319,12 @@ async function sample() {
     return;
   }
 
-  const before = performance.now();
-  // 窗口被系统节流打断时丢弃半截数据，不拿不完整窗口下结论
-  if (monitor.lastSampleAt && before - monitor.lastSampleAt > SAMPLE_INTERVAL_MS * GAP_FACTOR) {
-    monitor.gaps += 1;
-    resetWindow(before);
-  }
-  monitor.lastSampleAt = before;
-
+  monitor.lastSampleAt = performance.now();
   sampling = true;
   const startedAt = performance.now();
   record("open", "打开摄像头采样", "sampling");
   try {
-    const { landmarks, deviceId } = await capture(prefs.deviceId);
+    const { landmarks, frames, deviceId } = await capture(prefs.deviceId);
     if (monitor.status !== "running") return;
 
     if (deviceId && deviceId !== prefs.deviceId) {
@@ -343,11 +332,14 @@ async function sample() {
       monitor.deviceId = deviceId;
       savePrefs();
     }
-    const now = performance.now();
-    ingest(landmarks, now);
-    monitor.error = "";
+    const keypoints = ingest(landmarks, frames);
+    await report(keypoints, frames);
     lastSkip = "";
-    record("close", `摄像头已关闭（${Math.round(performance.now() - startedAt)} ms）`, "off");
+    record(
+      "close",
+      `摄像头已关闭（${Math.round(performance.now() - startedAt)} ms，有效帧 ${frames}）`,
+      "off"
+    );
   } catch (err) {
     const name = err?.name ?? "";
     record("error", cameraErrorMessage(err), "off");
@@ -394,7 +386,6 @@ export async function start(deviceId = prefs.deviceId) {
 }
 
 function configureWindow() {
-  resetWindow(performance.now());
   monitor.lastSampleAt = null;
 }
 
@@ -404,7 +395,7 @@ async function release() {
     timer = null;
   }
   sampling = false;
-  resetWindow(performance.now());
+  monitor.lastSampleAt = null;
   confirmedPosture = null;
   confirmedSince = 0;
 }
