@@ -1,0 +1,553 @@
+{
+  "contract_version": "v3",
+  "feature_spec_version": "v3",
+  "label_policy": {
+    "version": "v3",
+    "tilt_threshold_deg": 8.0,
+    "tilt_gray_deg": 2.0,
+    "head_forward_delta_threshold": 0.08,
+    "head_forward_delta_gray": 0.03,
+    "min_shoulder_visibility": 0.5,
+    "min_upper_body_visibility": 0.5,
+    "min_model_confidence": 0.5,
+    "baseline_defaults": {
+      "shoulder_tilt_deg": 0.0,
+      "neck_ratio": 0.65,
+      "head_offset_ratio": 0.0
+    }
+  },
+  "generated_at": "2026-11-26T14:13:52+00:00",
+  "git_head": "d45d064cb0b2590074ef8cfcb7022b3736a62470",
+  "seed": 20261117,
+  "chosen_input_version": "B",
+  "selection": {
+    "criterion": "validation macro-F1",
+    "chosen": "B",
+    "A": 0.7234561666101309,
+    "B": 0.7684879191438094,
+    "note": "selection used validation macro-F1 only; test is reported for both variants as a diagnostic and was not used for selection"
+  },
+  "decision_rule": {
+    "policy": "argmax; confidence below threshold becomes undetermined",
+    "min_confidence": 0.5,
+    "low_confidence_count": 179,
+    "applied_in_evaluation": true
+  },
+  "input_versions": {
+    "A": 9,
+    "B": 141
+  },
+  "model": {
+    "architecture": "MLP",
+    "hidden": [
+      64,
+      32
+    ],
+    "dropout": 0.15,
+    "activation": "ReLU",
+    "params": 11300,
+    "label_order": [
+      "baseline",
+      "forward_head",
+      "lateral_tilt",
+      "undetermined"
+    ],
+    "checkpoint": "model.pt",
+    "model_sha256": "d929665262de1b6ab6120931eb1c5ea75c69c242cc3e391362dd9c3cce9c113d"
+  },
+  "models": {
+    "A": {
+      "input_version": "A",
+      "input_dim": 9,
+      "params": 2852,
+      "epochs_run": null,
+      "best_epoch": null,
+      "best_val_macro_f1": 0.7234561666101309,
+      "mean_val_macro_f1": 0.7234561666101309,
+      "train_seconds": 44.558,
+      "val": null,
+      "test": {
+        "accuracy": 0.7159033719174636,
+        "macro_f1": 0.7145544501366003,
+        "weighted_f1": 0.7118257355106463,
+        "per_class": {
+          "baseline": {
+            "precision": 0.704031465093412,
+            "recall": 0.667910447761194,
+            "f1": 0.6854954523695548,
+            "support": 1072
+          },
+          "forward_head": {
+            "precision": 0.6904205607476636,
+            "recall": 0.5799803729146222,
+            "f1": 0.6304,
+            "support": 1019
+          },
+          "lateral_tilt": {
+            "precision": 0.7807308970099668,
+            "recall": 0.734375,
+            "f1": 0.7568438003220612,
+            "support": 960
+          },
+          "undetermined": {
+            "precision": 0.6953255425709516,
+            "recall": 0.9024918743228603,
+            "f1": 0.7854785478547854,
+            "support": 923
+          }
+        },
+        "confusion_matrix": {
+          "labels": [
+            "baseline",
+            "forward_head",
+            "lateral_tilt",
+            "undetermined"
+          ],
+          "matrix": [
+            [
+              716,
+              192,
+              51,
+              113
+            ],
+            [
+              274,
+              591,
+              103,
+              51
+            ],
+            [
+              26,
+              28,
+              705,
+              201
+            ],
+            [
+              1,
+              45,
+              44,
+              833
+            ]
+          ],
+          "rows": "ground_truth",
+          "columns": "predicted"
+        },
+        "support": 3974
+      },
+      "test_low_confidence": 322,
+      "history": null,
+      "fold_val_macro_f1": [
+        0.639197,
+        0.666036,
+        0.614215,
+        0.97913,
+        0.983332,
+        0.378566,
+        0.16156,
+        0.962288,
+        0.812603,
+        0.948971,
+        0.819912,
+        0.89273,
+        0.571144,
+        0.698701
+      ]
+    },
+    "B": {
+      "input_version": "B",
+      "input_dim": 141,
+      "params": 11300,
+      "epochs_run": null,
+      "best_epoch": null,
+      "best_val_macro_f1": 0.7684879191438094,
+      "mean_val_macro_f1": 0.7684879191438094,
+      "train_seconds": 43.721,
+      "val": null,
+      "test": {
+        "accuracy": 0.7322596879718168,
+        "macro_f1": 0.7305024202678296,
+        "weighted_f1": 0.7257066064925379,
+        "per_class": {
+          "baseline": {
+            "precision": 0.6187161639597835,
+            "recall": 0.746268656716418,
+            "f1": 0.6765327695560254,
+            "support": 1072
+          },
+          "forward_head": {
+            "precision": 0.7548005908419497,
+            "recall": 0.5014720314033366,
+            "f1": 0.6025943396226415,
+            "support": 1019
+          },
+          "lateral_tilt": {
+            "precision": 0.7731629392971247,
+            "recall": 0.75625,
+            "f1": 0.764612954186414,
+            "support": 960
+          },
+          "undetermined": {
+            "precision": 0.819718309859155,
+            "recall": 0.9458288190682557,
+            "f1": 0.8782696177062375,
+            "support": 923
+          }
+        },
+        "confusion_matrix": {
+          "labels": [
+            "baseline",
+            "forward_head",
+            "lateral_tilt",
+            "undetermined"
+          ],
+          "matrix": [
+            [
+              800,
+              125,
+              74,
+              73
+            ],
+            [
+              326,
+              511,
+              122,
+              60
+            ],
+            [
+              145,
+              30,
+              726,
+              59
+            ],
+            [
+              22,
+              11,
+              17,
+              873
+            ]
+          ],
+          "rows": "ground_truth",
+          "columns": "predicted"
+        },
+        "support": 3974
+      },
+      "test_low_confidence": 179,
+      "history": null,
+      "fold_val_macro_f1": [
+        0.602167,
+        0.570134,
+        0.756423,
+        0.962332,
+        0.970606,
+        0.354264,
+        0.533365,
+        0.97471,
+        0.876189,
+        0.970478,
+        0.902695,
+        0.913375,
+        0.706616,
+        0.665475
+      ]
+    }
+  },
+  "chosen": {
+    "input_version": "B",
+    "val": null,
+    "test": {
+      "accuracy": 0.7322596879718168,
+      "macro_f1": 0.7305024202678296,
+      "weighted_f1": 0.7257066064925379,
+      "per_class": {
+        "baseline": {
+          "precision": 0.6187161639597835,
+          "recall": 0.746268656716418,
+          "f1": 0.6765327695560254,
+          "support": 1072
+        },
+        "forward_head": {
+          "precision": 0.7548005908419497,
+          "recall": 0.5014720314033366,
+          "f1": 0.6025943396226415,
+          "support": 1019
+        },
+        "lateral_tilt": {
+          "precision": 0.7731629392971247,
+          "recall": 0.75625,
+          "f1": 0.764612954186414,
+          "support": 960
+        },
+        "undetermined": {
+          "precision": 0.819718309859155,
+          "recall": 0.9458288190682557,
+          "f1": 0.8782696177062375,
+          "support": 923
+        }
+      },
+      "confusion_matrix": {
+        "labels": [
+          "baseline",
+          "forward_head",
+          "lateral_tilt",
+          "undetermined"
+        ],
+        "matrix": [
+          [
+            800,
+            125,
+            74,
+            73
+          ],
+          [
+            326,
+            511,
+            122,
+            60
+          ],
+          [
+            145,
+            30,
+            726,
+            59
+          ],
+          [
+            22,
+            11,
+            17,
+            873
+          ]
+        ],
+        "rows": "ground_truth",
+        "columns": "predicted"
+      },
+      "support": 3974
+    },
+    "macro_f1": 0.7305024202678296,
+    "accuracy": 0.7322596879718168,
+    "per_class": {
+      "baseline": {
+        "precision": 0.6187161639597835,
+        "recall": 0.746268656716418,
+        "f1": 0.6765327695560254,
+        "support": 1072
+      },
+      "forward_head": {
+        "precision": 0.7548005908419497,
+        "recall": 0.5014720314033366,
+        "f1": 0.6025943396226415,
+        "support": 1019
+      },
+      "lateral_tilt": {
+        "precision": 0.7731629392971247,
+        "recall": 0.75625,
+        "f1": 0.764612954186414,
+        "support": 960
+      },
+      "undetermined": {
+        "precision": 0.819718309859155,
+        "recall": 0.9458288190682557,
+        "f1": 0.8782696177062375,
+        "support": 923
+      }
+    },
+    "confusion_matrix": {
+      "labels": [
+        "baseline",
+        "forward_head",
+        "lateral_tilt",
+        "undetermined"
+      ],
+      "matrix": [
+        [
+          800,
+          125,
+          74,
+          73
+        ],
+        [
+          326,
+          511,
+          122,
+          60
+        ],
+        [
+          145,
+          30,
+          726,
+          59
+        ],
+        [
+          22,
+          11,
+          17,
+          873
+        ]
+      ],
+      "rows": "ground_truth",
+      "columns": "predicted"
+    }
+  },
+  "by_framing": {},
+  "confusion_matrix": {
+    "labels": [
+      "baseline",
+      "forward_head",
+      "lateral_tilt",
+      "undetermined"
+    ],
+    "matrix": [
+      [
+        800,
+        125,
+        74,
+        73
+      ],
+      [
+        326,
+        511,
+        122,
+        60
+      ],
+      [
+        145,
+        30,
+        726,
+        59
+      ],
+      [
+        22,
+        11,
+        17,
+        873
+      ]
+    ],
+    "rows": "ground_truth",
+    "columns": "predicted"
+  },
+  "data": {
+    "path": "data\\posture\\capture.jsonl",
+    "sha256": "89b8e1fa11564bf4787fd1ff343e7647c871f8d9b5fff8a5896a8c498c04fc64",
+    "origin": "capture",
+    "origin_counts": {
+      "capture": 3974
+    },
+    "real_capture_frames": 3974,
+    "synthetic_frames": 0,
+    "framing_counts": {
+      "upper_body": 3974
+    },
+    "label_source_counts": {
+      "human": 3974
+    },
+    "frames_total": 3974,
+    "frames_used": 3974,
+    "label_distribution": {
+      "baseline": 1072,
+      "forward_head": 1019,
+      "lateral_tilt": 960,
+      "undetermined": 923
+    },
+    "subjects": [
+      "s01",
+      "s02",
+      "s03",
+      "s04",
+      "s11",
+      "s12",
+      "s13",
+      "s14",
+      "s15",
+      "s16",
+      "s17",
+      "s18",
+      "s19",
+      "s20"
+    ],
+    "subject_count": 14,
+    "devices": [
+      "laptop-cam"
+    ],
+    "device_count": 1,
+    "scenes": [
+      "office"
+    ],
+    "scene_count": 1,
+    "frames_per_split": {
+      "loso_folds": 14,
+      "oof_frames": 3974
+    },
+    "label_distribution_by_split": {
+      "oof": {
+        "baseline": 1072,
+        "forward_head": 1019,
+        "lateral_tilt": 960,
+        "undetermined": 923
+      }
+    },
+    "metrics_scope": "real_capture",
+    "metrics_warning": null,
+    "split_note": "LOSO metrics are out-of-fold; every subject is test exactly once"
+  },
+  "split": {
+    "scheme": "loso",
+    "seed": 20261117,
+    "train_subjects": [
+      "s01",
+      "s02",
+      "s03",
+      "s04",
+      "s11",
+      "s12",
+      "s13",
+      "s14",
+      "s15",
+      "s16",
+      "s17",
+      "s18",
+      "s19",
+      "s20"
+    ],
+    "val_subjects": [],
+    "test_subjects": [
+      "s01",
+      "s02",
+      "s03",
+      "s04",
+      "s11",
+      "s12",
+      "s13",
+      "s14",
+      "s15",
+      "s16",
+      "s17",
+      "s18",
+      "s19",
+      "s20"
+    ],
+    "frames": {
+      "train": 3974,
+      "val": 0,
+      "test": 3974
+    }
+  },
+  "training": {
+    "device": "cpu",
+    "torch_version": "2.15.0+cpu",
+    "num_threads": 1,
+    "duration_seconds": 88.279,
+    "epochs_requested": 160,
+    "patience": 25,
+    "batch_size": 64,
+    "learning_rate": 0.001,
+    "weight_decay": 0.0001,
+    "class_weight": "inverse-frequency CrossEntropyLoss",
+    "started_at": "2026-11-26T14:12:19+00:00",
+    "deploy_seconds": 1.393,
+    "deploy_epochs": 27
+  },
+  "warnings": [
+    "capture_scope: real capture metrics; report subject count and device/scene; do not present as external accuracy",
+    "loso_used: 14 subjects; metrics are out-of-fold leave-one-subject-out"
+  ],
+  "metrics_scope": "real_capture"
+}

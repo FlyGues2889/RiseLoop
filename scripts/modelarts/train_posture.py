@@ -13,6 +13,9 @@ B: 132 normalised coordinates (33 x [x, y, z, visibility]) + derived features.
 Both are standardised with train-split statistics only.  The version with the
 better *validation* macro-F1 is shipped as ``model.pt``; the test split is
 touched once for the final report.  Selecting on test would be leakage.
+
+``--split loso`` evaluates every subject once as an out-of-fold test; use it
+for small capture sets where a 70/15/15 subject split leaves too few people.
 """
 
 from __future__ import annotations
@@ -334,29 +337,34 @@ def select_origin(
     return chosen, selected
 
 
-def split_subjects(subjects: Sequence[str], seed: int) -> dict[str, list[str]]:
+def split_subjects(
+    subjects: Sequence[str], seed: int, scheme: str = "auto"
+) -> dict[str, list[str]]:
     ordered = sorted(subjects)
-    if len(ordered) >= 5:
-        rng = random.Random(seed)
-        rng.shuffle(ordered)
-        total = len(ordered)
-        n_test = max(1, round(total * 0.15))
-        n_val = max(1, round(total * 0.15))
-        n_train = total - n_test - n_val
-        if n_train < 1:
-            n_test, n_val, n_train = 1, 1, total - 2
+    if scheme == "loso" or (scheme == "auto" and len(ordered) < 5):
+        if len(ordered) < 2:
+            raise ValueError("LOSO needs at least two subjects")
         return {
-            "scheme": "subject_group_70_15_15",
-            "train": sorted(ordered[:n_train]),
-            "val": sorted(ordered[n_train : n_train + n_val]),
-            "test": sorted(ordered[n_train + n_val :]),
+            "scheme": "loso",
+            "train": [],
+            "val": [],
+            "test": sorted(ordered),
         }
-    # Leave-one-subject-out is handled by run_loso; this is only a placeholder.
+    if len(ordered) < 5:
+        raise ValueError("group split needs at least five subjects")
+    rng = random.Random(seed)
+    rng.shuffle(ordered)
+    total = len(ordered)
+    n_test = max(1, round(total * 0.15))
+    n_val = max(1, round(total * 0.15))
+    n_train = total - n_test - n_val
+    if n_train < 1:
+        n_test, n_val, n_train = 1, 1, total - 2
     return {
-        "scheme": "loso",
-        "train": sorted(ordered),
-        "val": [],
-        "test": sorted(ordered),
+        "scheme": "subject_group_70_15_15",
+        "train": sorted(ordered[:n_train]),
+        "val": sorted(ordered[n_train : n_train + n_val]),
+        "test": sorted(ordered[n_train + n_val :]),
     }
 
 
@@ -834,7 +842,7 @@ def _run_loso(
     args: argparse.Namespace,
     warnings: list[str],
 ) -> dict[str, Any]:
-    """Leave-one-subject-out evaluation for fewer than five subjects.
+    """Leave-one-subject-out evaluation, requested or used below five subjects.
 
     Out-of-fold predictions produce the reported metrics.  The shipped model is
     retrained on all subjects afterwards; its metrics are the OOF ones above.
@@ -844,7 +852,7 @@ def _run_loso(
     if len(subjects) < 2:
         raise ValueError("LOSO needs at least two subjects")
     warnings.append(
-        f"loso_used: {len(subjects)} subjects (<5); metrics are out-of-fold leave-one-subject-out"
+        f"loso_used: {len(subjects)} subjects; metrics are out-of-fold leave-one-subject-out"
     )
     folds = []
     for index, subject in enumerate(subjects):
@@ -962,6 +970,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
     parser.add_argument("--seed", type=int, default=20261117)
     parser.add_argument("--origin", choices=("auto", "capture", "synthetic"), default="auto")
+    parser.add_argument(
+        "--split",
+        choices=("auto", "group", "loso"),
+        default="auto",
+        help="auto uses LOSO below five subjects, otherwise subject group split",
+    )
     parser.add_argument("--epochs", type=int, default=160)
     parser.add_argument("--patience", type=int, default=25)
     parser.add_argument("--batch-size", type=int, default=64)
@@ -989,9 +1003,14 @@ def main(argv: Sequence[str] | None = None) -> int:
         warnings,
         allow_unreviewed=args.allow_unreviewed_capture,
     )
+    if scope == "capture":
+        warnings.append(
+            "capture_scope: real capture metrics; report subject count and device/scene; "
+            "do not present as external accuracy"
+        )
 
     subjects = sorted({frame.subject for frame in frames})
-    split = split_subjects(subjects, args.seed)
+    split = split_subjects(subjects, args.seed, args.split)
     out_dir: Path = args.out
     out_dir.mkdir(parents=True, exist_ok=True)
     _ensure_writable_tempdir(out_dir / ".tmp")
@@ -1117,6 +1136,17 @@ def main(argv: Sequence[str] | None = None) -> int:
     data_summary = _data_summary(
         data_path, frames, train_frames, val_frames, test_frames, scope, all_frames
     )
+    if split["scheme"] == "loso":
+        data_summary["frames_per_split"] = {
+            "loso_folds": len(run["folds"]),
+            "oof_frames": len(frames),
+        }
+        data_summary["label_distribution_by_split"] = {
+            "oof": data_summary["label_distribution"]
+        }
+        data_summary["split_note"] = (
+            "LOSO metrics are out-of-fold; every subject is test exactly once"
+        )
     spec = _feature_spec(mean_a, std_a, mean_b, std_b, args)
     spec["deployment"] = {
         "input_version": chosen,
@@ -1145,10 +1175,14 @@ def main(argv: Sequence[str] | None = None) -> int:
         "test_frame_count": len(test_frames),
     }
     if split["scheme"] == "loso":
+        split_payload["train_subjects"] = sorted({frame.subject for frame in train_frames})
+        split_payload["val_subjects"] = sorted({frame.subject for frame in val_frames})
+        split_payload["test_subjects"] = sorted({frame.subject for frame in test_frames})
         split_payload["folds"] = run["folds"]
         split_payload["note"] = (
-            "LOSO metrics are out-of-fold; evaluate_posture.py requires retraining "
-            "the folds to reproduce them."
+            "LOSO metrics are out-of-fold; train_frames is the deployment retrain "
+            "set, not a single fold. evaluate_posture.py requires retraining the "
+            "folds to reproduce them."
         )
     _write_json(out_dir / "split.json", split_payload)
 
@@ -1224,12 +1258,16 @@ def main(argv: Sequence[str] | None = None) -> int:
         "confusion_matrix": deploy_test_metrics["confusion_matrix"],
         "data": data_summary,
         "split": {
-            "scheme": split["scheme"],
-            "seed": args.seed,
-            "train_subjects": split["train"],
-            "val_subjects": split["val"],
-            "test_subjects": split["test"],
-            "frames": {"train": len(train_frames), "val": len(val_frames), "test": len(test_frames)},
+            "scheme": split_payload["scheme"],
+            "seed": split_payload["seed"],
+            "train_subjects": split_payload["train_subjects"],
+            "val_subjects": split_payload["val_subjects"],
+            "test_subjects": split_payload["test_subjects"],
+            "frames": {
+                "train": split_payload["train_frame_count"],
+                "val": split_payload["val_frame_count"],
+                "test": split_payload["test_frame_count"],
+            },
         },
         "training": {
             "device": "cpu",

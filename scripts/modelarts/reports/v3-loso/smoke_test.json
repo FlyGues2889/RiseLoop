@@ -1,0 +1,128 @@
+{
+  "contract_version": "v3",
+  "feature_spec_version": "v3",
+  "input_version": "B",
+  "model_file": "model.pt",
+  "model_sha256": "d929665262de1b6ab6120931eb1c5ea75c69c242cc3e391362dd9c3cce9c113d",
+  "created_at": "2026-11-26T14:13:53+00:00",
+  "note": "expected_posture is the stored model output for this feature vector; ground_truth is the label. sample carries derived features only and no raw keypoints. Endpoint replay also needs the 33 keypoints for the same frame_id, which are not committed.",
+  "samples": [
+    {
+      "frame_id": "s01-000000",
+      "split": "test",
+      "ground_truth": "baseline",
+      "expected_posture": "baseline",
+      "expected_confidence": 0.930238,
+      "expected_probabilities": {
+        "baseline": 0.930238,
+        "forward_head": 0.062581,
+        "lateral_tilt": 0.004222,
+        "undetermined": 0.002959
+      },
+      "sample": {
+        "subject": "s01",
+        "device": "laptop-cam",
+        "scene": "office",
+        "features": {
+          "shoulder_tilt_deg": -2.97,
+          "shoulder_width": 0.4896,
+          "shoulder_visibility": 0.987,
+          "upper_body_visibility": 1.0,
+          "neck_ratio": 0.683,
+          "head_offset_ratio": -0.08,
+          "neck_ratio_delta": 0.005,
+          "head_offset_delta": -0.047,
+          "tilt_delta_deg": -0.76
+        }
+      }
+    },
+    {
+      "frame_id": "s01-000060",
+      "split": "test",
+      "ground_truth": "forward_head",
+      "expected_posture": "forward_head",
+      "expected_confidence": 0.523054,
+      "expected_probabilities": {
+        "baseline": 0.434565,
+        "forward_head": 0.523054,
+        "lateral_tilt": 0.037399,
+        "undetermined": 0.004981
+      },
+      "sample": {
+        "subject": "s01",
+        "device": "laptop-cam",
+        "scene": "office",
+        "features": {
+          "shoulder_tilt_deg": -0.67,
+          "shoulder_width": 0.4815,
+          "shoulder_visibility": 0.994,
+          "upper_body_visibility": 1.0,
+          "neck_ratio": 0.697,
+          "head_offset_ratio": -0.073,
+          "neck_ratio_delta": 0.019,
+          "head_offset_delta": -0.04,
+          "tilt_delta_deg": 1.54
+        }
+      }
+    },
+    {
+      "frame_id": "s01-000120",
+      "split": "test",
+      "ground_truth": "lateral_tilt",
+      "expected_posture": "lateral_tilt",
+      "expected_confidence": 0.929783,
+      "expected_probabilities": {
+        "baseline": 0.064089,
+        "forward_head": 0.003503,
+        "lateral_tilt": 0.929783,
+        "undetermined": 0.002625
+      },
+      "sample": {
+        "subject": "s01",
+        "device": "laptop-cam",
+        "scene": "office",
+        "features": {
+          "shoulder_tilt_deg": -1.94,
+          "shoulder_width": 0.5162,
+          "shoulder_visibility": 0.994,
+          "upper_body_visibility": 1.0,
+          "neck_ratio": 0.699,
+          "head_offset_ratio": 0.137,
+          "neck_ratio_delta": 0.021,
+          "head_offset_delta": 0.171,
+          "tilt_delta_deg": 0.27
+        }
+      }
+    },
+    {
+      "frame_id": "s01-000180",
+      "split": "test",
+      "ground_truth": "undetermined",
+      "expected_posture": "undetermined",
+      "expected_confidence": 0.508975,
+      "expected_probabilities": {
+        "baseline": 0.081821,
+        "forward_head": 0.00421,
+        "lateral_tilt": 0.404993,
+        "undetermined": 0.508975
+      },
+      "sample": {
+        "subject": "s01",
+        "device": "laptop-cam",
+        "scene": "office",
+        "features": {
+          "shoulder_tilt_deg": 2.52,
+          "shoulder_width": 0.4656,
+          "shoulder_visibility": 0.997,
+          "upper_body_visibility": 1.0,
+          "neck_ratio": 0.612,
+          "head_offset_ratio": -0.092,
+          "neck_ratio_delta": -0.066,
+          "head_offset_delta": -0.059,
+          "tilt_delta_deg": 4.73
+        }
+      }
+    }
+  ],
+  "warnings": []
+}
