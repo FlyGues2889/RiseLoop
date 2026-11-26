@@ -1,4 +1,4 @@
-"""ModelArts custom inference script for the v1 posture classifier.
+"""ModelArts custom inference script for the posture classifier.
 
 Deployment contract
 -------------------
@@ -123,6 +123,8 @@ class Model(PTServingBaseService):
         self.feature_order = list(spec["feature_order"])
         if self.feature_order != list(runtime.FEATURE_ORDER):
             raise ValueError("feature_spec feature_order mismatch")
+        if list(spec.get("baseline_fields", [])) != list(runtime.BASELINE_FIELDS):
+            raise ValueError("feature_spec baseline_fields mismatch")
         checkpoint_order = list(self.meta.get("mediapipe_landmarks", []))
         if checkpoint_order and self.keypoint_order != checkpoint_order:
             raise ValueError("feature_spec/checkpoint keypoint order mismatch")
@@ -257,7 +259,10 @@ class Model(PTServingBaseService):
         except InputContractError as exc:
             return self._error(request_id, exc.code, exc.message, started)
 
-        computed = runtime.features_from_keypoints(points)
+        try:
+            computed = runtime.features_from_keypoints(points, data.get("baseline"))
+        except ValueError as exc:
+            return self._error(request_id, "invalid_baseline", str(exc), started)
         features_raw = data.get("features")
         warnings: list[str] = []
         if features_raw is None:

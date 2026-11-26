@@ -9,7 +9,7 @@ const emit = defineEmits(["close"]);
 
 const SEGMENTS = [
   { label: "baseline", title: "自然坐正", hint: "保持双肩水平，头部不要前伸" },
-  { label: "forward_head", title: "头部前伸", hint: "下巴前伸并保持，不要低头" },
+  { label: "forward_head", title: "头部前伸", hint: "头部整体前移并保持，颈长比明显变小" },
   { label: "lateral_tilt", title: "肩部侧倾", hint: "压低一侧肩部，另一侧自然抬起" },
   { label: "undetermined", title: "侧身或遮挡", hint: "侧身，或用手遮挡一侧肩部" },
 ];
@@ -33,7 +33,7 @@ const recording = ref(false);
 const secondsToStart = ref(0);
 const secondsLeft = ref(0);
 const poseState = ref("none");
-const live = ref({ tilt: 0, forward: 0, neck: 0 });
+const live = ref({ tilt: 0, neck: 0, offset: 0 });
 const counts = ref({});
 const savedPath = ref("");
 
@@ -63,16 +63,14 @@ function measure(points) {
   const right = points[12];
   const nose = points[0];
   const width = Math.hypot(right.x - left.x, right.y - left.y) || 0;
-  if (!width) return { tilt: 0, forward: 0, neck: 0 };
+  if (!width) return { tilt: 0, neck: 0, offset: 0 };
   let degrees = (Math.atan2(right.y - left.y, right.x - left.x) * 180) / Math.PI;
   if (degrees > 90) degrees -= 180;
   if (degrees < -90) degrees += 180;
-  const shoulderZ = (left.z + right.z) / 2;
-  const shoulderY = (left.y + right.y) / 2;
   return {
     tilt: Math.round(degrees * 10) / 10,
-    forward: Math.round(((shoulderZ - nose.z) / width) * 100) / 100,
-    neck: Math.round(((shoulderY - nose.y) / width) * 100) / 100,
+    neck: Math.round((((left.y + right.y) / 2 - nose.y) / width) * 100) / 100,
+    offset: Math.round(((nose.x - (left.x + right.x) / 2) / width) * 100) / 100,
   };
 }
 
@@ -399,7 +397,7 @@ onBeforeUnmount(() => {
             <span class="frames mono">已采 {{ totalFrames }} 帧</span>
           </p>
           <p class="live mono">
-            肩倾 {{ live.tilt }}° · 头前伸 {{ live.forward }} · 颈长比 {{ live.neck }}
+            肩倾 {{ live.tilt }}° · 颈长比 {{ live.neck }} · 头偏移 {{ live.offset }}
           </p>
           <div class="actions">
             <m3e-button variant="outlined" size="small" @click="stop">提前结束</m3e-button>

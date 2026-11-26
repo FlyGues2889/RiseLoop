@@ -9,21 +9,14 @@ from ..schemas.posture import (
     UPPER_BODY_NAMES,
     UPPER_BODY_VISIBILITY_MIN,
     Keypoint,
+    PostureBaseline,
     PostureFeatures,
 )
 
 
-def extract_features(keypoints: list[Keypoint]) -> PostureFeatures:
-    """从 33 点中提取与姿态分类相关的几何特征。
-
-    只做可解释的几何量，不做分类决策；分类由云端模型负责。
-    特征只依赖鼻与双肩，髋部与腿出画不影响结果。
-    """
-    points = {point.name.strip().lower(): point for point in keypoints}
-    left = points["left_shoulder"]
-    right = points["right_shoulder"]
-    nose = points["nose"]
-
+def _raw_geometry(
+    left: Keypoint, right: Keypoint, nose: Keypoint
+) -> tuple[float, float, float, float]:
     width = hypot(right.x - left.x, right.y - left.y)
     tilt = 0.0
     if width > 0:
@@ -32,14 +25,51 @@ def extract_features(keypoints: list[Keypoint]) -> PostureFeatures:
             angle -= 180
         if angle < -90:
             angle += 180
-        tilt = round(angle, 2)
+        tilt = angle
+
+    neck_ratio = 0.0
+    head_offset_ratio = 0.0
+    if width > 0:
+        shoulder_mid_x = (left.x + right.x) / 2
+        shoulder_mid_y = (left.y + right.y) / 2
+        neck_ratio = (shoulder_mid_y - nose.y) / width
+        head_offset_ratio = (nose.x - shoulder_mid_x) / width
+    return tilt, width, neck_ratio, head_offset_ratio
+
+
+def baseline_from_keypoints(keypoints: list[Keypoint]) -> PostureBaseline:
+    """从一帧中立坐姿提取基线；批量采集时取多帧中位数。"""
+
+    points = {point.name.strip().lower(): point for point in keypoints}
+    tilt, _, neck_ratio, head_offset_ratio = _raw_geometry(
+        points["left_shoulder"], points["right_shoulder"], points["nose"]
+    )
+    return PostureBaseline(
+        shoulder_tilt_deg=round(tilt, 2),
+        neck_ratio=round(neck_ratio, 4),
+        head_offset_ratio=round(head_offset_ratio, 4),
+    )
+
+
+def extract_features(
+    keypoints: list[Keypoint], baseline: PostureBaseline | None = None
+) -> PostureFeatures:
+    """提取 2D 几何特征与相对个人中立位的偏差。
+
+    只做可解释的几何量，不做分类决策；分类由云端模型负责。
+    不使用 MediaPipe 的 z：真实摄像头上该通道的尺度随距离漂移，无法
+    稳定区分头前伸。相对量在没有校准数据时回退到总体中立位。
+    """
+
+    points = {point.name.strip().lower(): point for point in keypoints}
+    left = points["left_shoulder"]
+    right = points["right_shoulder"]
+    nose = points["nose"]
+    reference = baseline or PostureBaseline()
+
+    tilt, width, neck_ratio, head_offset_ratio = _raw_geometry(left, right, nose)
 
     shoulder_visibility = min(left.visibility, right.visibility)
-
-    head_forward = 0.0
-    if width > 0:
-        shoulder_mid_z = (left.z + right.z) / 2
-        head_forward = round((shoulder_mid_z - nose.z) / width, 3)
 
     visible_upper = sum(
         1
@@ -49,11 +79,15 @@ def extract_features(keypoints: list[Keypoint]) -> PostureFeatures:
     upper_body_visibility = round(visible_upper / len(UPPER_BODY_NAMES), 3)
 
     return PostureFeatures(
-        shoulder_tilt_deg=tilt,
+        shoulder_tilt_deg=round(tilt, 2),
         shoulder_width=round(width, 4),
         shoulder_visibility=round(shoulder_visibility, 3),
-        head_forward_ratio=head_forward,
         upper_body_visibility=upper_body_visibility,
+        neck_ratio=round(neck_ratio, 3),
+        head_offset_ratio=round(head_offset_ratio, 3),
+        neck_ratio_delta=round(neck_ratio - reference.neck_ratio, 3),
+        head_offset_delta=round(head_offset_ratio - reference.head_offset_ratio, 3),
+        tilt_delta_deg=round(tilt - reference.shoulder_tilt_deg, 2),
     )
 
 

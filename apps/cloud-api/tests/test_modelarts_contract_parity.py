@@ -72,13 +72,22 @@ def test_constants_follow_cloud_api():
     assert contract.LABELS == ("baseline", "forward_head", "lateral_tilt", "undetermined")
     assert contract.FRAMINGS == ("upper_body", "full_body")
     assert len(contract.UPPER_BODY_POINTS) == 13
-    assert contract.FEATURE_SPEC_VERSION == "v2"
+    assert contract.FEATURE_SPEC_VERSION == "v3"
     assert contract.FEATURE_ORDER == (
         "shoulder_tilt_deg",
         "shoulder_width",
         "shoulder_visibility",
-        "head_forward_ratio",
         "upper_body_visibility",
+        "neck_ratio",
+        "head_offset_ratio",
+        "neck_ratio_delta",
+        "head_offset_delta",
+        "tilt_delta_deg",
+    )
+    assert contract.BASELINE_ORDER == (
+        "shoulder_tilt_deg",
+        "neck_ratio",
+        "head_offset_ratio",
     )
 
 
@@ -118,10 +127,21 @@ def test_runtime_copy_matches_cloud_features():
         assert actual == pytest.approx(expected, abs=1e-12)
 
 
+def test_runtime_copy_matches_cloud_features_with_baseline():
+    keypoints = _pose(random.Random(20261126))
+    baseline = {"shoulder_tilt_deg": 1.5, "neck_ratio": 0.72, "head_offset_ratio": -0.01}
+    expected = contract.features_from_keypoints(keypoints, baseline)
+    actual = runtime.features_from_keypoints(keypoints, baseline)
+    assert actual == pytest.approx(expected, abs=1e-12)
+    assert expected["neck_ratio_delta"] == pytest.approx(
+        expected["neck_ratio"] - baseline["neck_ratio"], abs=1e-3
+    )
+
+
 def test_runtime_vector_order_is_schema_order():
     features = _frame()["features"]
     assert runtime.features_vector(features) == contract.features_vector(features)
-    assert len(contract.features_vector(features)) == 5
+    assert len(contract.features_vector(features)) == 9
     assert len(contract.coordinates_vector(_frame()["keypoints"])) == 132
     assert runtime.UPPER_BODY_POINTS == contract.UPPER_BODY_POINTS
 
@@ -233,13 +253,17 @@ def test_prelabel_policy_covers_four_classes():
         "shoulder_tilt_deg": 0.0,
         "shoulder_width": 0.2,
         "shoulder_visibility": 0.98,
-        "head_forward_ratio": 0.0,
         "upper_body_visibility": 1.0,
+        "neck_ratio": 0.65,
+        "head_offset_ratio": 0.0,
+        "neck_ratio_delta": 0.0,
+        "head_offset_delta": 0.0,
+        "tilt_delta_deg": 0.0,
     }
     assert label_policy.prelabel(base) == "baseline"
     assert label_policy.prelabel({**base, "shoulder_tilt_deg": 12.0}) == "lateral_tilt"
-    assert label_policy.prelabel({**base, "head_forward_ratio": 0.4}) == "forward_head"
+    assert label_policy.prelabel({**base, "neck_ratio_delta": -0.2}) == "forward_head"
     assert label_policy.prelabel({**base, "shoulder_tilt_deg": 7.0}) == "undetermined"
     assert label_policy.prelabel({**base, "shoulder_visibility": 0.3}) == "undetermined"
     assert label_policy.prelabel({**base, "upper_body_visibility": 0.3}) == "undetermined"
-    assert label_policy.describe()["version"] == "v2"
+    assert label_policy.describe()["version"] == "v3"

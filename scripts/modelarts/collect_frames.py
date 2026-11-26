@@ -4,8 +4,8 @@ The collector is deliberately keypoint-only:
 
 * it rejects any record containing image / video / base64 / pixel fields;
 * it never writes frames, crops or screenshots;
-* it recomputes the five features with the contract module (a supplied value
-  that disagrees is counted, never logged);
+* it recomputes the contract features with the contract module, using the
+  per-subject median of ``label=baseline`` frames as the neutral reference;
 * ``--append`` adds to an existing dataset without rewriting it.
 
 Typical use::
@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import statistics
 import sys
 import time
 from datetime import datetime
@@ -29,11 +30,15 @@ from typing import Any, Iterable, TextIO
 
 from label_policy import prelabel
 from posture_contract import (
+    BASELINE_DEFAULTS,
+    BASELINE_ORDER,
     DEFAULT_FRAMING,
     FEATURE_ORDER,
+    FEATURE_SPEC_VERSION,
     FRAMINGS,
     LABELS as LABEL_ORDER,
     ContractError,
+    baseline_from_keypoints as compute_baseline,
     features_from_keypoints as compute_features,
     validate_keypoint_ranges,
     validate_keypoints,
@@ -66,6 +71,67 @@ def _validate_features(raw) -> dict[str, float]:
 
 def _features_close(left, right, tol: float = 1e-9) -> bool:
     return all(abs(float(left[name]) - float(right[name])) <= tol for name in FEATURE_ORDER)
+
+
+def _record_label(record: dict[str, Any], args: argparse.Namespace) -> str:
+    return args.label or record.get("label") or ""
+
+
+def _record_subject(record: dict[str, Any], args: argparse.Namespace) -> str:
+    return str(args.subject or record.get("subject") or "")
+
+
+def _baselines(
+    records: Iterable[tuple[int, str]], args: argparse.Namespace
+) -> dict[str, dict[str, float]]:
+    """Per-subject median of the labelled neutral segment, in raw 2D units."""
+
+    samples: dict[str, list[dict[str, float]]] = {}
+    for _, line in records:
+        try:
+            record = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if not isinstance(record, dict):
+            continue
+        if _record_label(record, args) != "baseline":
+            continue
+        subject = _record_subject(record, args)
+        if not subject:
+            continue
+        try:
+            points = _normalise_points(record.get("keypoints"))
+            samples.setdefault(subject, []).append(compute_baseline(points))
+        except ContractError:
+            continue
+
+    baselines: dict[str, dict[str, float]] = {}
+    for subject, values in samples.items():
+        baselines[subject] = {
+            "shoulder_tilt_deg": round(
+                statistics.median(value["shoulder_tilt_deg"] for value in values), 2
+            ),
+            "neck_ratio": round(
+                statistics.median(value["neck_ratio"] for value in values), 4
+            ),
+            "head_offset_ratio": round(
+                statistics.median(value["head_offset_ratio"] for value in values), 4
+            ),
+        }
+    return baselines
+
+
+def _baseline(record: dict[str, Any], subject: str, baselines: dict[str, dict[str, float]]) -> dict[str, float]:
+    supplied = record.get("baseline")
+    if isinstance(supplied, dict):
+        try:
+            return {
+                name: float(supplied.get(name, BASELINE_DEFAULTS[name]))
+                for name in BASELINE_ORDER
+            }
+        except (TypeError, ValueError) as exc:
+            raise ContractError("baseline 不是数值", code="invalid_baseline") from exc
+    return baselines.get(subject, dict(BASELINE_DEFAULTS))
 
 FORBIDDEN_FIELDS = {
     "image",
@@ -134,17 +200,17 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--label-source", choices=("human", "prelabel"), default=None)
     parser.add_argument("--origin", choices=("capture", "synthetic"), default=None)
     parser.add_argument("--framing", choices=FRAMINGS, default=None)
-    parser.add_argument("--prelabel", action="store_true", help="derive a draft label with the v2 rubric")
+    parser.add_argument("--prelabel", action="store_true", help="derive a draft label with the v3 rubric")
     parser.add_argument("--note", default="")
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args(argv)
 
     if args.input == "-":
-        stream = sys.stdin
-        close_stream = False
+        lines = list(_records(sys.stdin))
     else:
-        stream = Path(args.input).open("r", encoding="utf-8")
-        close_stream = True
+        with Path(args.input).open("r", encoding="utf-8") as handle:
+            lines = list(_records(handle))
+    baselines = _baselines(lines, args)
 
     counters: dict[str, int] = {}
     written = 0
@@ -174,7 +240,7 @@ def main(argv: list[str] | None = None) -> int:
         output_handle = args.out.open(mode, encoding="utf-8", newline="\n")
 
     try:
-        for line_number, line in _records(stream):
+        for line_number, line in lines:
             try:
                 record = json.loads(line)
             except json.JSONDecodeError:
@@ -192,8 +258,8 @@ def main(argv: list[str] | None = None) -> int:
                 skipped[media_error] = skipped.get(media_error, 0) + 1
                 continue
 
-            subject = args.subject or record.get("subject")
-            if not isinstance(subject, str) or not subject:
+            subject = _record_subject(record, args)
+            if not subject:
                 skipped["missing_subject"] = skipped.get("missing_subject", 0) + 1
                 continue
 
@@ -203,7 +269,8 @@ def main(argv: list[str] | None = None) -> int:
                 skipped[exc.code] = skipped.get(exc.code, 0) + 1
                 continue
             try:
-                features = compute_features(points)
+                neutral = _baseline(record, subject, baselines)
+                features = compute_features(points, neutral)
             except ContractError as exc:
                 skipped[exc.code] = skipped.get(exc.code, 0) + 1
                 continue
@@ -217,7 +284,7 @@ def main(argv: list[str] | None = None) -> int:
                     if not _features_close(features, supplied_features):
                         feature_mismatch += 1
 
-            label = args.label or record.get("label") or ""
+            label = _record_label(record, args)
             if args.prelabel and not label:
                 label = prelabel(features)
             if label not in LABEL_ORDER:
@@ -275,6 +342,8 @@ def main(argv: list[str] | None = None) -> int:
                 "subject": subject,
                 "scene": str(record.get("scene") or args.scene),
                 "framing": framing,
+                "feature_spec_version": FEATURE_SPEC_VERSION,
+                "baseline": neutral,
                 "keypoints": points,
                 "features": {
                     name: round(float(value), 6) for name, value in features.items()
@@ -291,8 +360,6 @@ def main(argv: list[str] | None = None) -> int:
                 )
             written += 1
     finally:
-        if close_stream:
-            stream.close()
         if output_handle is not None:
             output_handle.close()
 

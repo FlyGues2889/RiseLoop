@@ -67,14 +67,26 @@ class Keypoint(BaseModel):
     visibility: float = Field(ge=0.0, le=1.0)
 
 
+class PostureBaseline(BaseModel):
+    """同一受试者的中立坐姿参考值；缺省值只作无校准时的兜底。"""
+
+    shoulder_tilt_deg: float = Field(default=0.0, ge=-90.0, le=90.0)
+    neck_ratio: float = Field(default=0.65, ge=-6.0, le=6.0)
+    head_offset_ratio: float = Field(default=0.0, ge=-6.0, le=6.0)
+
+
 class PostureFeatures(BaseModel):
-    """从关键点派生的可解释特征，同时作为模型输入与响应解释项。"""
+    """从关键点派生的 2D 可解释特征；相对量需要 `PostureBaseline`。"""
 
     shoulder_tilt_deg: float
     shoulder_width: float
     shoulder_visibility: float
-    head_forward_ratio: float
     upper_body_visibility: float
+    neck_ratio: float
+    head_offset_ratio: float
+    neck_ratio_delta: float
+    head_offset_delta: float
+    tilt_delta_deg: float
 
 
 class PostureContext(BaseModel):
@@ -120,6 +132,7 @@ class PostureInferRequest(PostureContext):
     """端侧上传 33 个归一化关键点，由云端完成姿态分类；不包含原始画面。"""
 
     keypoints: list[Keypoint]
+    baseline: PostureBaseline | None = None
     source: Literal["mediapipe-pose-33"] = "mediapipe-pose-33"
     captured_at: datetime | None = None
     posture_duration_minutes: float = Field(default=0.0, ge=0.0)

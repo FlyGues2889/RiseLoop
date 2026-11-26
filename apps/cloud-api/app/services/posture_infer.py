@@ -74,7 +74,7 @@ def deviation_for(posture: PostureClass, features: PostureFeatures) -> float:
     if posture is PostureClass.LATERAL_TILT:
         return round(min(90.0, abs(features.shoulder_tilt_deg)), 2)
     if posture is PostureClass.FORWARD_HEAD:
-        return round(min(90.0, max(0.0, features.head_forward_ratio) * 45), 2)
+        return round(min(90.0, max(0.0, -features.neck_ratio_delta) * 90), 2)
     return 0.0
 
 
@@ -126,12 +126,13 @@ async def handle_posture_infer(
     request: PostureInferRequest,
     cloud: CloudRegistry,
 ) -> PostureInferResponse:
-    features = extract_features(request.keypoints)
+    features = extract_features(request.keypoints, request.baseline)
 
     try:
         prediction = await cloud.modelarts.predict(
             keypoints=[point.model_dump() for point in request.keypoints],
             features=features,
+            baseline=request.baseline,
         )
     except ModelArtsError as exc:
         raise InferenceUnavailable(exc.reason) from exc

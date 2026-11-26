@@ -26,6 +26,8 @@ ALLOWED_KEYS = REQUIRED_KEYS | {
     "label_source",
     "origin",
     "note",
+    "baseline",
+    "feature_spec_version",
 }
 FORBIDDEN_KEYS = {
     "image",
@@ -115,12 +117,40 @@ def check_frame(frame: dict[str, Any], line: int, tolerance: float) -> tuple[lis
     elif framing not in contract.FRAMINGS:
         errors.append(f"framing 必须是 {sorted(contract.FRAMINGS)}，实际 {framing!r}")
 
+    version = frame.get("feature_spec_version")
+    if version is not None and version != contract.FEATURE_SPEC_VERSION:
+        errors.append(
+            f"特征契约版本不符：期望 {contract.FEATURE_SPEC_VERSION}，实际 {version!r}"
+        )
+
+    baseline = frame.get("baseline")
+    if baseline is None:
+        baseline = contract.BASELINE_DEFAULTS
+    elif not isinstance(baseline, dict):
+        errors.append("baseline 必须是对象")
+        return errors, warnings
+    else:
+        unknown_baseline = set(baseline) - set(contract.BASELINE_ORDER)
+        if unknown_baseline:
+            warnings.append(f"baseline 未识别字段：{', '.join(sorted(unknown_baseline))}")
+        missing_baseline = set(contract.BASELINE_ORDER) - set(baseline)
+        if missing_baseline:
+            warnings.append(f"baseline 缺字段：{', '.join(sorted(missing_baseline))}")
+        try:
+            baseline = {
+                name: float(baseline.get(name, contract.BASELINE_DEFAULTS[name]))
+                for name in contract.BASELINE_ORDER
+            }
+        except (TypeError, ValueError):
+            errors.append("baseline 字段必须是数值")
+            return errors, warnings
+
     if not str(frame.get("subject", "")).strip():
         errors.append("subject 为空")
 
     try:
         contract.validate_keypoints(frame["keypoints"])
-        computed = contract.features_from_keypoints(frame["keypoints"])
+        computed = contract.features_from_keypoints(frame["keypoints"], baseline)
     except contract.ContractError as exc:
         errors.append(str(exc))
         return errors, warnings

@@ -6,16 +6,20 @@
 
 from __future__ import annotations
 
-from math import atan2, degrees, hypot
+from math import atan2, degrees, hypot, isfinite
 from typing import Any, Mapping, Sequence
 
-FEATURE_SPEC_VERSION = "v2"
+FEATURE_SPEC_VERSION = "v3"
 FEATURE_ORDER = (
     "shoulder_tilt_deg",
     "shoulder_width",
     "shoulder_visibility",
-    "head_forward_ratio",
     "upper_body_visibility",
+    "neck_ratio",
+    "head_offset_ratio",
+    "neck_ratio_delta",
+    "head_offset_delta",
+    "tilt_delta_deg",
 )
 LABELS = ("baseline", "forward_head", "lateral_tilt", "undetermined")
 UPPER_BODY_POINTS = (
@@ -36,6 +40,12 @@ UPPER_BODY_POINTS = (
 UPPER_BODY_VISIBILITY_MIN = 0.5
 REQUIRED_POINTS = ("nose", "left_shoulder", "right_shoulder")
 MIN_MODEL_CONFIDENCE = 0.5
+BASELINE_FIELDS = ("shoulder_tilt_deg", "neck_ratio", "head_offset_ratio")
+DEFAULT_BASELINE = {
+    "shoulder_tilt_deg": 0.0,
+    "neck_ratio": 0.65,
+    "head_offset_ratio": 0.0,
+}
 
 
 def _index(keypoints: Sequence[Mapping[str, Any]]) -> dict[str, Mapping[str, Any]]:
@@ -58,32 +68,88 @@ def _index(keypoints: Sequence[Mapping[str, Any]]) -> dict[str, Mapping[str, Any
 
 def _number(point: Mapping[str, Any], key: str) -> float:
     try:
-        return float(point[key])
+        value = float(point[key])
     except KeyError as exc:
         raise ValueError(f"关键点 {point.get('name')} 缺字段 {key}") from exc
     except (TypeError, ValueError) as exc:
         raise ValueError(f"关键点 {point.get('name')} 的 {key} 不是数值") from exc
+    if not isfinite(value):
+        raise ValueError(f"关键点 {point.get('name')} 的 {key} 不是有限数值")
+    return value
 
 
-def features_from_keypoints(keypoints: Sequence[Mapping[str, Any]]) -> dict[str, float]:
-    points = _index(keypoints)
-    left, right = points["left_shoulder"], points["right_shoulder"]
-    nose = points["nose"]
+def _baseline(raw: Mapping[str, Any] | None) -> dict[str, float]:
+    if raw is None:
+        return dict(DEFAULT_BASELINE)
+    if not isinstance(raw, Mapping):
+        raise ValueError("baseline 必须是对象")
+    baseline: dict[str, float] = {}
+    for name in BASELINE_FIELDS:
+        try:
+            value = float(raw.get(name, DEFAULT_BASELINE[name]))
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"baseline {name} 不是数值") from exc
+        if not isfinite(value):
+            raise ValueError(f"baseline {name} 不是有限数值")
+        baseline[name] = value
+    return baseline
 
-    width = hypot(_number(right, "x") - _number(left, "x"), _number(right, "y") - _number(left, "y"))
+
+def _raw_geometry(
+    left: Mapping[str, Any],
+    right: Mapping[str, Any],
+    nose: Mapping[str, Any],
+) -> tuple[float, float, float, float]:
+    width = hypot(
+        _number(right, "x") - _number(left, "x"),
+        _number(right, "y") - _number(left, "y"),
+    )
     tilt = 0.0
+    neck_ratio = 0.0
+    head_offset_ratio = 0.0
     if width > 0:
-        angle = degrees(atan2(_number(right, "y") - _number(left, "y"), _number(right, "x") - _number(left, "x")))
+        angle = degrees(
+            atan2(
+                _number(right, "y") - _number(left, "y"),
+                _number(right, "x") - _number(left, "x"),
+            )
+        )
         if angle > 90:
             angle -= 180
         if angle < -90:
             angle += 180
-        tilt = round(angle, 2)
+        tilt = angle
+        shoulder_mid_x = (_number(left, "x") + _number(right, "x")) / 2
+        shoulder_mid_y = (_number(left, "y") + _number(right, "y")) / 2
+        neck_ratio = (shoulder_mid_y - _number(nose, "y")) / width
+        head_offset_ratio = (_number(nose, "x") - shoulder_mid_x) / width
+    return tilt, width, neck_ratio, head_offset_ratio
 
-    head_forward = 0.0
-    if width > 0:
-        shoulder_mid_z = (_number(left, "z") + _number(right, "z")) / 2
-        head_forward = round((shoulder_mid_z - _number(nose, "z")) / width, 3)
+
+def baseline_from_keypoints(
+    keypoints: Sequence[Mapping[str, Any]],
+) -> dict[str, float]:
+    points = _index(keypoints)
+    tilt, _, neck_ratio, head_offset_ratio = _raw_geometry(
+        points["left_shoulder"], points["right_shoulder"], points["nose"]
+    )
+    return {
+        "shoulder_tilt_deg": round(tilt, 2),
+        "neck_ratio": round(neck_ratio, 4),
+        "head_offset_ratio": round(head_offset_ratio, 4),
+    }
+
+
+def features_from_keypoints(
+    keypoints: Sequence[Mapping[str, Any]],
+    baseline: Mapping[str, Any] | None = None,
+) -> dict[str, float]:
+    points = _index(keypoints)
+    left, right = points["left_shoulder"], points["right_shoulder"]
+    nose = points["nose"]
+    reference = _baseline(baseline)
+
+    tilt, width, neck_ratio, head_offset_ratio = _raw_geometry(left, right, nose)
 
     visible_upper = sum(
         1
@@ -92,11 +158,19 @@ def features_from_keypoints(keypoints: Sequence[Mapping[str, Any]]) -> dict[str,
     )
 
     return {
-        "shoulder_tilt_deg": tilt,
+        "shoulder_tilt_deg": round(tilt, 2),
         "shoulder_width": round(width, 4),
-        "shoulder_visibility": round(min(_number(left, "visibility"), _number(right, "visibility")), 3),
-        "head_forward_ratio": head_forward,
+        "shoulder_visibility": round(
+            min(_number(left, "visibility"), _number(right, "visibility")), 3
+        ),
         "upper_body_visibility": round(visible_upper / len(UPPER_BODY_POINTS), 3),
+        "neck_ratio": round(neck_ratio, 3),
+        "head_offset_ratio": round(head_offset_ratio, 3),
+        "neck_ratio_delta": round(neck_ratio - reference["neck_ratio"], 3),
+        "head_offset_delta": round(
+            head_offset_ratio - reference["head_offset_ratio"], 3
+        ),
+        "tilt_delta_deg": round(tilt - reference["shoulder_tilt_deg"], 2),
     }
 
 
@@ -130,4 +204,3 @@ def decide_posture(probabilities: Sequence[float] | Mapping[str, float]) -> tupl
     if confidence < MIN_MODEL_CONFIDENCE:
         return "undetermined", confidence
     return posture, confidence
-

@@ -77,8 +77,8 @@ def test_collect_skips_out_of_range_row_without_aborting(tmp_path):
 @pytest.mark.parametrize(
     ("label", "check"),
     [
-        ("baseline", lambda f: abs(f["shoulder_tilt_deg"]) < 6 and f["head_forward_ratio"] < 0.2),
-        ("forward_head", lambda f: f["head_forward_ratio"] >= 0.3),
+        ("baseline", lambda f: abs(f["shoulder_tilt_deg"]) < 6 and 0.55 <= f["neck_ratio"] <= 0.75),
+        ("forward_head", lambda f: f["neck_ratio"] < 0.4 and f["neck_ratio_delta"] < -0.2),
         ("lateral_tilt", lambda f: abs(f["shoulder_tilt_deg"]) >= 10),
         ("undetermined", lambda f: f["shoulder_visibility"] < 0.5),
     ],

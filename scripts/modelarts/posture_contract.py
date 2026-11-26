@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any, Mapping, Sequence
 
 ROOT = Path(__file__).resolve().parents[2]
 for _path in (
@@ -26,15 +26,21 @@ from app.schemas.posture import (  # noqa: E402
     MEDIAPIPE_33,
     UPPER_BODY_NAMES,
     Keypoint,
+    PostureBaseline,
     PostureFeatures,
 )
-from app.services.posture_features import extract_features as _server_features  # noqa: E402
+from app.services.posture_features import (  # noqa: E402
+    baseline_from_keypoints as _server_baseline,
+    extract_features as _server_features,
+)
 from intervention_engine import PostureClass  # noqa: E402
 
-FEATURE_SPEC_VERSION = "v2"
+FEATURE_SPEC_VERSION = "v3"
 KEYPOINT_ORDER = MEDIAPIPE_33
 UPPER_BODY_POINTS = UPPER_BODY_NAMES
 FEATURE_ORDER = tuple(PostureFeatures.model_fields)
+BASELINE_ORDER = tuple(PostureBaseline.model_fields)
+BASELINE_DEFAULTS = PostureBaseline().model_dump()
 COORDINATE_ORDER = ("x", "y", "z", "visibility")
 LABELS = tuple(label.value for label in PostureClass)
 FRAMINGS = ("upper_body", "full_body")
@@ -86,10 +92,28 @@ def validate_keypoint_ranges(keypoints: Sequence[dict[str, Any]]) -> None:
         _to_keypoint(index, raw)
 
 
-def features_from_keypoints(keypoints: Sequence[dict[str, Any]]) -> dict[str, float]:
+def _baseline(raw: Mapping[str, Any] | None) -> PostureBaseline:
+    if raw is None:
+        return PostureBaseline()
+    try:
+        return PostureBaseline.model_validate(raw)
+    except ValidationError as exc:
+        raise ContractError("baseline 数值越界", code="invalid_baseline") from exc
+
+
+def baseline_from_keypoints(keypoints: Sequence[dict[str, Any]]) -> dict[str, float]:
     validate_keypoints(keypoints)
     points = [_to_keypoint(index, raw) for index, raw in enumerate(keypoints)]
-    return _server_features(points).model_dump()
+    return _server_baseline(points).model_dump()
+
+
+def features_from_keypoints(
+    keypoints: Sequence[dict[str, Any]],
+    baseline: Mapping[str, Any] | None = None,
+) -> dict[str, float]:
+    validate_keypoints(keypoints)
+    points = [_to_keypoint(index, raw) for index, raw in enumerate(keypoints)]
+    return _server_features(points, _baseline(baseline)).model_dump()
 
 
 def features_vector(features: dict[str, float]) -> list[float]:
@@ -116,6 +140,8 @@ def feature_spec() -> dict[str, Any]:
         "keypoints": list(KEYPOINT_ORDER),
         "upper_body_points": list(UPPER_BODY_POINTS),
         "features": list(FEATURE_ORDER),
+        "baseline_fields": list(BASELINE_ORDER),
+        "baseline_defaults": BASELINE_DEFAULTS,
         "labels": list(LABELS),
         "coordinates": list(COORDINATE_ORDER),
         "framings": list(FRAMINGS),

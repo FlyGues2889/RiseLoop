@@ -15,7 +15,7 @@ Rules:
   real-capture metrics.
 
 The geometry is intentionally varied across subjects: body scale, camera yaw
-(side cameras), image position, baseline head-forward/tilt offsets, visibility
+(side cameras), image position, baseline neck-ratio/tilt offsets, visibility
 profiles, desk/hair occlusions and transition frames.
 
 The target setting is a seated laptop camera: only the head and both shoulders
@@ -36,6 +36,7 @@ from typing import Any
 
 from label_policy import prelabel
 from posture_contract import (
+    FEATURE_SPEC_VERSION,
     KEYPOINT_ORDER as MEDIAPIPE_33,
     LABELS as LABEL_ORDER,
     features_from_keypoints as compute_features,
@@ -136,7 +137,7 @@ def build_pose(
     rng: random.Random,
     profile: dict[str, Any],
     tilt_deg: float,
-    head_forward_ratio: float,
+    neck_ratio: float,
     lean_deg: float,
     occlusion: str | None = None,
     framing: str = "upper_body",
@@ -210,9 +211,10 @@ def build_pose(
         rotated_x, rotated_y = _rotate(offset_x * scale, offset_y * scale, tilt_deg)
         raw[name] = (sx + rotated_x, sy + rotated_y, -0.06)
 
-    # Head: centred over the shoulder midpoint.  Head-forward is depth-only.
-    head_y = shoulder_y - 0.105 * scale
-    nose_z = -head_forward_ratio * shoulder_width
+    # Head: centred over the shoulder midpoint.  Neck ratio is the 2D
+    # nose-to-shoulder distance; forward head reduces it.
+    head_y = shoulder_y - neck_ratio * shoulder_width
+    nose_z = 0.0
     raw["nose"] = (shoulder_mid_x, head_y, nose_z)
     face_offsets = {
         "left_eye_inner": (-0.011, -0.013, -0.008),
@@ -309,48 +311,48 @@ def build_pose(
 
 def _scenario_params(kind: str, rng: random.Random, profile: dict[str, Any]) -> dict[str, float]:
     base_tilt = profile["tilt_offset"]
-    base_ratio = profile["ratio_offset"]
+    base_neck = profile["neck_offset"]
     sign = 1.0 if rng.random() < 0.5 else -1.0
 
     if kind == "baseline":
         return {
             "tilt": base_tilt + rng.gauss(0.0, 2.0),
-            "ratio": _clip(base_ratio + rng.gauss(0.0, 0.035), 0.0, 0.20),
+            "neck": _clip(base_neck + rng.gauss(0.0, 0.02), 0.45, 0.90),
             "lean": rng.gauss(0.0, 2.0),
             "occlusion": None,
         }
     if kind == "forward":
         return {
             "tilt": base_tilt + rng.gauss(0.0, 1.6),
-            "ratio": 0.30 + rng.uniform(0.0, 0.24),
+            "neck": _clip(base_neck - rng.uniform(0.12, 0.28), 0.30, 0.60),
             "lean": rng.gauss(0.0, 2.0),
             "occlusion": None,
         }
     if kind == "lateral":
         return {
             "tilt": sign * rng.uniform(10.0, 24.0),
-            "ratio": _clip(base_ratio + rng.gauss(0.0, 0.045), -0.05, 0.22),
+            "neck": _clip(base_neck + rng.gauss(0.0, 0.025), 0.45, 0.90),
             "lean": sign * rng.uniform(3.0, 9.0),
             "occlusion": None,
         }
     if kind == "mixed":
         return {
             "tilt": sign * rng.uniform(9.0, 20.0),
-            "ratio": 0.30 + rng.uniform(0.0, 0.20),
+            "neck": _clip(base_neck - rng.uniform(0.08, 0.20), 0.35, 0.70),
             "lean": sign * rng.uniform(2.0, 8.0),
             "occlusion": None,
         }
     if kind == "grey":
         return {
             "tilt": sign * rng.uniform(6.2, 9.8),
-            "ratio": rng.uniform(0.205, 0.295),
+            "neck": _clip(base_neck - rng.uniform(0.05, 0.12), 0.40, 0.80),
             "lean": rng.gauss(0.0, 3.0),
             "occlusion": None,
         }
     if kind == "near":
         return {
             "tilt": sign * rng.uniform(6.5, 10.5),
-            "ratio": rng.uniform(0.17, 0.24),
+            "neck": _clip(base_neck - rng.uniform(0.02, 0.07), 0.45, 0.85),
             "lean": sign * rng.uniform(0.0, 4.0),
             "occlusion": None,
         }
@@ -369,7 +371,7 @@ def _scenario_params(kind: str, rng: random.Random, profile: dict[str, Any]) -> 
         t = rng.uniform(0.15, 0.85)
         return {
             "tilt": start["tilt"] * (1 - t) + target["tilt"] * t,
-            "ratio": start["ratio"] * (1 - t) + target["ratio"] * t,
+            "neck": start["neck"] * (1 - t) + target["neck"] * t,
             "lean": start["lean"] * (1 - t) + target["lean"] * t,
             "occlusion": None,
         }
@@ -418,9 +420,15 @@ def generate(
             "hip_y": subject_rng.uniform(0.57, 0.65),
             "zoom": subject_rng.uniform(0.92, 1.08),
             "tilt_offset": subject_rng.gauss(0.0, 1.2),
-            "ratio_offset": max(0.0, subject_rng.gauss(0.12, 0.025)),
+            "neck_offset": subject_rng.uniform(0.60, 0.74),
             "xy_sigma": subject_rng.uniform(0.0025, 0.0045),
             "z_sigma": subject_rng.uniform(0.006, 0.012),
+        }
+
+        baseline = {
+            "shoulder_tilt_deg": round(profile["tilt_offset"], 4),
+            "neck_ratio": round(profile["neck_offset"], 4),
+            "head_offset_ratio": 0.0,
         }
 
         for frame_index in range(frames_per_subject):
@@ -430,12 +438,12 @@ def generate(
                 rng=subject_rng,
                 profile=profile,
                 tilt_deg=params["tilt"],
-                head_forward_ratio=params["ratio"],
+                neck_ratio=params["neck"],
                 lean_deg=params["lean"],
                 occlusion=params["occlusion"],
                 framing=FRAMING,
             )
-            features = compute_features(points)
+            features = compute_features(points, baseline)
             label = prelabel(features)
             timestamp = start + timedelta(
                 days=subject_index, minutes=frame_index, seconds=subject_index
@@ -448,6 +456,8 @@ def generate(
                     "subject": subject,
                     "scene": scene,
                     "framing": FRAMING,
+                    "feature_spec_version": FEATURE_SPEC_VERSION,
+                    "baseline": baseline,
                     "keypoints": points,
                     "features": {name: round(value, 6) for name, value in features.items()},
                     "label": label,

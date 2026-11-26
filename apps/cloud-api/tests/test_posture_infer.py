@@ -95,12 +95,26 @@ def test_infer_detects_lateral_tilt(client, auth_headers):
 
 
 def test_infer_detects_forward_head(client, auth_headers):
-    response = _infer(client, auth_headers, keypoints=_pose(nose={"z": -0.12}))
+    response = _infer(client, auth_headers, keypoints=_pose(nose={"y": 0.34}))
     assert response.status_code == 200, response.text
     body = response.json()
     assert body["posture"] == "forward_head"
-    assert body["features"]["head_forward_ratio"] > 0.25
+    assert body["features"]["neck_ratio"] < 0.5
+    assert body["features"]["neck_ratio_delta"] < -0.08
     assert body["deviation_deg"] > 0
+
+
+def test_infer_uses_personal_baseline(client, auth_headers):
+    pose = _pose(nose={"y": 0.34})
+    default = _infer(client, auth_headers, keypoints=pose)
+    assert default.json()["posture"] == "forward_head"
+
+    baseline = {"shoulder_tilt_deg": 0.0, "neck_ratio": 0.4, "head_offset_ratio": 0.0}
+    personal = _infer(client, auth_headers, keypoints=pose, baseline=baseline)
+    assert personal.status_code == 200, personal.text
+    body = personal.json()
+    assert body["posture"] == "baseline"
+    assert abs(body["features"]["neck_ratio_delta"]) < 0.01
 
 
 def test_infer_marks_undetermined_when_shoulders_hidden(client, auth_headers):
@@ -187,8 +201,12 @@ def test_mock_predict_zero_shoulder_width_is_undetermined():
         shoulder_tilt_deg=0.0,
         shoulder_width=0.0,
         shoulder_visibility=1.0,
-        head_forward_ratio=0.0,
         upper_body_visibility=1.0,
+        neck_ratio=0.0,
+        head_offset_ratio=0.0,
+        neck_ratio_delta=0.0,
+        head_offset_delta=0.0,
+        tilt_delta_deg=0.0,
     )
     posture, confidence = mock_predict(features)
     assert posture.value == "undetermined"

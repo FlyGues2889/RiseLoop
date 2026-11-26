@@ -1,7 +1,7 @@
 """Capture MediaPipe Pose landmarks from a webcam into keypoints-only JSONL.
 
 The output is a raw capture file, not a training dataset. Feed it to
-``collect_frames.py`` to validate, recompute the five features and assign
+``collect_frames.py`` to validate, recompute the contract features and assign
 ``frame_id``::
 
     python scripts/modelarts/collect_frames.py --input raw.jsonl --out frames.jsonl --append
@@ -150,7 +150,7 @@ def self_test_pose(label: str) -> list[dict[str, Any]]:
     """Generate a deterministic 33-point pose that matches the requested label."""
 
     base = {
-        "nose": (0.50, 0.20, -0.10),
+        "nose": (0.50, 0.27, -0.10),
         "left_shoulder": (0.40, 0.40, -0.10),
         "right_shoulder": (0.60, 0.40, -0.10),
         "left_hip": (0.43, 0.70, -0.10),
@@ -158,7 +158,7 @@ def self_test_pose(label: str) -> list[dict[str, Any]]:
     }
     visibility = 0.99
     if label == "forward_head":
-        base["nose"] = (0.50, 0.20, -0.26)
+        base["nose"] = (0.50, 0.35, -0.10)
     elif label == "lateral_tilt":
         base["left_shoulder"] = (0.40, 0.35, -0.10)
         base["right_shoulder"] = (0.60, 0.45, -0.10)

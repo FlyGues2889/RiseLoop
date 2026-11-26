@@ -16,14 +16,18 @@ import httpx
 from pydantic import BaseModel
 
 from ..core.config import Settings
-from ..schemas.posture import UPPER_BODY_VISIBILITY_MIN, PostureFeatures
+from ..schemas.posture import (
+    UPPER_BODY_VISIBILITY_MIN,
+    PostureBaseline,
+    PostureFeatures,
+)
 from .base import ServiceStatus
 from intervention_engine import PostureClass
 
 PredictionSource = Literal["mock", "huawei"]
 
 TILT_THRESHOLD_DEG = 8.0
-HEAD_FORWARD_THRESHOLD = 0.25
+HEAD_FORWARD_DELTA_THRESHOLD = 0.08
 
 
 class ModelArtsError(RuntimeError):
@@ -59,11 +63,12 @@ def mock_predict(features: PostureFeatures) -> tuple[PostureClass, float]:
         confidence = min(0.95, 0.6 + abs(features.shoulder_tilt_deg) / 45)
         return PostureClass.LATERAL_TILT, round(confidence, 3)
 
-    if features.head_forward_ratio >= HEAD_FORWARD_THRESHOLD:
-        confidence = min(0.95, 0.6 + features.head_forward_ratio)
+    head_forward = -features.neck_ratio_delta
+    if head_forward >= HEAD_FORWARD_DELTA_THRESHOLD:
+        confidence = min(0.95, 0.6 + head_forward)
         return PostureClass.FORWARD_HEAD, round(confidence, 3)
 
-    headroom = max(0.0, HEAD_FORWARD_THRESHOLD - features.head_forward_ratio)
+    headroom = max(0.0, HEAD_FORWARD_DELTA_THRESHOLD - head_forward)
     return PostureClass.BASELINE, round(min(0.97, 0.6 + headroom), 3)
 
 
@@ -153,6 +158,7 @@ class ModelArtsService:
         *,
         keypoints: list[dict[str, float]],
         features: PostureFeatures,
+        baseline: PostureBaseline | None = None,
     ) -> PosturePrediction:
         started = perf_counter()
         if self._settings.cloud_provider == "mock":
@@ -174,6 +180,8 @@ class ModelArtsService:
             "keypoints": keypoints,
             "features": features.model_dump(),
         }
+        if baseline is not None:
+            body["baseline"] = baseline.model_dump()
         if self._settings.modelarts_project_id:
             body["project_id"] = self._settings.modelarts_project_id
 

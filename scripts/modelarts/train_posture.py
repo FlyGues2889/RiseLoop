@@ -6,8 +6,9 @@ One command reproduces every artefact under ``artifacts/v1``:
 
 Input versions
 --------------
-A: 5 derived features (head and shoulders only).
-B: 132 normalised coordinates (33 x [x, y, z, visibility]) + 5 features = 137.
+A: derived 2D features (head and shoulders only), including deltas from the
+   per-subject neutral baseline.
+B: 132 normalised coordinates (33 x [x, y, z, visibility]) + derived features.
 
 Both are standardised with train-split statistics only.  The version with the
 better *validation* macro-F1 is shipped as ``model.pt``; the test split is
@@ -97,6 +98,8 @@ from torch.utils.data import DataLoader, Dataset
 
 from label_policy import describe as describe_label_policy
 from posture_contract import (
+    BASELINE_DEFAULTS,
+    BASELINE_ORDER,
     FEATURE_ORDER as FEATURE_NAMES,
     FEATURE_SPEC_VERSION,
     KEYPOINT_ORDER as MEDIAPIPE_33,
@@ -234,12 +237,21 @@ def load_frames(path: Path, warnings: list[str]) -> list[Frame]:
                 raise ValueError(f"duplicate frame_id at line {line_number}: {frame_id}")
             seen.add(frame_id)
 
+            version = record.get("feature_spec_version")
+            if version is not None and version != FEATURE_SPEC_VERSION:
+                skipped["feature_spec_version_mismatch"] += 1
+                continue
+
             try:
                 points = _normalise_points(record.get("keypoints"))
             except ContractError:
                 skipped["invalid_keypoints"] += 1
                 continue
-            features = compute_features(points)
+            try:
+                features = compute_features(points, record.get("baseline"))
+            except ContractError:
+                skipped["invalid_baseline"] += 1
+                continue
             supplied = record.get("features")
             if supplied is not None:
                 try:
@@ -646,19 +658,22 @@ def _predict_payload(
 
 def _feature_spec(mean_a: np.ndarray, std_a: np.ndarray, mean_b: np.ndarray, std_b: np.ndarray,
                   args: argparse.Namespace) -> dict[str, Any]:
+    feature_count = len(FEATURE_NAMES)
     return {
         "contract_version": CONTRACT_VERSION,
         "feature_spec_version": FEATURE_SPEC_VERSION,
         "mediapipe_landmarks": list(MEDIAPIPE_33),
         "upper_body_points": list(UPPER_BODY_POINTS),
         "feature_order": list(FEATURE_NAMES),
+        "baseline_fields": list(BASELINE_ORDER),
+        "baseline_defaults": BASELINE_DEFAULTS,
         "label_order": list(LABEL_ORDER),
         "label_index": {label: index for index, label in enumerate(LABEL_ORDER)},
         "label_policy": describe_label_policy(),
         "input_versions": {
             "A": {
-                "dimension": len(FEATURE_NAMES),
-                "layout": "5 derived features in feature_order",
+                "dimension": feature_count,
+                "layout": f"{feature_count} 2D features in feature_order",
                 "standardization": {
                     "method": "z-score with train-split mean/std",
                     "mean": mean_a.tolist(),
@@ -667,7 +682,10 @@ def _feature_spec(mean_a: np.ndarray, std_a: np.ndarray, mean_b: np.ndarray, std
             },
             "B": {
                 "dimension": len(mean_b),
-                "layout": "132 coordinates (33 landmarks x [x, y, z, visibility]) + 5 features",
+                "layout": (
+                    "132 coordinates (33 landmarks x [x, y, z, visibility]) + "
+                    f"{feature_count} 2D features"
+                ),
                 "coordinate_normalization": {
                     "origin": "shoulder midpoint (left_shoulder, right_shoulder), including z",
                     "scale": f"max(2D shoulder width, {COORD_SCALE_FLOOR})",
@@ -675,7 +693,7 @@ def _feature_spec(mean_a: np.ndarray, std_a: np.ndarray, mean_b: np.ndarray, std
                     "rationale": "removes camera distance and image position; visibility stays 0..1",
                 },
                 "standardization": {
-                    "method": "z-score with train-split mean/std over all 137 dimensions",
+                    "method": f"z-score with train-split mean/std over all {len(mean_b)} dimensions",
                     "mean": mean_b.tolist(),
                     "std": std_b.tolist(),
                 },
