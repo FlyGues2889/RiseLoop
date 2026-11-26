@@ -162,6 +162,8 @@ class ModelArtsService:
     ) -> PosturePrediction:
         started = perf_counter()
         if self._settings.cloud_provider == "mock":
+            if self._settings.posture_mock_policy == "unavailable":
+                raise ModelArtsError("mock_disabled")
             posture, confidence = mock_predict(features)
             return PosturePrediction(
                 posture=posture,

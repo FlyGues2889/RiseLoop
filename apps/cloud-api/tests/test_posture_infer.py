@@ -188,6 +188,26 @@ def test_infer_returns_503_when_modelarts_unavailable(client, auth_headers):
     assert detail["reason"] == "timeout"
 
 
+def test_infer_returns_503_when_mock_disabled():
+    settings = Settings(
+        cloud_provider="mock",
+        posture_mock_policy="unavailable",
+        jwt_secret="test-secret",
+    )
+    with TestClient(create_app(settings)) as client:
+        response = client.post(
+            "/auth/register",
+            json={"email": "mockoff@example.com", "password": "strong-pass-1"},
+        )
+        assert response.status_code == 201, response.text
+        headers = {"Authorization": f"Bearer {response.json()['access_token']}"}
+        response = client.post("/posture/infer", json=_payload(), headers=headers)
+    assert response.status_code == 503
+    detail = response.json()["detail"]
+    assert detail["error"] == "modelarts_unavailable"
+    assert detail["reason"] == "mock_disabled"
+
+
 def test_infer_in_openapi(client):
     schema = client.get("/openapi.json").json()
     assert "/posture/infer" in schema["paths"]

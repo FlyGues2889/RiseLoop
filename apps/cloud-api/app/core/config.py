@@ -78,6 +78,8 @@ class Settings(BaseSettings):
         "x-auth-token", "authorization", "x-api-key", "x-apig-appcode"
     ] = "x-auth-token"
     modelarts_timeout_seconds: float = 2.5
+    # mock 只用于联调；演示前可设为 unavailable，让 /posture/infer 明确 503 降级。
+    posture_mock_policy: Literal["heuristic", "unavailable"] = "heuristic"
 
     @property
     def store_backend(self) -> Literal["memory", "sql"]:
