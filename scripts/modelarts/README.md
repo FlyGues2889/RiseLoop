@@ -12,6 +12,7 @@
 | `label_policy.py` | 标注口径（预标注/合成数据）；引用 mock 阈值 | 否 |
 | `dataset_check.py` | jsonl 校验：契约、特征一致性、标签、取景、禁止字段 | 否 |
 | `collect_frames.py` | 原始关键点 → 训练集：按 subject 求基线、重算 9 特征、分配 `frame_id`、拒绝画面字段 | 否 |
+| `package_model.py` | 把代码、`model.pt`、`feature_spec.json` 收进一个上传目录并写 MANIFEST | 否 |
 | `capture_webcam.py` | 摄像头采集：MediaPipe 33 点 → 仅关键点 jsonl，不写画面 | 否 |
 | `list_cameras.py` | 列出 DirectShow 摄像头序号，对应 `--camera N` | 否 |
 
@@ -163,6 +164,19 @@ undetermined 0.878。`forward_head` 召回只有 0.501，仍是弱项；14 人�
 
 本地部署包冒烟：`customize_service.Model` 能加载 B 版 `model.pt`，接受
 `keypoints + baseline`，走完 `_preprocess / _inference / _postprocess`；这不是效果指标。
+
+打包上传目录：
+
+```powershell
+python scripts/modelarts/package_model.py `
+  --artifacts data/posture/reports/v3-loso `
+  --out data/posture/reports/v3-loso/package
+```
+
+包内只含 `customize_service.py`、`posture_runtime.py`、`model.py`、`model.pt`、
+`feature_spec.json` 和 `MANIFEST.json`；数据与分折权重不会进入。没有真实 endpoint 时，
+把 `RISELOOP_POSTURE_MOCK_POLICY=unavailable`，`/posture/infer` 会返回 503，
+客户端走明确降级，不展示 mock 分类。
 
 ---
 

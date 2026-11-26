@@ -130,6 +130,8 @@
 - [x] 修特征契约：v3 去掉 z 轴 `head_forward_ratio`，改为 2D 颈长比/头偏移 + 每人中立位基线；云端、ModelArts 运行时、采集器与合成数据生成器同步
 - [x] 用 v3 重新生成 `data/posture/capture.jsonl`：3,974 帧、14 人、0 errors / 0 warnings；合成数据也已按 v3 重生成
 - [x] 用 v3 跑内部 LOSO：B 版 141 维、11,300 参数，OOF macro-F1 0.7305、accuracy 0.7323；报告在 `scripts/modelarts/reports/v3-loso/`
+- [x] v3 部署包生成脚本 `package_model.py` + 本地 `customize_service.Model` 冒烟通过
+- [x] mock 回退开关 `RISELOOP_POSTURE_MOCK_POLICY=unavailable`：无 endpoint 时 `/posture/infer` 返回 503，不输出 mock 分类
 - [ ] 重采动作不一致的 s01 / s03 / s20，把受试者扩到 ≥20
 - [ ] 扩样后重跑 LOSO；forward_head F1 稳定过 0.65 再考虑部署；v3 部署前补线上个人基线校准
 
