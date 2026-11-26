@@ -109,7 +109,7 @@ intervention-engine
 | 决策层 | `packages/intervention-engine` | 四状态迁移纯函数，唯一状态迁移入口 | ✅ 已实现 |
 | 事实数据 | RDS for PostgreSQL | 用户、评估、迁移历史、执行记录、动作库、问答日志、安全事件 | 🟡 适配层与迁移脚本完成，生产实例待接 |
 | 实时状态 | DCS for Redis | 会话、久坐计时、待响应干预、安全短缓存 | 🟡 适配层完成，生产实例待接 |
-| 姿态推理 | ModelArts 在线服务 | 33 点 → 2D 特征 + 个人基线 → 四分类；2.5 秒超时降级 | 🟡 离线训练/评估完成，v3 契约已落地，生产 endpoint 待开通 |
+| 姿态推理 | ModelArts 在线服务 | 33 点 → 2D 特征 + 个人基线 → 四分类；2.5 秒超时降级 | 🟡 v1 离线报告完成；v3 内部 LOSO 完成，未部署；生产 endpoint 待开通 |
 | 工具与技能 | MCP Server + Skills | 3 个固定工具、4 个平台无关 Skill，不直连数据库 | ✅ 已实现 |
 | 部署 | 华为云 ECS + Docker Compose | 公网 API、镜像与编排清单 | 🟡 清单就绪，待部署 |
 | 加密与分发 | KMS + OBS | 健康字段加密、安装包与演示材料分发 | 🟡 适配层完成，按需接线 |
@@ -121,13 +121,13 @@ MCP 工具固定为 3 个：`read_realtime_state`、`get_actions_by_state`、`wr
 
 ## 数据与模型
 
-真实采集第一批已完成：2026-11-23 至 11-26，Tauri 采集页记录 14 名受试者、去重后 3,974 帧带段落标签的关键点（原始 4,934 帧，其中一份文件重复 959 帧；转换时 1 帧关键点越界被跳过），四类为 baseline 1,072 / forward_head 1,019 / lateral_tilt 960 / undetermined 923，全部 `origin=capture`、`label_source=human`、`framing=upper_body`，不含画面字段。这批数据已按特征契约 v3 重新生成到 `data/posture/capture.jsonl`，`dataset_check` 为 0 errors / 0 warnings；尚未训练 v3 模型。
+真实采集第一批已完成：2026-11-23 至 11-26，Tauri 采集页记录 14 名受试者、去重后 3,974 帧带段落标签的关键点（原始 4,934 帧，其中一份文件重复 959 帧；转换时 1 帧关键点越界被跳过），四类为 baseline 1,072 / forward_head 1,019 / lateral_tilt 960 / undetermined 923，全部 `origin=capture`、`label_source=human`、`framing=upper_body`，不含画面字段。这批数据已按特征契约 v3 重新生成到 `data/posture/capture.jsonl`，`dataset_check` 为 0 errors / 0 warnings。
 
 当前离线训练包仍是 v1（特征契约 v2），使用 1,440 帧合成关键点，来自 12 名受试者、4 种设备 × 5 种场景；按受试者划分训练/验证/测试为 960 / 240 / 240 帧，四类标签为 356 / 351 / 327 / 406。
 
 v1 模型输入 5 个派生特征，结构为 64 → 32 的 MLP，共 2,596 个参数。该合成训练包的测试集 macro-F1 0.9670、accuracy 0.9667，四类 F1 为 0.974 / 0.962 / 0.992 / 0.940，本机单帧推理 0.3–0.5 ms；置信度低于 0.5 判为 `undetermined`。这些指标只对应 v2 合成数据，不能写成 v3 或真实场景准确率。
 
-特征契约 v3 去掉 z 轴 `head_forward_ratio`，改用 2D 颈长比、头偏移与每人中立位基线偏差。真实数据跨受试者 LOSO 试算约 0.63，按个人基线归一约 0.75，仍不足以对外发布；v3 模型、受试者扩样与重采完成前，不发布真实数据指标。推理超时或失败时，客户端不展示姿态结论，也不伪造结果。
+特征契约 v3 去掉 z 轴 `head_forward_ratio`，改用 2D 颈长比、头偏移与每人中立位基线偏差。v3 内部 LOSO 已完成（14 人逐个留出）：B 版 141 维、11,300 参数，out-of-fold macro-F1 0.7305、accuracy 0.7323；每类 F1 为 baseline 0.677 / forward_head 0.603 / lateral_tilt 0.765 / undetermined 0.878。`forward_head` 召回只有 0.501，且只有 14 人、单一设备/场景，不能当作对外准确率；报告在 `scripts/modelarts/reports/v3-loso/`。v3 尚未部署，推理超时或失败时客户端不展示姿态结论，也不伪造结果。
 
 ## 工程验证
 

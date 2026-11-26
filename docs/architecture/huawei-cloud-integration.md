@@ -14,7 +14,7 @@
 |---|---|---|---|---|
 | DCS for Redis | `session:*`、`sitting:*`、`pending_intervention:*`、`safety:*` 四类实时 Key | 核心，可降级 | `app/cloud/dcs.py` | `ping/get/set/delete` 已实现 |
 | RDS for PostgreSQL | 用户、评估、迁移、执行记录、问答日志、安全事件、姿态摘要 | 核心 | `app/cloud/rds.py` | 连接与 `SELECT 1` 探活已实现 |
-| ModelArts 在线服务 | 33 关键点 → 姿态四分类 + 置信度 | 核心（AI） | `app/cloud/modelarts.py` | v1 训练包（特征契约 v2）与离线报告已完成；v3 契约（2D + 个人基线）已落地，v3 模型待训练；调用、超时、显式降级已实现；endpoint 待开通 |
+| ModelArts 在线服务 | 33 关键点 → 姿态四分类 + 置信度 | 核心（AI） | `app/cloud/modelarts.py` | v1 训练包（特征契约 v2）已完成；v3 内部 LOSO 完成（B 版 141 维，OOF macro-F1 0.7305），尚未部署；调用、超时、显式降级已实现；endpoint 待开通 |
 | 云主机（Linux + Docker Compose） | 跑 `cloud-api` 容器 | 必须 | `infra/docker/` | 待接入 |
 | IAM 子用户 + AK/SK | OBS/KMS 签名，最小权限 | 必须（间接） | 无（IAM 侧配置） | 待配置 |
 | OBS | 安装包、演示视频分发 | 推荐 | `app/cloud/obs.py` | 预签名已实现，业务未接线 |
@@ -30,7 +30,7 @@
 
 **RDS**：事实数据是可追溯的基础。托管实例自带备份与快照，容器内自建 PostgreSQL 要自己承担备份与恢复；两条路代码一致，只改 `.env` 里的 DSN。
 
-**ModelArts**：`/posture/infer` 已接 `app/cloud/modelarts.py`，但当前 `mock` 模式仍是几何规则（阈值 `TILT_THRESHOLD_DEG=8.0`、`HEAD_FORWARD_DELTA_THRESHOLD=0.08`），不是模型。v1 训练包已完成（A 版 5 个派生特征 MLP，四分类 + 低置信度改判），报告在 `scripts/modelarts/reports/v1/`；v3 契约已改为 2D 颈长比/头偏移 + 个人基线偏差，真实数据已重生成，但 v3 模型尚未训练。真实在线服务与 endpoint 尚未开通。赛题要求 AI 创新，这一件是唯一能拿出真实推理结果的环节。
+**ModelArts**：`/posture/infer` 已接 `app/cloud/modelarts.py`，但当前 `mock` 模式仍是几何规则（阈值 `TILT_THRESHOLD_DEG=8.0`、`HEAD_FORWARD_DELTA_THRESHOLD=0.08`），不是模型。v1 训练包已完成（A 版 5 个派生特征 MLP，四分类 + 低置信度改判），报告在 `scripts/modelarts/reports/v1/`；v3 契约已改为 2D 颈长比/头偏移 + 个人基线偏差，内部 LOSO 完成（B 版 141 维，OOF macro-F1 0.7305，forward_head F1 0.603），但尚未部署。真实在线服务与 endpoint 尚未开通。赛题要求 AI 创新，这一件是唯一能拿出真实推理结果的环节。
 
 ## 3. 接入前置条件
 
@@ -54,10 +54,10 @@
 
 ### 3.3 ModelArts 在线服务
 
-分三步，顺序不能反：**有模型 → 有服务 → 有 endpoint**。v1 模型训练已完成；v3 契约已落地，v3 模型待训练；部署与 endpoint 尚未完成。
+分三步，顺序不能反：**有模型 → 有服务 → 有 endpoint**。v1 模型训练已完成；v3 内部 LOSO 已完成（B 版 141 维，OOF macro-F1 0.7305），尚未部署；endpoint 尚未开通。
 
-1. **训模型**：v1（特征契约 v2）已完成，输入 5 个派生特征（`shoulder_tilt_deg`、`shoulder_width`、`shoulder_visibility`、`head_forward_ratio`、`upper_body_visibility`），B 版另加 33 点坐标共 137 维；输出四分类 `baseline` / `forward_head` / `lateral_tilt` / `undetermined`。A 版 2,596 参数，报告在 `scripts/modelarts/reports/v1/`。**v3 已改为 9 个 2D 特征 + 个人基线偏差，需重新训练后才能部署。**
-2. **样本**：`reports/v1/` 仍来自 1440 帧合成关键点（12 受试者、seed 20261117、`framing=upper_body`），只验证管线；真实采集第一批已有 14 名受试者、3,974 帧带段落标签（2026-11-26，去重后），已按 v3 重生成并通过 `dataset_check`，但尚未训练 v3 模型；现有试算指标不足以对外，不能把合成指标当作泛化准确率。
+1. **训模型**：v1（特征契约 v2）已完成，输入 5 个派生特征（`shoulder_tilt_deg`、`shoulder_width`、`shoulder_visibility`、`head_forward_ratio`、`upper_body_visibility`），B 版另加 33 点坐标共 137 维；输出四分类 `baseline` / `forward_head` / `lateral_tilt` / `undetermined`。A 版 2,596 参数，报告在 `scripts/modelarts/reports/v1/`。**v3 已改为 9 个 2D 特征 + 个人基线偏差，内部 LOSO 选中 B 版（141 维、11,300 参数）；尚未部署，不能当作真实准确率。**
+2. **样本**：`reports/v1/` 仍来自 1440 帧合成关键点（12 受试者、seed 20261117、`framing=upper_body`），只验证管线；真实采集第一批已有 14 名受试者、3,974 帧带段落标签（2026-11-26，去重后），已按 v3 重生成并通过 `dataset_check`；v3 报告在 `scripts/modelarts/reports/v3-loso/`，forward_head F1 0.603、召回 0.501，仍未达到对外发布条件。
 3. **部署**：把 `customize_service.py`、`posture_runtime.py`、`model.py`、`model.pt`、`feature_spec.json` 打成模型包，导入 ModelArts 模型管理，部署为**在线服务**（CPU、1 副本），取调用 URL 与鉴权方式。首次调用须确认请求包络（见 §4）。
 4. **填入 `.env`**：见 §4。
 

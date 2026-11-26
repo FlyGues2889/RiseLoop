@@ -116,6 +116,8 @@ py -3.11 -m venv .venv-capture
 
 - `synthetic` 只证明管线可复现，不能对外称准确率。
 - `capture` 帧按 `subject` 分组划分，同一人不得跨训练与测试。
+- 14 人这类小样本用 `--split loso`：每人轮流出一次测试集；`--split auto`
+  在 ≥5 人时仍走 70/15/15，二者报告不可混用。
 - 报告必须同时给 macro-F1、每类 P/R/F1、混淆矩阵、样本来源与受试者数。
 
 ---
@@ -133,11 +135,34 @@ v2 的 `head_forward_ratio` 依赖 MediaPipe `z`，在真实数据上 baseline �
 | 缺省基线 | `shoulder_tilt_deg=0`、`neck_ratio=0.65`、`head_offset_ratio=0`；仅用于没有校准数据时，不能当作个人基线 |
 | 同步点 | `apps/cloud-api/app/schemas/posture.py`、`services/posture_features.py`、`cloud/modelarts.py`、`posture_contract.py`、`posture_runtime.py`、`label_policy.py`、`collect_frames.py`、`dataset_check.py`、`generate_synthetic_frames.py` |
 | 数据 | `data/posture/capture.jsonl` 已按 v3 重生成：3,974 帧 / 14 人 / 0 errors；`data/posture/frames.jsonl` 合成数据也已重生成 |
-| 模型 | **v3 模型未训练**；当前 mock 只用于链路验证，阈值 `|肩倾| ≥ 8°`、`−neck_ratio_delta ≥ 0.08` |
+| 模型 | v3 内部 LOSO 已完成（`reports/v3-loso/`）：B 版 141 维、11,300 参数，OOF macro-F1 0.7305、accuracy 0.7323；尚未部署，不能当对外准确率 |
+| mock | 只用于链路验证，阈值 `|肩倾| ≥ 8°`、`−neck_ratio_delta ≥ 0.08`；不作为分类结果 |
 
 采集器会先读完整输入文件，按 `subject` 计算基线中位数，再逐帧重算特征。输入记录若已带
 `baseline` 则优先使用；没有 baseline 段落时写总体缺省值。`dataset_check.py` 会用同一
 baseline 重算，任何特征漂移都会报错。
+
+14 人采集集的内部复评：
+
+```powershell
+python scripts/modelarts/train_posture.py `
+  --data data/posture/capture.jsonl --origin capture `
+  --split loso --out data/posture/reports/v3-loso
+```
+
+内部结果（14 人逐个留出，out-of-fold）：
+
+| 版本 | 输入 | OOF macro-F1 | OOF accuracy |
+|---|---|---:|---:|
+| A | 9 个 2D 特征 | 0.7146 | 0.7159 |
+| **B（选中）** | 132 坐标 + 9 个 2D 特征 | **0.7305** | **0.7323** |
+
+B 版每类 F1：baseline 0.677 / forward_head 0.603 / lateral_tilt 0.765 /
+undetermined 0.878。`forward_head` 召回只有 0.501，仍是弱项；14 人、单一设备/场景，
+不能外推。完整报告见 `reports/v3-loso/`，权重不入库。
+
+本地部署包冒烟：`customize_service.Model` 能加载 B 版 `model.pt`，接受
+`keypoints + baseline`，走完 `_preprocess / _inference / _postprocess`；这不是效果指标。
 
 ---
 
@@ -272,7 +297,7 @@ argmax，`confidence < 0.5` 时输出 `posture=undetermined`。
 ## 局限
 
 - `reports/v1/` 仍是 0 帧真实采集、0 条人工标签；指标只验证管线，不能外推为通用准确率。
-- 真实采集第一批已到 14 人 / 3,974 帧（见下节），但尚未进入正式训练；试算指标低于合成报告，不能替换 v1。
+- 真实采集第一批已到 14 人 / 3,974 帧（见下节）；v3 内部 LOSO 已完成（macro-F1 0.7305），但 forward_head 召回 0.501、只有单一设备/场景，尚未部署。
 - 合成数据只覆盖头肩入画的笔记本机位；站立、全身机位未建模。
 - 单人、单帧、无时序平滑；遮挡是 visibility 数值模拟。
 - test 仅 2 名受试者 240 帧，方差大；灰区本身存在标注分歧。
@@ -305,6 +330,9 @@ argmax，`confidence < 0.5` 时输出 `posture=undetermined`。
 - 跨受试者 LOSO 试算（HistGradientBoosting）：v2 的 5 特征 macro-F1 0.629；8 个 2D
   几何量 0.643；按个人 baseline 中位数归一后 0.755；137 维坐标 0.726。远低于合成
   报告的 0.967，不能当对外指标。
+- v3 官方训练脚本按 14 折 LOSO：A 版 0.7146、B 版 0.7305；B 版每类 F1 为
+  baseline 0.677 / forward_head 0.603 / lateral_tilt 0.765 / undetermined 0.878。
+  `forward_head` 召回 0.501，仍是弱项；完整报告在 `reports/v3-loso/`。
 - 前倾标签一致性不足：用 `neck_ratio`（鼻–肩中点垂直距离 / 肩宽）区分 baseline 与
   forward_head，9 人 AUC ≥ 0.72；`s02`（0.658）、`s19`（0.688）偏弱；`s03`（0.032）
   反向；`s01`（0.518）、`s20`（0.491）几乎无分离。说明部分受试者的动作与标签不一致。
@@ -318,7 +346,9 @@ argmax，`confidence < 0.5` 时输出 `posture=undetermined`。
 1. [已完成] 删除重复文件，把唯一文件移到 `data/posture/raw/`（已在 `.gitignore`）。
 2. [已完成] `collect_frames.py --append` 合并为 `data/posture/capture.jsonl`，再跑 `dataset_check.py`。
 3. [已完成] 特征契约 v3：去掉 z 轴 `head_forward_ratio`，改为 2D 几何 + 每人中立位基线。
-4. 重采 `s01` / `s03` / `s20`，把受试者扩到 ≥20；采集页实时显示目标量，避免
+4. [进行中] 重采 `s01` / `s03` / `s20`，把受试者扩到 ≥20；采集页实时显示目标量，避免
    “以为做了、实际没到”。
-5. 用 v3 跑 `train_posture.py --origin capture`，改用 LOSO 或重复分组；未达标记口径前
-   不替换 v1 合成模型，也不对外发布准确率。
+5. [已完成-内部] 用 v3 跑 `train_posture.py --split loso`；B 版 0.7305，报告在
+   `reports/v3-loso/`。未替换 v1 合成模型，也未对外发布准确率。
+6. 扩样后重跑 LOSO，`forward_head` F1 稳定过 0.65 再考虑接真实 ModelArts endpoint；
+   接入前先补线上个人基线校准。
