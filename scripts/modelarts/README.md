@@ -7,11 +7,11 @@
 
 | 文件 | 作用 | 能否进 ModelArts 模型包 |
 |---|---|---|
-| `posture_contract.py` | 从 cloud-api 取 33 点、5 特征、类别、阈值；训练与校验用 | 否 |
+| `posture_contract.py` | 从 cloud-api 取 33 点、9 个 2D 特征、基线字段、类别、阈值；训练与校验用 | 否 |
 | `posture_runtime.py` | 部署副本：纯 Python 特征提取与响应组装，无 torch | 是 |
 | `label_policy.py` | 标注口径（预标注/合成数据）；引用 mock 阈值 | 否 |
 | `dataset_check.py` | jsonl 校验：契约、特征一致性、标签、取景、禁止字段 | 否 |
-| `collect_frames.py` | 原始关键点 → 训练集：重算 5 特征、分配 `frame_id`、拒绝画面字段 | 否 |
+| `collect_frames.py` | 原始关键点 → 训练集：按 subject 求基线、重算 9 特征、分配 `frame_id`、拒绝画面字段 | 否 |
 | `capture_webcam.py` | 摄像头采集：MediaPipe 33 点 → 仅关键点 jsonl，不写画面 | 否 |
 | `list_cameras.py` | 列出 DirectShow 摄像头序号，对应 `--camera N` | 否 |
 
@@ -105,7 +105,7 @@ py -3.11 -m venv .venv-capture
 1. 删除自带的 `contract.py` 与常量表，改为 `from posture_contract import ...`。
 2. 推理包里内联的特征逻辑一律放 `posture_runtime.py`，`customize_service.py`
    只做 torch 推理；禁止在 `customize_service.py` 里再抄一份公式。
-3. `customize_service.py` 必须导出 `FEATURE_SPEC_VERSION = "v2"` 与
+3. `customize_service.py` 必须导出 `FEATURE_SPEC_VERSION = "v3"` 与
    `features_from_keypoints`，便于测试对账。
 4. 不改 `apps/cloud-api/**`、`packages/**`。发现差异改训练侧，不改服务端。
 5. 合成数据必须走 `label_policy.prelabel`，并在 `metrics.json` 记录
@@ -120,7 +120,28 @@ py -3.11 -m venv .venv-capture
 
 ---
 
-# 训练包 v1（特征契约 v2）
+# 特征契约 v3（当前，2026-11-26）
+
+v2 的 `head_forward_ratio` 依赖 MediaPipe `z`，在真实数据上 baseline 与 forward_head
+完全重叠，因此 v3 改为纯 2D 几何 + 个人中立位基线。
+
+| 项 | v3 |
+|---|---|
+| 特征 | 9 个：`shoulder_tilt_deg`、`shoulder_width`、`shoulder_visibility`、`upper_body_visibility`、`neck_ratio`、`head_offset_ratio`、`neck_ratio_delta`、`head_offset_delta`、`tilt_delta_deg` |
+| 2D 几何 | `neck_ratio = (肩中点 y − 鼻 y) / 肩宽`；`head_offset_ratio = (鼻 x − 肩中点 x) / 肩宽` |
+| 个人基线 | 每个文件内按 `subject` 取 `label=baseline` 帧的中位数；写入每帧 `baseline`，请求也可显式携带 |
+| 缺省基线 | `shoulder_tilt_deg=0`、`neck_ratio=0.65`、`head_offset_ratio=0`；仅用于没有校准数据时，不能当作个人基线 |
+| 同步点 | `apps/cloud-api/app/schemas/posture.py`、`services/posture_features.py`、`cloud/modelarts.py`、`posture_contract.py`、`posture_runtime.py`、`label_policy.py`、`collect_frames.py`、`dataset_check.py`、`generate_synthetic_frames.py` |
+| 数据 | `data/posture/capture.jsonl` 已按 v3 重生成：3,974 帧 / 14 人 / 0 errors；`data/posture/frames.jsonl` 合成数据也已重生成 |
+| 模型 | **v3 模型未训练**；当前 mock 只用于链路验证，阈值 `|肩倾| ≥ 8°`、`−neck_ratio_delta ≥ 0.08` |
+
+采集器会先读完整输入文件，按 `subject` 计算基线中位数，再逐帧重算特征。输入记录若已带
+`baseline` 则优先使用；没有 baseline 段落时写总体缺省值。`dataset_check.py` 会用同一
+baseline 重算，任何特征漂移都会报错。
+
+---
+
+# 训练包 v1（特征契约 v2，历史）
 
 > **数据声明**：本轮仍是 **1440 帧合成关键点**（`origin=synthetic`、
 > `label_source=prelabel`、`capture=0`、`human=0`），全部为 `framing=upper_body`。
@@ -227,11 +248,13 @@ python -m pytest -q
 
 ## 部署
 
+以下为 v1 部署包（特征契约 v2）；v3 模型重训后需替换为 9 特征与新的 `feature_spec.json`。
+
 ModelArts 推理包包含：
 
 ```
 customize_service.py   # 校验 feature_spec 顺序 + torch 前向 + 日志
-posture_runtime.py     # 上游唯一部署副本：5 特征、features_vector、build_response、决策规则
+posture_runtime.py     # v1 部署副本：5 特征、features_vector、build_response、决策规则
 model.py               # MLP、checkpoint、B 版坐标归一化
 model.pt               # A 版，14,461 B
 feature_spec.json      # v2：33 点顺序、头肩 13 点、5 特征、4 类、label_policy、标准化统计
@@ -248,9 +271,54 @@ argmax，`confidence < 0.5` 时输出 `posture=undetermined`。
 
 ## 局限
 
-- 0 帧真实采集、0 条人工标签；指标只验证管线，不能外推为通用准确率。
+- `reports/v1/` 仍是 0 帧真实采集、0 条人工标签；指标只验证管线，不能外推为通用准确率。
+- 真实采集第一批已到 14 人 / 3,974 帧（见下节），但尚未进入正式训练；试算指标低于合成报告，不能替换 v1。
 - 合成数据只覆盖头肩入画的笔记本机位；站立、全身机位未建模。
 - 单人、单帧、无时序平滑；遮挡是 visibility 数值模拟。
 - test 仅 2 名受试者 240 帧，方差大；灰区本身存在标注分歧。
 - 不包含风险融合、状态迁移、就医判断；这些留在服务端。
 - ModelArts 真实端点未上传（本机无云凭证）。
+
+## 真实采集第一批（2026-11-26）
+
+数据来自 Tauri 采集页，标签由采集段落指定，未进入正式训练。
+
+| 项 | 值 |
+|---|---|
+| 原始文件 | 12 个 jsonl / 4,934 帧 |
+| 去重 | `data (2).jsonl` 与 `data (3).jsonl` 字节级相同，去掉 959 帧 |
+| 可训练 | 3,974 帧（`collect_frames.py` 跳过 1 帧关键点越界：s16 / undetermined） |
+| 受试者 | 14（`s01`–`s04`、`s11`–`s20`） |
+| 类别 | baseline 1,072 / forward_head 1,019 / lateral_tilt 960 / undetermined 923 |
+| 元数据 | 全部 `origin=capture`、`label_source=human`、`framing=upper_body`、`device=laptop-cam`、`scene=office` |
+| 时长 | 每段约 2.1 分钟，0.5 s 一帧；`s01`、`s17`、`s18`、`s20` 有两次采集 |
+| 校验 | `collect_frames.py` → `dataset_check.py`：`ok=true`、0 errors / 0 warnings |
+
+可用性结论：
+
+- 格式可用：33 点、字段齐全、可见度充足（鼻/肩/耳最低可见度 p1 = 0.889），无图像字段。
+- v2 的 `head_forward_ratio` 不可用：baseline 中位数 1.77、forward_head 1.84，p5–p95 完全重叠；
+  99% 帧超过旧 mock 阈值 0.25。旧 mock 跑这 3,974 帧：forward_head 3,188、
+  lateral_tilt 784、baseline 2、undetermined 0。v3 已去掉该特征。
+- v3 重新转换：3,974 帧全部带 `feature_spec_version=v3` 与每人 `baseline`，
+  `dataset_check` 仍为 0 errors / 0 warnings。
+- 跨受试者 LOSO 试算（HistGradientBoosting）：v2 的 5 特征 macro-F1 0.629；8 个 2D
+  几何量 0.643；按个人 baseline 中位数归一后 0.755；137 维坐标 0.726。远低于合成
+  报告的 0.967，不能当对外指标。
+- 前倾标签一致性不足：用 `neck_ratio`（鼻–肩中点垂直距离 / 肩宽）区分 baseline 与
+  forward_head，9 人 AUC ≥ 0.72；`s02`（0.658）、`s19`（0.688）偏弱；`s03`（0.032）
+  反向；`s01`（0.518）、`s20`（0.491）几乎无分离。说明部分受试者的动作与标签不一致。
+- `undetermined` 主要是取景问题：肩宽中位数 0.147，其他类 0.52–0.54；它更像
+  “人离镜头太远/侧身”的质量类，不是姿态类。
+- 官方 `train_posture.py` 固定 70/15/15：10 人训练、2 人验证、2 人测试（`s03`、`s20`），
+  A 版 test macro-F1 0.429、B 版 0.589；A 版验证集 0.636。小样本单次划分不稳定。
+
+下一步：
+
+1. [已完成] 删除重复文件，把唯一文件移到 `data/posture/raw/`（已在 `.gitignore`）。
+2. [已完成] `collect_frames.py --append` 合并为 `data/posture/capture.jsonl`，再跑 `dataset_check.py`。
+3. [已完成] 特征契约 v3：去掉 z 轴 `head_forward_ratio`，改为 2D 几何 + 每人中立位基线。
+4. 重采 `s01` / `s03` / `s20`，把受试者扩到 ≥20；采集页实时显示目标量，避免
+   “以为做了、实际没到”。
+5. 用 v3 跑 `train_posture.py --origin capture`，改用 LOSO 或重复分组；未达标记口径前
+   不替换 v1 合成模型，也不对外发布准确率。

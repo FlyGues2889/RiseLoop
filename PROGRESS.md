@@ -14,11 +14,11 @@
 
 | 检查 | 结果 |
 |---|---|
-| `python -m pytest -q` | ✅ 153 passed（含跨语言对拍、鉴权生命周期、姿态契约与头肩机位回归） |
+| `python -m pytest -q` | ✅ 155 passed（含跨语言对拍、鉴权生命周期、姿态契约与头肩机位回归） |
 | `packages/api-client` `node --test` | ✅ 8 passed |
 | `pnpm build` | ✅ 通过（有 chunk 体积告警） |
 | `cargo check --lib --tests` | ✅ 通过 |
-| `cargo test` | ✅ 20 passed（含摄像头日志追加测试、动作会话 7 项） |
+| `cargo test` | ✅ 21 passed（含摄像头日志追加测试、动作会话 7 项） |
 
 > 2026-11-23 复跑：`python -m pytest -q` 153 passed、`api-client` 8 passed、`cargo test` 20 passed、`pnpm build` 通过。
 
@@ -31,7 +31,7 @@
 | 跨语言一致性测试 | ✅ | `packages/intervention-engine/tests/test_cross_language.py`：25 个场景 Python/JS 全字段对拍，桥接脚本 `scripts/engine_dump.mjs` |
 | 安全中间件（8 类红旗短路） | ✅ | `app/core/safety.py`，命中直接 403 + 就医提示 |
 | BRLI 风险指数 | 🟡 | 规则版 V1 有单测，已接 `/posture/risk`，未校准 |
-| 姿态分类推理（ModelArts） | 🟡 | v1 训练包与离线报告已完成（特征契约 v2，5 个派生特征 MLP，只要求头肩入画；合成数据 test macro-F1 0.9670）；调用链、超时、降级已写；**没有真实 endpoint**，现走 mock + 端侧降级 |
+| 姿态分类推理（ModelArts） | 🟡 | v1 训练包与离线报告已完成（特征契约 v2，5 个派生特征 MLP，只要求头肩入画；合成数据 test macro-F1 0.9670）；v3 契约（9 个 2D 特征 + 个人基线偏差）已落地，真实数据已重生成；**没有 v3 模型和真实 endpoint**，现走 v3 mock + 端侧降级 |
 | 循证知识库 | ✅ | 39 条证据台账（PubMed 36 / WHO 1 / CDC 1 / NIOSH 1，共 40 个主题归属）+ `articles.json` 7 条问答语料，`scripts/validate_evidence.py` 0 error |
 | 知识库问答 | ✅ | 本地检索 + citations（`data/knowledge/articles.json` 8 条）；无命中明确回答“资料中没有”。AgentArts 增强为可选，未接入 |
 | 限流 | ✅ | `app/core/ratelimit.py`：按 token 指纹或 IP 滑动窗口，登录类接口单独更严；超限 429 + `Retry-After` |
@@ -99,8 +99,9 @@
 - [ ] 真实环境验证断网、关摄像头、ModelArts 超时三条回退
 - [ ] 抓包确认不含原始画面；日志不打印关键点数组
 - [x] 真人关键点验证正常
-- [ ] 真实摄像头采集 + 人工标注，按 subject 划分复评（当前指标全部来自合成数据）
-- [ ] 侧倾/前倾识别精度初测（用真实数据，不用合成指标对外）
+- [x] 真实摄像头采集 + 段落标签：14 名受试者、3,974 帧去重后可用（2026-11-26）
+- [ ] 真实数据按 subject 划分复评（待用 v3 重训，见 11.26 真实采集第一批）
+- [x] 侧倾/前倾识别精度初测：真实数据 LOSO 试算 macro-F1 约 0.63，按个人基线归一约 0.75，不可对外
 
 ### 11.17 文案与时长对齐
 - [x] 步骤倒计时拟合动作标签时长（推算不足时等比放大），15 条动作标签 vs 实际倒计时全部在 ±6% 内
@@ -122,6 +123,15 @@
 - [x] 自制通知 P0：编译 + 真机验收（见 §3，点击交互仍待人工过一遍）
 - [ ] 演示数据（落地时新建 `data/seeds`）
 - [ ] 作品信息收集表逐节评审，核对与实现的表述
+
+### 11.26 真实采集第一批
+- [x] Tauri 采集页记录 14 名受试者、4,934 条原始记录；`data (2).jsonl` 与 `data (3).jsonl` 字节级相同，去重后 3,975 帧
+- [x] 转成训练契约：3,974 帧可训练（1 帧关键点越界），`dataset_check` 0 errors / 0 warnings
+- [x] 修特征契约：v3 去掉 z 轴 `head_forward_ratio`，改为 2D 颈长比/头偏移 + 每人中立位基线；云端、ModelArts 运行时、采集器与合成数据生成器同步
+- [x] 用 v3 重新生成 `data/posture/capture.jsonl`：3,974 帧、14 人、0 errors / 0 warnings；合成数据也已按 v3 重生成
+- [ ] 用 v3 重训模型并做 LOSO / 重复分组；v3 mock 只验证链路，不作结果
+- [ ] 重采动作不一致的 s01 / s03 / s20，把受试者扩到 ≥20
+- [ ] 真实数据正式复评：固定 10 / 2 / 2 划分落在 s03、s20，A 版 test macro-F1 0.429、B 版 0.589；改用 LOSO 或多次分组后再定指标
 
 ### 11.26 演示与录屏
 - [ ] 录屏脚本按最新界面重写

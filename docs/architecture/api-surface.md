@@ -6,7 +6,7 @@
 ## 1. 现状一句话
 
 接口层已经完整：从注册登录到评估、计时、姿态、干预、反馈、问答、周复盘全部有路由、有 schema、有测试。
-缺的是**云资源本身**（DCS、RDS、ModelArts endpoint；OBS、KMS 为可选），所以现在所有云服务走 `mock` 适配层。姿态模型 v1（特征契约 v2）的训练包与离线报告已完成（`scripts/modelarts/reports/v1/`），但真实 endpoint 仍未开通。
+缺的是**云资源本身**（DCS、RDS、ModelArts endpoint；OBS、KMS 为可选），所以现在所有云服务走 `mock` 适配层。姿态模型 v1（特征契约 v2）的训练包与离线报告已完成（`scripts/modelarts/reports/v1/`）；v3 契约（2D + 个人基线）已落地，v3 模型待训练，真实 endpoint 仍未开通。
 `GET /health/capabilities` 是自查入口：返回各依赖的 `provider / configured / reachable` 与限流参数。
 
 ## 2. 路由全表
