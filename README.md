@@ -182,15 +182,22 @@ pnpm dev
 
 ### 打包桌面端
 
-打包前必须先指定云端地址，否则构建直接失败——避免打出一个只能连本机的空壳安装包：
+**发布包必须带云端地址，否则构建立刻失败**。`tauri build` 的前置命令是 `scripts/build-release.mjs`：没有 `VITE_API_BASE`、或地址是 `127.0.0.1` / `localhost`，都会报错退出，避免打出一个只能连本机的空壳。
+
+PowerShell 里执行（`$env:` 只对当前窗口有效，两条命令要在同一个窗口里连着跑）：
 
 ```powershell
-$env:VITE_API_BASE="http://<ECS 公网 IP>:8000"; pnpm tauri build
+$env:VITE_API_BASE = "http://119.3.214.105:8000"   # 当前测试环境；换环境就换成 deployed-config 里的地址
+pnpm tauri build
 ```
+
+构建日志第一行会打印 `[build-release] 云端地址：http://119.3.214.105:8000`，看到这行才说明地址进去了。
+
+不想每次设置，也可以写进 `apps/desktop-tauri/.env.production`（内容 `VITE_API_BASE=...`），代价是地址脱离终端历史、换 IP 时容易忘。
 
 产出免安装单文件 `apps/desktop-tauri/src-tauri/target/release/rise-loop.exe`。目标机需要 WebView2 运行时；Windows 11 自带，Windows 10 一般随 Edge 预装。
 
-只做本机联调包时显式放行：`$env:ALLOW_LOCAL_API="1"`。地址也可以写在 `apps/desktop-tauri/.env.production`，构建日志会打印最终生效的地址。
+只做本机联调包时显式放行：`$env:ALLOW_LOCAL_API="1"`。
 
 ## 测试与部署复现
 
