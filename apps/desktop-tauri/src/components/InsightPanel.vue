@@ -44,6 +44,9 @@ watch(
       <header class="page-head">
         <h2>近 7 天</h2>
         <p class="lead">完成率、疼痛趋势和安全中断的变化。</p>
+
+        <AdviceLine surface="weekly" :fallback="state.weekly?.suggestions?.[0] ?? ''"
+          :context="{ completion_rate: state.weekly?.interventions?.completion_rate, trend: state.weekly?.pain?.trend, safety_events: state.weekly?.safety_events }" />
       </header>
 
       <m3e-list variant="segmented">
@@ -73,18 +76,15 @@ watch(
 
         <m3e-list-item>
           <span class="material-symbols-rounded" slot="leading">lightbulb</span>
-          <ul class="notes" v-if="hasNotes">
+          <p class="placeholder" v-if="state.weeklyBusy">完成一次活动后，此处将显示建议。</p>
+          <ul class="notes" v-else-if="hasNotes">
             <li v-for="item in state.weekly.highlights" :key="`h-${item}`">{{ item }}</li>
             <li v-for="item in state.weekly.suggestions" :key="`s-${item}`" class="muted">{{ item }}</li>
           </ul>
-          <p class="placeholder" v-else-if="state.weeklyBusy">正在生成建议…</p>
-          <p class="placeholder" v-else>完成一次活动后，此处将显示建议。</p>
         </m3e-list-item>
       </m3e-list>
 
       <EvidenceCallout v-if="hasNotes" v-bind="REVIEW_SOURCE" />
-      <AdviceLine surface="weekly" :fallback="state.weekly?.suggestions?.[0] ?? ''"
-        :context="{ completion_rate: state.weekly?.interventions?.completion_rate, trend: state.weekly?.pain?.trend, safety_events: state.weekly?.safety_events }" />
 
       <header class="title-head">
         <h2>问答</h2>
@@ -92,18 +92,19 @@ watch(
 
       <section v-if="aiEnabled" class="qa">
         <div class="qa-input">
-          <input id="ai-question" v-model="state.ai.question" type="text"
-            placeholder="例如：开会时颈肩紧张，怎么快速缓解？" @keyup.enter="askQuestion" />
-          <m3e-icon-button variant="filled"
-            :disabled.prop="state.ai.busy || !state.ai.question.trim()" @click="askQuestion">
+          <input id="ai-question" v-model="state.ai.question" type="text" placeholder="输入你的问题..."
+            @keyup.enter="askQuestion" />
+          <m3e-icon-button variant="filled" :disabled.prop="state.ai.busy || !state.ai.question.trim()"
+            @click="askQuestion">
             <span class="material-symbols-rounded-fill">send</span>
           </m3e-icon-button>
         </div>
 
         <ErrorBanner :error="state.errors.qa" />
 
-        <div class="qa-body">
+        <div class="qa-body"v-if="!state.ai.busy">
           <MarkdownText v-if="state.ai.answer" :text="state.ai.answer" />
+
           <details v-if="state.ai.citations.length" class="qa-refs">
             <summary>参考 {{ state.ai.citations.length }} 条文献</summary>
             <ul>
@@ -111,13 +112,13 @@ watch(
             </ul>
           </details>
           <p class="qa-disclaimer" v-if="state.ai.disclaimer">{{ state.ai.disclaimer }}</p>
-          <LoadingOverlay v-if="state.ai.busy" label="正在生成回答…" />
         </div>
+
+        <m3e-loading-indicator v-if="state.ai.busy" style="margin-top: 0.5rem;align-self: center;width: 100%;height: 10vh;"></m3e-loading-indicator>
       </section>
 
       <MedicalNote />
     </div>
-    <LoadingOverlay v-if="state.weeklyBusy || state.ai.busy" :label="loadingLabel" />
   </m3e-card>
 </template>
 
@@ -146,11 +147,13 @@ watch(
   min-width: 0;
   padding: 0.6rem 0.75rem;
   border: 0.0625rem solid var(--md-sys-color-outline-variant);
-  border-radius: 0.625rem;
+  border-radius: 999rem;
   background: var(--md-sys-color-surface-container-lowest);
   color: var(--md-sys-color-on-surface);
   font: inherit;
   font-size: 0.875rem;
+
+  transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
 }
 
 .qa-input input::placeholder {
@@ -159,7 +162,7 @@ watch(
 
 .qa-input input:focus {
   outline: none;
-  border-color: var(--md-sys-color-secondary);
+  border: 0.14rem solid var(--md-sys-color-secondary);
 }
 
 .qa-body {
@@ -169,6 +172,7 @@ watch(
 
 .qa-refs {
   margin-top: 0.5rem;
+  margin-left: 0.5rem;
   color: var(--md-sys-color-tertiary);
   font-size: 0.688rem;
 }
@@ -268,7 +272,7 @@ watch(
   font-size: 0.75rem;
 }
 
-.title-head{
+.title-head {
   margin-top: 1.6rem;
   padding-top: 1rem;
 }

@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref } from "vue";
 import WindowControls from "./WindowControls.vue";
-import { clearAllData, logout, state } from "../state/session.js";
+import { clearAllData, logout, openAssessment, state } from "../state/session.js";
 import { monitor, ui as cameraUi } from "../state/postureMonitor.js";
 
 const isSignedIn = computed(() => state.phase !== "auth");
@@ -78,6 +78,10 @@ async function confirmClear() {
     <m3e-menu-item v-if="showExperimental" @click="state.experimentalOpen = true">
       <span slot="icon" class="material-symbols-rounded">science</span>
       实验性功能
+    </m3e-menu-item>
+    <m3e-menu-item v-if="isSignedIn" @click="openAssessment">
+      <span slot="icon" class="material-symbols-rounded">assignment</span>
+      重新评估
     </m3e-menu-item>
     <m3e-menu-item v-if="isSignedIn" @click="confirmOpen = true">
       <span slot="icon" class="material-symbols-rounded">delete_sweep</span>

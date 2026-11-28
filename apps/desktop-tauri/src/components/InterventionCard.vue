@@ -106,7 +106,8 @@ function pickField(event, field, value) {
       <article v-if="result">
         <header class="page-head">
           <h2>本次结果</h2>
-          <p class="lead">按最近几次的完成情况调整了阶段，下面是接下来的动作。</p>
+          <AdviceLine surface="transition" :fallback="result.reason"
+            :context="{ transition: result.transition_type, from: result.from_state, to: result.to_state }" />
         </header>
 
         <div class="result-head">
@@ -115,9 +116,7 @@ function pickField(event, field, value) {
               <span class="material-symbols-rounded">arrow_forward</span>
             </i>{{ result.to_state }}
           </h1>
-          <p class="reason">{{ result.reason }}</p>
-          <AdviceLine surface="transition" :fallback="result.reason"
-            :context="{ transition: result.transition_type, from: result.from_state, to: result.to_state }" />
+          <p class="lead">按最近几次的完成情况调整了阶段，下面是接下来的动作。</p>
         </div>
 
         <m3e-list variant="segmented">
@@ -180,7 +179,7 @@ function pickField(event, field, value) {
 }
 
 .result-head {
-  margin-bottom: 1.25rem;
+  margin-bottom: 1rem;
 }
 
 .transition {

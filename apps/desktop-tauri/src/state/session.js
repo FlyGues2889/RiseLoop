@@ -184,7 +184,15 @@ export async function restoreSession() {
     memoryToken = token;
     // 钥匙串里的令牌可能已经过期，或后端换过签名密钥：先确认它还能用。
     // 否则用户会先看到评估页，填完提交时才被踢回登录。
-    await activeApi.weeklyReview(7);
+    const review = await activeApi.weeklyReview(7);
+    // 已经有评估记录的账号直接进主界面；第一次使用的才停在评估页
+    if (review?.current_state) {
+      state.weekly = review;
+      state.currentState = review.current_state;
+      state.phase = "main";
+      await refreshTimer();
+      return true;
+    }
     state.phase = "assessment";
     return true;
   } catch (error) {
@@ -562,6 +570,11 @@ export async function loadAdvice(surface, fallback, context = {}) {
   } catch {
     /* 保持现有文案 */
   }
+}
+
+export function openAssessment() {
+  state.phase = "assessment";
+  state.error = null;
 }
 
 export async function askQuestion() {

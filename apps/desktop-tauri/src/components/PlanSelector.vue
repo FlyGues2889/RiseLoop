@@ -3,7 +3,7 @@ import { computed } from "vue";
 import EvidenceCallout from "./EvidenceCallout.vue";
 import { PLAN_SELECTOR_SOURCE, PLAN_SOURCE } from "../data/actionSources.js";
 import { PLAN_OPTIONS } from "../config/plans.js";
-import { selectPlan, state } from "../state/session.js";
+import { openAssessment, selectPlan, state } from "../state/session.js";
 
 const plan = computed(() => state.assessment?.plan ?? null);
 
@@ -28,8 +28,11 @@ function choose(planId) {
         >
           <span class="material-symbols-rounded" slot="leading">{{ item.icon }}</span>
           {{ item.name }}
+          <span slot="supporting-text" class="plan-hint">{{ item.hint }}</span>
         </m3e-list-option>
       </m3e-selection-list>
+
+      <m3e-button variant="text" size="small" class="reassess" @click="openAssessment">重新评估</m3e-button>
 
       <section v-if="plan" class="two-week">
         <h2>两周方案</h2>
@@ -61,6 +64,16 @@ function choose(planId) {
 
 .plans {
   display: block;
+}
+
+.plan-hint {
+  display: block;
+  color: var(--md-sys-color-outline);
+  font-size: 0.688rem;
+}
+
+.reassess {
+  margin-top: 0.5rem;
 }
 
 .two-week {

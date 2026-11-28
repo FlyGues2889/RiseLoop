@@ -9,7 +9,7 @@ const props = defineProps({
 
 // 模型输出直接进 webview，必须清洗；只放行正文需要的标签
 const html = computed(() =>
-  DOMPurify.sanitize(marked.parse(String(props.text ?? ""), { async: false }), {
+  DOMPurify.sanitize(marked.parse(String(props.text ?? ""), { async: false, breaks: true }), {
     ALLOWED_TAGS: ["p", "strong", "em", "ul", "ol", "li", "br", "code"],
     ALLOWED_ATTR: [],
   })

@@ -323,8 +323,7 @@ onBeforeUnmount(() => {
 
         <div class="media-row">
           <div class="media-col">
-            <button v-if="refImage" class="ref-slot" type="button"
-              aria-label="放大参考图" @click="refOpen = true">
+            <button v-if="refImage" class="ref-slot" type="button" aria-label="放大参考图" @click="refOpen = true">
               <img class="ref-img" :src="refImage" alt="" loading="lazy" />
               <span class="ref-cap">参考图 · 点击放大</span>
             </button>
@@ -339,8 +338,14 @@ onBeforeUnmount(() => {
               <m3e-chip v-if="action.desk_friendly" class="desk-chip" variant="elevated">工位可做</m3e-chip>
             </div>
 
-            <EvidenceCallout dense title="科学依据" :source="actionSource.source"
-              :url="actionSource.url" :evidence-id="actionSource.evidenceId" />
+            <EvidenceCallout dense title="科学依据" :source="actionSource.source" :url="actionSource.url"
+              :evidence-id="actionSource.evidenceId" />
+
+            <m3e-callout v-if="action.caution && !feedbackOpen" variant="tertiary" class="caution-callout">
+              <span slot="icon" class="material-symbols-rounded">info</span>
+              <span slot="label">提示</span>
+              <small>{{ action.caution }}</small>
+            </m3e-callout>
 
             <div class="timer">
               <div class="timer-head">
@@ -378,12 +383,6 @@ onBeforeUnmount(() => {
 
       </div>
     </m3e-card>
-
-    <m3e-callout v-if="action.caution && !feedbackOpen" variant="surface" class="caution-callout">
-      <span slot="icon" class="material-symbols-rounded">info</span>
-      <span slot="label">提示</span>
-      <small>{{ action.caution }}</small>
-    </m3e-callout>
 
     <m3e-dialog :open.prop="refOpen" class="ref-dialog" @closed="refOpen = false">
       <h2 slot="header">{{ action?.name }}</h2>
@@ -586,7 +585,7 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 0.5rem;
 
-  margin-bottom:0.5rem;
+  margin-bottom: 0.5rem;
 }
 
 .desk-chip {
@@ -647,6 +646,7 @@ onBeforeUnmount(() => {
 }
 
 .caution-callout {
+  margin-top: 0.75rem;
   display: block;
 }
 

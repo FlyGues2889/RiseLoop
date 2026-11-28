@@ -433,7 +433,7 @@ onBeforeUnmount(() => {
 .view {
   width: min(45rem, 100%);
   margin: 0 auto;
-  padding: 2rem 1.5rem 2.5rem;
+  padding: 2rem 1.5rem 0;
 }
 
 .head-row {
