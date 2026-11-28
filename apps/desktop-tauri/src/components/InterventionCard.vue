@@ -100,7 +100,7 @@ function pickField(event, field, value) {
 <template>
   <m3e-card variant="elevated" class="surface-card">
     <div class="surface-body">
-      <ErrorBanner :error="state.error" />
+      <ErrorBanner :error="state.errors.feedback" />
 
       <article v-if="result">
         <header class="page-head">

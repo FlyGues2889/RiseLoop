@@ -434,7 +434,7 @@ onBeforeUnmount(() => {
         </div>
 
         <p v-if="error" class="error">{{ error }}</p>
-        <ErrorBanner :error="state.error" />
+        <ErrorBanner :error="state.errors.feedback" />
 
         <div class="feedback-actions">
           <m3e-button variant="filled" size="medium" :disabled.prop="submitting" @click="submit('completed')">

@@ -17,7 +17,7 @@ import SafetyAlert from "./components/SafetyAlert.vue";
 import StatusBar from "./components/StatusBar.vue";
 import TrainingView from "./components/TrainingView.vue";
 import { initActionSession } from "./state/actionSession.js";
-import { closePosture, refreshTimer, restoreSession, state, tickHeartbeat, tickPreview } from "./state/session.js";
+import { closePosture, clearError, refreshTimer, restoreSession, state, tickHeartbeat, tickPreview } from "./state/session.js";
 import { monitor, prefs as cameraPrefs, ui as cameraUi } from "./state/postureMonitor.js";
 
 const unlisteners = ref([]);
@@ -102,6 +102,10 @@ onUnmounted(() => {
   <div class="app">
     <LoadingOverlay v-if="booting" fullscreen label="正在启动 Rise Loop…" />
     <StatusBar />
+    <m3e-snackbar :open.prop="!!state.errors.background" dismissible
+      @closed="clearError('background')">
+      {{ state.errors.background?.title }}{{ state.errors.background?.hint ? `：${state.errors.background.hint}` : "" }}
+    </m3e-snackbar>
     <CameraPermissionDialog />
     <PostureSpike v-if="state.postureOpen" @close="closePosture" />
     <m3e-content-pane class="content">

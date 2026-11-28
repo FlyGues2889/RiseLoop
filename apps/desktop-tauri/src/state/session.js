@@ -96,7 +96,7 @@ export const state = reactive({
   postureEvents: loadPostureEvents(),
   lastFeedback: null,
   safety: null,
-  error: null,
+  errors: { auth: null, assessment: null, feedback: null, qa: null, background: null },
   log: [],
   heartbeat: null,
   ai: { question: "", answer: null, citations: [], disclaimer: "", busy: false },
@@ -114,12 +114,12 @@ function pushLog(message) {
   if (state.mode === MODES.demo.id) saveLocalLogs(state.log);
 }
 
-function handleError(error) {
+function handleError(error, scope = "background") {
   if (error instanceof ApiError && error.isSafetyShortCircuit) {
     state.safety = error.payload;
     state.pending = null;
     state.pendingActions = [];
-    state.error = null;
+    state.errors[scope] = null;
     return;
   }
   // 凭证真的失效时，说清原因并退回登录页，而不是留在主界面反复失败。
@@ -127,14 +127,14 @@ function handleError(error) {
     void expireSession(error);
     return;
   }
-  state.error = describeError(error);
+  state.errors[scope] = describeError(error);
 }
 
 async function expireSession(error) {
   const view = describeError(error);
   await clearToken();
   resetViewState();
-  state.error = view;
+  state.errors.auth = view;
   pushLog("登录状态已失效，请重新登录。");
 }
 
@@ -151,7 +151,7 @@ export async function applyToken(response) {
     }
   }
   state.phase = "assessment";
-  state.error = null;
+  state.errors.auth = null;
 }
 
 // 用刷新令牌换一对新令牌；后端会立刻作废旧刷新令牌，所以新的那份必须存回钥匙串
@@ -191,7 +191,7 @@ export async function restoreSession() {
     memoryToken = null;
     if (error instanceof ApiError && error.isSessionExpired) {
       await clearToken();
-      state.error = describeError(error);
+      state.errors.auth = describeError(error);
     }
     return false;
   }
@@ -213,7 +213,7 @@ function resetViewState() {
   state.pendingActions = [];
   state.lastFeedback = null;
   state.safety = null;
-  state.error = null;
+  state.errors = { auth: null, assessment: null, feedback: null, qa: null, background: null };
   state.heartbeat = null;
   state.weekly = null;
   state.weeklyBusy = false;
@@ -234,7 +234,7 @@ function useDemo() {
 
 export async function enterDemo() {
   state.busy = true;
-  state.error = null;
+  state.errors.background = null;
   useDemo();
   try {
     await activeApi.health();
@@ -268,7 +268,7 @@ export async function enterDemo() {
     pushLog(`本地模式不连接云端，${DEMO_UNAVAILABLE.join("、")} 暂不可用。`);
   } catch (error) {
     useCloud();
-    state.error = describeError(error);
+    state.errors.background = describeError(error);
   } finally {
     state.busy = false;
   }
@@ -284,12 +284,12 @@ export async function exitDemo() {
 export async function register() {
   useCloud();
   state.busy = true;
-  state.error = null;
+  state.errors.auth = null;
   try {
     await applyToken(await activeApi.register(state.email, state.password));
     pushLog("账号已创建，已完成登录。");
   } catch (error) {
-    handleError(error);
+    handleError(error, "auth");
   } finally {
     state.busy = false;
   }
@@ -298,12 +298,12 @@ export async function register() {
 export async function login() {
   useCloud();
   state.busy = true;
-  state.error = null;
+  state.errors.auth = null;
   try {
     await applyToken(await activeApi.login(state.email, state.password));
     pushLog("登录成功。");
   } catch (error) {
-    handleError(error);
+    handleError(error, "auth");
   } finally {
     state.busy = false;
   }
@@ -328,7 +328,7 @@ export async function logout() {
 
 export async function submitAssessment(form) {
   state.busy = true;
-  state.error = null;
+  state.errors.assessment = null;
   try {
     const result = await activeApi.assessment(form);
     state.assessment = result;
@@ -338,7 +338,7 @@ export async function submitAssessment(form) {
     await startTimer();
     pushLog(`评估完成，当前阶段：${result.state_name}。`);
   } catch (error) {
-    handleError(error);
+    handleError(error, "assessment");
   } finally {
     state.busy = false;
   }
@@ -389,7 +389,7 @@ async function timerCommand(command, args) {
   try {
     return await invoke(command, args);
   } catch (error) {
-    state.error = describeError(error);
+    state.errors.background = describeError(error);
     return null;
   }
 }
@@ -522,13 +522,13 @@ export async function tickHeartbeat({ force = false } = {}) {
       pushLog("已到达提醒时间，但当前没有可用的动作。");
     }
   } catch (error) {
-    handleError(error);
+    handleError(error, "background");
   }
 }
 
 export async function submitFeedback(payload) {
   state.busy = true;
-  state.error = null;
+  state.errors.feedback = null;
   try {
     const result = await activeApi.feedback(payload);
     state.lastFeedback = result;
@@ -540,7 +540,7 @@ export async function submitFeedback(payload) {
       `阶段已迁移：${result.from_state} → ${result.to_state}（${result.reason}）。`
     );
   } catch (error) {
-    handleError(error);
+    handleError(error, "feedback");
   } finally {
     state.busy = false;
   }
@@ -550,11 +550,11 @@ export async function askQuestion() {
   const question = state.ai.question.trim();
   if (!aiEnabled.value || state.ai.busy) return;
   if (question.length < 2) {
-    state.error = { title: "问题太短", message: "至少输入两个字再提问。", detail: null, hint: null };
+    state.errors.qa = { title: "问题太短", message: "至少输入两个字再提问。", detail: null, hint: null };
     return;
   }
   state.ai.busy = true;
-  state.error = null;
+  state.errors.qa = null;
   try {
     const result = await activeApi.askQuestion({
       question,
@@ -564,7 +564,7 @@ export async function askQuestion() {
     state.ai.citations = result.citations || [];
     state.ai.disclaimer = result.disclaimer || "";
   } catch (error) {
-    handleError(error);
+    handleError(error, "qa");
   } finally {
     state.ai.busy = false;
   }
@@ -649,7 +649,7 @@ export async function evaluatePostureInfer(payload) {
   } catch (error) {
     if (error instanceof ApiError && (error.isSafetyShortCircuit || error.isSessionExpired)) {
       // 安全短路与凭证失效都交给统一出口（后者会退回登录页）
-      handleError(error);
+      handleError(error, "background");
       return null;
     }
     throw error;
@@ -678,7 +678,7 @@ export function dismissSafety() {
   state.phase = "main";
   state.pending = null;
   state.pendingActions = [];
-  state.error = null;
+  state.errors.background = null;
 }
 
 export async function clearAllData() {
@@ -714,4 +714,7 @@ export async function clearAllData() {
         threshold_minutes: 45,
         overdue: false,
       };
+}
+export function clearError(scope) {
+  if (state.errors[scope] !== undefined) state.errors[scope] = null;
 }

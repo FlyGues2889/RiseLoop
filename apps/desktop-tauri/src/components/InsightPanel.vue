@@ -90,14 +90,15 @@ watch(
         <m3e-list-item>
           <div class="body">
             <m3e-form-field variant="filled" class="ask">
-              <label slot="label" for="ai-question">问一个问题</label>
-              <input id="ai-question" v-model="state.ai.question" type="text"
-                placeholder="例如：开会时颈肩紧张，怎么快速缓解？" @keyup.enter="askQuestion" />
-              <m3e-button slot="suffix" variant="text" size="small"
+              <label slot="label" for="ai-question">输入你想问的问题...</label>
+              <input id="ai-question" v-model="state.ai.question" type="text" @keyup.enter="askQuestion" />
+              <m3e-icon-button slot="suffix" variant="filled"
                 :disabled.prop="state.ai.busy || !state.ai.question.trim()" @click="askQuestion">
-                提问
-              </m3e-button>
+                <span class="material-symbols-rounded-fill">send</span>
+              </m3e-icon-button>
             </m3e-form-field>
+
+            <ErrorBanner :error="state.errors.qa" />
 
             <div class="answer" v-if="state.ai.answer">
               <p>{{ state.ai.answer }}</p>
@@ -123,7 +124,6 @@ watch(
 
 .body {
   padding: 0.25rem 0 1.125rem;
-  border-top: 0.2rem solid var(--md-sys-color-outline-variant);
 }
 
 .qa {

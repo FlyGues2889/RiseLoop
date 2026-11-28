@@ -102,7 +102,7 @@ function onPainChange(event) {
         </m3e-list-item>
       </m3e-list>
 
-      <ErrorBanner :error="state.error" />
+      <ErrorBanner :error="state.errors.assessment" />
 
       <m3e-button class="primary-action" variant="filled" size="medium" :disabled.prop="state.busy"
         @click="submitAssessment(form)">

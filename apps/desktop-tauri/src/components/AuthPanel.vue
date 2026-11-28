@@ -25,7 +25,7 @@ import { login, register, state } from "../state/session.js";
             minlength="8" placeholder="至少 8 位" required />
         </m3e-form-field>
 
-        <ErrorBanner :error="state.error" />
+        <ErrorBanner :error="state.errors.auth" />
 
         <m3e-button class="primary-action" variant="filled" :disabled.prop="state.busy" @click="login">
           登录
