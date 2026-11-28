@@ -107,17 +107,17 @@ intervention-engine
 | 桌面端 | Tauri 2 + Vue 3 + Rust | 界面、久坐计时、托盘、系统通知、Keychain；不保存状态机，不执行迁移 | ✅ 已实现 |
 | 接入层 | `apps/cloud-api` | JWT、限流、安全中间件、评估/久坐时间/反馈/姿态/周报/问答路由 | ✅ 已实现 |
 | 决策层 | `packages/intervention-engine` | 四状态迁移纯函数，唯一状态迁移入口 | ✅ 已实现 |
-| 事实数据 | RDS for PostgreSQL | 用户、评估、迁移历史、执行记录、动作库、问答日志、安全事件 | 🟡 适配层与迁移脚本完成，生产实例待接 |
-| 实时状态 | DCS for Redis | 会话、久坐计时、待响应干预、安全短缓存 | 🟡 适配层完成，生产实例待接 |
-| 姿态推理 | ModelArts 在线服务 | 33 点 → 2D 特征 + 个人基线 → 四分类；2.5 秒超时降级 | 🟡 v1 离线报告完成；v3 内部 LOSO 完成，未部署；生产 endpoint 待开通 |
+| 事实数据 | RDS for PostgreSQL | 用户、评估、迁移历史、执行记录、动作库、问答日志、安全事件 | ✅ 已接入（2026-11-28） |
+| 实时状态 | DCS for Redis | 会话、久坐计时、待响应干预、安全短缓存 | ✅ 已接入（2026-11-28） |
+| 姿态推理 | ModelArts 在线服务 | 33 点 → 2D 特征 + 个人基线 → 四分类；2.5 秒超时降级 | ✅ v3 head A 版已部署（2026-11-28），实测 `source=huawei`；精度仅内部评估 |
 | 工具与技能 | MCP Server + Skills | 3 个固定工具、4 个平台无关 Skill，不直连数据库 | ✅ 已实现 |
-| 部署 | 华为云 ECS + Docker Compose | 公网 API、镜像与编排清单 | 🟡 清单就绪，待部署 |
-| 加密与分发 | KMS + OBS | 健康字段加密、安装包与演示材料分发 | 🟡 适配层完成，按需接线 |
+| 部署 | 华为云 ECS + Docker Compose | 公网 API、镜像与编排清单 | ✅ 已部署（2026-11-28，HTTP 测试期） |
+| 加密与分发 | KMS + OBS | 健康字段加密、安装包与演示材料分发 | 🟡 OBS 已用于模型包；KMS 未接线 |
 | 研发工具 | 华为云 CodeArts | 需求拆解、代码生成、构建与问题修复 | ✅ 研发期使用，不进运行时 |
 
 MCP 工具固定为 3 个：`read_realtime_state`、`get_actions_by_state`、`write_intervention_result`。Skill 为姿态评估、状态机、安全与问答四个，作为平台无关资产交付，主链路不依赖 Agent 编排。
 
-本地模式仅运行在 `packages/local-engine`，使用纯 JS 状态机与只读动作库，不发起网络请求；云端模式必须走 `cloud-api` 与 `intervention-engine`，两套状态机保持同一迁移规则。正式评审以云端公网链路为准，不以本地模式替代。
+本项目只提供云端模式；`packages/local-engine` 仅作内部测试对拍资产，不随客户端交付，也不出现在界面与评审材料中。
 
 ## 数据与模型
 
@@ -127,14 +127,14 @@ MCP 工具固定为 3 个：`read_realtime_state`、`get_actions_by_state`、`wr
 
 v1 模型输入 5 个派生特征，结构为 64 → 32 的 MLP，共 2,596 个参数。该合成训练包的测试集 macro-F1 0.9670、accuracy 0.9667，四类 F1 为 0.974 / 0.962 / 0.992 / 0.940，本机单帧推理 0.3–0.5 ms；置信度低于 0.5 判为 `undetermined`。这些指标只对应 v2 合成数据，不能写成 v3 或真实场景准确率。
 
-特征契约 v3 去掉 z 轴 `head_forward_ratio`，改用 2D 颈长比、头偏移与每人中立位基线偏差；模型内部再加 7 个头部几何 delta。v3 head 内部 LOSO 已完成（14 人逐个留出）：A 版 16 维、3,300 参数，out-of-fold macro-F1 0.7759、accuracy 0.7765；每类 F1 为 baseline 0.763 / forward_head 0.714 / lateral_tilt 0.787 / undetermined 0.839。B 版 148 维为 0.7722，部署包按 A 版。只有 14 人、单一设备/场景，不能当作对外准确率；报告在 `scripts/modelarts/reports/v3-loso-head/`。v3 尚未部署，推理超时或失败时客户端不展示姿态结论，也不伪造结果。
+特征契约 v3 去掉 z 轴 `head_forward_ratio`，改用 2D 颈长比、头偏移与每人中立位基线偏差；模型内部再加 7 个头部几何 delta。v3 head 内部 LOSO 已完成（14 人逐个留出）：A 版 16 维、3,300 参数，out-of-fold macro-F1 0.7759、accuracy 0.7765；每类 F1 为 baseline 0.763 / forward_head 0.714 / lateral_tilt 0.787 / undetermined 0.839。B 版 148 维为 0.7722，部署包按 A 版。只有 14 人、单一设备/场景，不能当作对外准确率；报告在 `scripts/modelarts/reports/v3-loso-head/`。v3 已部署到 ModelArts（2026-11-28），推理超时或失败时客户端不展示姿态结论，也不伪造结果。
 
 ## 工程验证
 
 | 项目 | 结果 |
 | :--- | :--- |
 | 状态机 | 4 状态 × 4 分支 + `hold`；25 个 Python / JS 跨语言场景全字段对拍 |
-| 自动化测试 | 155 项 Python 测试、21 项 Rust 测试、8 项 api-client 测试通过；`pnpm build` 通过 |
+| 自动化测试 | 167 项 Python 测试、21 项 Rust 测试、12 项 api-client 测试通过；`pnpm build` 通过 |
 | 动作库 | 15 条动作覆盖四状态，单条 1–3 分钟；S2 一轮 2–3 条、合计 5–8 分钟 |
 | 安全 | 8 类红旗短路；高风险在中间件层拦截，返回 403 与就医提示 |
 | 接口 | 登录限流 10 次/60 秒，业务 120 次/60 秒；JWT access 1 小时、refresh 30 天，支持轮换与 jti 吊销 |
@@ -178,7 +178,7 @@ uvicorn app.main:app --app-dir apps/cloud-api --reload --port 8000
 pnpm dev
 ```
 
-客户端默认连接 `http://127.0.0.1:8000`。云服务适配层支持 `mock` / `huawei` 双模式，本地没有云资源也能跑通测试与演示。
+客户端默认连接 `http://127.0.0.1:8000`；也可在构建或启动前用 `VITE_API_BASE` 指向云端。2026-11-28 已部署测试环境（`http://<ECS 公网 IP>:8000`，HTTP 测试期），实测配置见 `infra/huawei-cloud/deployed-config.md`。`mock` 模式只用于本地没有云资源时的联调，不作为上云证据。
 
 ### 打包桌面端
 

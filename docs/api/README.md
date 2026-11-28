@@ -1,6 +1,6 @@
 # Rise Loop Cloud API
 
-Base URL：本地 `http://127.0.0.1:8000`，线上为 ELB 绑定的 HTTPS 域名。OpenAPI：`/docs`、`/openapi.json`。
+Base URL：本地 `http://127.0.0.1:8000`；测试环境为 `http://<ECS 公网 IP>:8000`（2026-11-28 实测，无 ELB/HTTPS）。正式环境应换 HTTPS 域名。OpenAPI：`/docs`、`/openapi.json`。
 
 ## 鉴权
 

@@ -1,5 +1,7 @@
 # 一次性云链路测试配置清单
 
+> 2026-11-28 已按本清单完成一次真实部署与验证；实测配置、调用地址与结果见 [`deployed-config.md`](deployed-config.md)。RDS 实际按 ¥0.40/小时计费，DCS ¥0.08/小时，ModelArts 8C32G ¥3.40/小时；测试结束后务必按 §7 释放。
+
 ## 0. 边界
 
 - 初赛只提交 `docs/submission`（文档 + 宣传片），无答辩、无常驻环境。
@@ -96,7 +98,8 @@ RISELOOP_REDIS_URL=
 ```dotenv
 RISELOOP_MODELARTS_ENDPOINT=
 RISELOOP_MODELARTS_API_KEY=
-RISELOOP_MODELARTS_AUTH_HEADER=
+RISELOOP_MODELARTS_AUTH_HEADER=authorization
+RISELOOP_MODELARTS_MODEL_NAME=serve
 # 自签证书才设为 false；生产保持 true
 RISELOOP_MODELARTS_TLS_VERIFY=true
 ```

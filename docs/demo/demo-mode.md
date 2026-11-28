@@ -6,10 +6,11 @@
 
 ## 演示前
 
-- `cloud-api` 已部署到华为云，公网 HTTPS 可达。
+- `cloud-api` 已部署到华为云，测试期公网 HTTP 可达（`http://<ECS 公网 IP>:8000`）；正式环境应换 HTTPS 域名。
 - `/health/live`、`/health/ready`、`/health/capabilities` 返回正常。
 - 准备一个可登录的演示账号，提前完成一次评估。
 - 演示机摄像头权限已打开，MediaPipe 模型与 WASM 随客户端本地加载。
+- ModelArts 在线服务为「运行中」且已设自动停止；`RISELOOP_MODELARTS_TLS_VERIFY=false` 只用于当前 IP + 自签证书的测试地址。
 - 录屏文件已导出，现场网络异常时可直接播放。
 
 ## 推荐顺序
@@ -36,6 +37,6 @@
 |---|---|---|
 | 登录失败 | 公网 API 不可达或账号错误 | 先查 `/health/live`，再核对账号 |
 | `/health/ready` 返回 503 | RDS 或 DCS 未就绪 | 按部署手册检查 DSN 与 Redis 配置 |
-| 姿态检查提示云端不可用 | ModelArts endpoint 未开通或超时 | 跳过姿态环节，展示其余闭环 |
+| 姿态检查提示云端不可用 | ModelArts 服务停止、超时或自签证书被拒 | 先确认在线服务运行中；跳过姿态环节，展示其余闭环 |
 | 页面提示连接失败 | 网络中断 | 切录屏，保持讲解节奏 |
 | 摄像头打不开 | 权限或设备占用 | 关闭其他占用摄像头的程序，或跳过该环节 |

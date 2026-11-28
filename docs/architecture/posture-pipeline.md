@@ -1,14 +1,15 @@
-# 端云姿态感知链路（11.10 路线决策，11.23 模型 v1 / 特征契约 v2，11.26 契约 v3，11.28 16 维模型与基线校准）
+# 端云姿态感知链路（11.10 路线决策，11.23 模型 v1 / 特征契约 v2，11.26 契约 v3，11.28 16 维模型、基线校准与 ModelArts 部署）
 
-> 2026-11-23：姿态模型 v1（特征契约 v2）训练包与离线报告已完成；真实 ModelArts endpoint 尚未开通，当前线上仍是 mock 几何规则。
+> 2026-11-23：姿态模型 v1（特征契约 v2）训练包与离线报告已完成。
 > 2026-11-26：第一批真实采集完成（14 人、去重后 3,974 帧）；特征契约 v3（2D 几何 + 个人中立位基线）已落地，真实与合成数据都已按 v3 重生成。
-> 2026-11-28：v3 head 在公开 9 特征外增加 7 个头部几何 delta（模型输入 16 维）；A 版 OOF macro-F1 0.7759、forward_head F1 0.7142，部署包按 A 版生成；新增 `/posture/baseline` 与客户端 10 秒校准；仍未部署，对外报告只引用 v1/v2 合成数据结果。
+> 2026-11-28：v3 head 在公开 9 特征外增加 7 个头部几何 delta（模型输入 16 维）；A 版 OOF macro-F1 0.7759、forward_head F1 0.7142，部署包按 A 版生成；新增 `/posture/baseline` 与客户端 10 秒校准。
+> 2026-11-28：v3 head A 版已部署到 ModelArts，`/posture/infer` 实测 `source=huawei`（约 101 ms）；mock 只用于本地联调，对外仍不把内部指标写成真实准确率。
 
 ## 1. 目标与边界
 
 | 项 | 内容 |
 |---|---|
-| 目标 | 11.13 跑通“摄像头 → 本地关键点 → 云端推理 → 客户端提示”的最小链路；姿态模型 v1（特征契约 v2）已完成训练与离线评估（11.23），v3 head 内部 LOSO 已完成（11.28，A 版 16 维 macro-F1 0.7759），尚未部署，真实 endpoint 待开通 |
+| 目标 | 11.13 跑通“摄像头 → 本地关键点 → 云端推理 → 客户端提示”的最小链路；v3 head A 版已部署到 ModelArts（11.28），端到端实测 `source=huawei`，精度仍只作内部评估 |
 | 输入 | 摄像头画面仅在本地处理；上传归一化骨骼关键点，不上传原始图像/视频；只要求头部与双肩清晰入画，不要求全身 |
 | 云端 | ModelArts 在线推理（mock / huawei 两种云端配置）：v1 模型用 A 版 5 个派生特征 MLP；v3 公开 9 个 2D 特征，模型额外用 7 个头部几何 delta（16 维），四分类 + 置信度 <0.5 判 `undetermined` |
 | 客户端 | Tauri 2 + Vue 3；叠加姿态引导框、风险解释与回退提示 |
@@ -34,9 +35,9 @@
 | 工作流 | 范围 | 当前状态 | 关键依赖 |
 |---|---|---|---|
 | 端侧与前端 | Tauri、摄像头、关键点提取、隐私开关、姿态引导 UI | spike 已完成；真人关键点/演示机性能待验证 | 演示机摄像头 |
-| 云端与模型 | ModelArts、ECS/FastAPI、APIG、模型部署、性能测试 | v1 训练包与离线报告已完成（5 特征 MLP，合成数据 test macro-F1 0.9670）；v3 head 内部 LOSO 完成（A 版 16 维，OOF macro-F1 0.7759、forward_head F1 0.7142），尚未部署；`/posture/infer` + `/posture/baseline` + 适配层就绪；真实 endpoint 待开通 | ModelArts endpoint（需付费开通）、v3 扩样复评 |
+| 云端与模型 | ModelArts、ECS/FastAPI、APIG、模型部署、性能测试 | v1 训练包与离线报告已完成（5 特征 MLP，合成数据 test macro-F1 0.9670）；v3 head A 版已部署，OOF macro-F1 0.7759、forward_head F1 0.7142；`/posture/infer` + `/posture/baseline` 实测可用，延迟约 101 ms | v3 扩样复评、三条降级演练 |
 | 算法与运动健康 | 数据集、姿态分类评价、风险规则、循证 JSON、动作适配 | 证据台账已完成；规则草稿/姿态评价待做 | 运康专业审核 |
-| 集成与交付 | S0–S3 集成、DCS/RDS/ModelArts、自动化测试、文档与演示 | 状态机/动作库已有；真实 DCS/RDS/ModelArts 与端到端集成未开始 | 云端环境与演示机 |
+| 集成与交付 | S0–S3 集成、DCS/RDS/ModelArts、自动化测试、文档与演示 | 状态机/动作库已有；2026-11-28 已完成真实 DCS/RDS/ModelArts 公网端到端验证 | 演示机、三条降级演练 |
 
 **范围冻结口径：**
 
@@ -84,14 +85,14 @@
 | 选型 | 同 seed 对比 5 维 A 与 137 维 B，按验证集 macro-F1 选 A（0.9831 vs 0.8867） |
 | 离线指标 | 测试集 macro-F1 0.9670、accuracy 0.9667；低置信度改判 0 帧 |
 | 报告 | `scripts/modelarts/reports/v1/`：`metrics.json`、`feature_spec.json`、`split.json`、`smoke_test.json`、混淆矩阵 |
-| 端到端 | 本地 `serve.py` / `customize_service.Model` 冒烟通过；真实 ModelArts endpoint 未开通 |
+| 端到端 | 本地 `serve.py` / `customize_service.Model` 冒烟通过；真实 ModelArts endpoint 已于 2026-11-28 验证，`source=huawei` |
 
 机位口径：久坐人群面对笔记本摄像头时通常只有头部和双肩入画。v2 删除了依赖髋部的
 `torso_lean_deg` 和按 33 点统计的 `visible_ratio`，不再要求全身可见；采集记录增加
 `framing`（默认 `upper_body`），评估按机位分开统计。姿态能力边界仍是
 “头颈前伸与肩部不对称识别”，不宣称能测其他部位。
 
-版本关系：**当前特征契约 `v3`；v1 模型与 `reports/v1/` 仍是 `v2`**；`reports/v0/` 只作历史保留。三代指标不可直接比较；v3 head 内部 LOSO 已完成（A 版 macro-F1 0.7759），尚未部署。指标只证明特征契约、训练与部署脚本可复现，**不代表真实场景准确率**；对外不得把 0.9670 或 v3 的 0.7759 写成泛化准确率。权重与原始数据不入库。
+版本关系：**当前特征契约 `v3`；v1 模型与 `reports/v1/` 仍是 `v2`**；`reports/v0/` 只作历史保留。三代指标不可直接比较；v3 head 内部 LOSO 已完成（A 版 macro-F1 0.7759），A 版已于 2026-11-28 部署。指标只证明特征契约、训练与部署脚本可复现，**不代表真实场景准确率**；对外不得把 0.9670 或 v3 的 0.7759 写成泛化准确率。权重与原始数据不入库。
 
 ### 特征契约 v3（2026-11-26，模型输入 2026-11-28）
 
@@ -104,7 +105,7 @@
 | 去掉 | z 轴 `head_forward_ratio`：真实数据 baseline 中位数 1.77、forward_head 1.84，p5–p95 完全重叠 |
 | 同步范围 | `apps/cloud-api`、`scripts/modelarts/posture_contract.py`、`posture_runtime.py`、`label_policy.py`、`generate_synthetic_frames.py`、`collect_frames.py`、`dataset_check.py` 与测试 |
 | 数据 | `data/posture/capture.jsonl` 已按 10 字段基线重生成：3,974 帧 / 14 人 / 0 errors |
-| 模型 | v3 head LOSO：A 版 16 维、3,300 参数，OOF macro-F1 0.7759 / accuracy 0.7765 / forward_head F1 0.7142；B 版 148 维、11,748 参数，OOF macro-F1 0.7722；部署包按 A 版；尚未部署；mock 只用 `|肩倾| ≥ 8°` 与 `−neck_ratio_delta ≥ 0.08` 验证链路 |
+| 模型 | v3 head LOSO：A 版 16 维、3,300 参数，OOF macro-F1 0.7759 / accuracy 0.7765 / forward_head F1 0.7142；B 版 148 维、11,748 参数，OOF macro-F1 0.7722；部署包按 A 版并已于 2026-11-28 部署；mock 只用 `|肩倾| ≥ 8°` 与 `−neck_ratio_delta ≥ 0.08` 验证链路 |
 
 **真实采集第一批（2026-11-26）：** 12 个 jsonl 共 4,934 条，`data (2).jsonl` 与
 `data (3).jsonl` 字节级相同，去重后 3,975 帧；`collect_frames.py` 跳过 1 帧关键点越界，
@@ -221,7 +222,7 @@ Tauri WebView
 - [ ] Tauri 能打开摄像头，MediaPipe 在本地加载并输出 33 关键点。
 - [ ] 演示机连续 60 秒 ≥15 fps，关键点不中断。
 - [ ] 只上传关键点：抓包/日志检查无原始图像或视频。
-- [x] ModelArts 在线推理可调用（无 endpoint 时用 mock，并在界面标注“mock”）——mock 全链路已实测；训练包 v1（特征契约 v2）与离线报告已完成，真实 endpoint 待开通。
+- [x] ModelArts 在线推理可调用——2026-11-28 已部署 v3 head A 版，`/posture/infer` 实测 `source=huawei`；mock 只用于本地联调。
 - [ ] 客户端可显示“基准 / 头前伸 / 明显侧倾 / 不可判定”四类结果与引导框；只做基准线与局部调整提示，不做 3D/复杂动效。
 - [ ] 关摄像头、断网、ModelArts 超时三种降级都能演示。
 - [ ] 姿态页有免责声明与隐私开关。
@@ -321,7 +322,7 @@ Tauri WebView
 - 2026-11-26 特征契约 v3 落地：去掉 z 轴量，改为 2D 颈长比/头偏移 + 个人基线偏差；
   `data/posture/capture.jsonl` 已按 v3 重生成，`dataset_check` 0 errors。
 - 2026-11-26 v3 内部 LOSO：B 版 macro-F1 0.7305、accuracy 0.7323，forward_head F1 0.603；
-  报告在 `scripts/modelarts/reports/v3-loso/`。尚未部署。
+  报告在 `scripts/modelarts/reports/v3-loso/`；该版未部署，后续以 v3 head A 版部署。
 - 仍未完成：扩样与重采（s01 / s03 / s20，≥20 人）、线上个人基线校准、真实 endpoint。
 
 ## 10. 摄像头姿态：记录与报告（不弹通知）
@@ -390,7 +391,7 @@ Tauri WebView
 | 本地资源 | 已打包，不走 CDN | `public/models/pose_landmarker_lite.task`（5.5 MB）、`public/mediapipe/wasm/*`（14.6 MB + 334 KB），本地 200 可访问 |
 | 测试 | 167 passed | `python -m pytest -q`；前端 `pnpm build` 通过 |
 
-真实 ModelArts endpoint 尚未开通（**需付费**），因此当前所有推理结果都带 `source: "mock"`，界面显示「演示模型」，不得对外表述为「已接入华为云推理」。
+真实 ModelArts endpoint 已于 2026-11-28 开通并验证，推理结果带 `source: "huawei"`；mock 仅用于本地联调。由于只有 14 人、单一设备/场景，精度仍不得写成真实准确率，对外只陈述“已接入华为云推理”。
 
 ### A.2 请求/响应（实现后的精确契约）
 
@@ -505,5 +506,5 @@ Tauri WebView
 | 客户端 | 「校准坐姿 · 10 秒」连续取样后调用 `/posture/baseline`，结果写本机 `riseloop.posture.prefs.v1`；之后每次 `/posture/infer` 带 `baseline`，未校准时省略并回退总体中位数 |
 | 本机冒烟 | 当前代码生成的部署包加载 `model.pt`，对 `s01-000000` 返回 `baseline` / `0.596057`，与 `smoke_test.json` 一致 |
 | 测试 | 后端 167 passed；api-client 12 passed；Tauri 前端 `pnpm build` 通过 |
-| 未完成 | ModelArts endpoint 未开通；14 人、单一设备/场景；s01 / s03 / s20 需重采，扩到 ≥20 人后再更新指标 |
+| 未完成 | 14 人、单一设备/场景；s01 / s03 / s20 需重采，扩到 ≥20 人后再更新指标；断网/关摄像头/ModelArts 超时三条降级待在演示机逐条过 |
 

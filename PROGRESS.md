@@ -1,24 +1,26 @@
 # Rise Loop 进度与待办
 
-> 更新：2026-11-17。README 讲产品与四问，**实现进度以本文件为准**。
+> 更新：2026-11-28。README 讲产品与四问，**实现进度以本文件为准**。
 > 状态口径：✅ 已实现并验证 / 🟡 有代码但未接线或未验证 / ⬜ 只有骨架或文档承诺。
 > `FlyTodo.md` 是个人草稿，不参与项目状态。
 
 ## 1. 一眼看现状
 
-- 核心闭环（评估 → 久坐计时 → 按状态推送动作 → 反馈 → 迁移）**已实现**，云端链路已跑通，默认只展示云端模式。
-- 但**云端资源尚未开通**：DCS、RDS 只有适配层，没有一通到底的真实调用；ModelArts 已有 v0 训练包与离线报告，仍缺真实 endpoint；OBS、KMS 未接线。
+- 核心闭环（评估 → 久坐计时 → 按状态推送动作 → 反馈 → 迁移）**已实现**，并已在华为云完成真实部署与公网验证（2026-11-28），默认只展示云端模式。
+- 华为云资源已按一次性测试开通并验证：Flexus L（2C4G）+ RDS PostgreSQL + DCS Redis + ModelArts 在线服务，公网 API 走 Docker Compose；OBS 只用于模型包分发，KMS 未接线。测试资源按月/按小时计费，不再使用需按部署记录释放。
 - 云服务核心（2026-11-15 定）：**DCS for Redis + RDS for PostgreSQL + ModelArts 在线服务**三件为必接项；CodeArts 退为研发工具，不参与运行时；OBS / KMS 为可选加分项；AgentArts 为可选的问答编排替身。
 - 交付物缺口集中在架构素材、演示数据与作品书评审；仓库空目录已清零（8 个约定目录 + 3 个残留空目录删除，README 去掉两处占位图）。
-- 最近一次验证（2026-11-17）：
+- 最近一次验证（2026-11-28）：
 
 | 检查 | 结果 |
 |---|---|
 | `python -m pytest -q` | ✅ 167 passed（含跨语言对拍、鉴权生命周期、姿态契约与头肩机位回归） |
-| `packages/api-client` `node --test` | ✅ 8 passed |
+| `packages/api-client` `node --test` | ✅ 12 passed |
 | `pnpm build` | ✅ 通过（有 chunk 体积告警） |
-| `cargo check --lib --tests` | ✅ 通过 |
-| `cargo test` | ✅ 21 passed（含摄像头日志追加测试、动作会话 7 项） |
+| `cargo test --lib` | ✅ 21 passed |
+| 公网链路 `smoke.py` | ✅ OK（注册 → 评估 → 久坐时间 → 干预 → 反馈 → 姿态基线/推理） |
+| 云端依赖 | ✅ `store_backend=sql`、`cloud_provider=huawei`；RDS 8 ms、DCS 1.57 ms |
+| 真实推理 | ✅ `/posture/infer` 返回 `source=huawei`，延迟 101.1 ms，结果写入 RDS |
 
 > 2026-11-23 复跑：`python -m pytest -q` 153 passed、`api-client` 8 passed、`cargo test` 20 passed、`pnpm build` 通过。
 
@@ -31,13 +33,13 @@
 | 跨语言一致性测试 | ✅ | `packages/intervention-engine/tests/test_cross_language.py`：25 个场景 Python/JS 全字段对拍，桥接脚本 `scripts/engine_dump.mjs` |
 | 安全中间件（8 类红旗短路） | ✅ | `app/core/safety.py`，命中直接 403 + 就医提示 |
 | BRLI 风险指数 | 🟡 | 规则版 V1 有单测，已接 `/posture/risk`，未校准 |
-| 姿态分类推理（ModelArts） | 🟡 | v1 训练包是合成数据历史包（test macro-F1 0.9670，不能外推）；v3 head 内部 LOSO 用 16 维（9 公开 + 7 头部 delta），A 版 OOF macro-F1 0.7759、forward_head F1 0.7142，报告在 `reports/v3-loso-head/`；**尚未部署、无真实 endpoint**，现走 v3 mock + 端侧降级 |
+| 姿态分类推理（ModelArts） | ✅ | v3 head A 版（16 维、3,300 参数）已部署为在线服务：14 折 LOSO OOF macro-F1 0.7759、forward_head F1 0.7142，不能当对外准确率；2026-11-28 实测 `/posture/infer` 返回 `source=huawei`、延迟约 101 ms，结果写 RDS。v1 合成数据包仅作历史 |
 | 循证知识库 | ✅ | 39 条证据台账（PubMed 36 / WHO 1 / CDC 1 / NIOSH 1，共 40 个主题归属）+ `articles.json` 7 条问答语料，`scripts/validate_evidence.py` 0 error |
-| 知识库问答 | ✅ | 本地检索 + citations（`data/knowledge/articles.json` 8 条）；无命中明确回答“资料中没有”。AgentArts 增强为可选，未接入 |
+| 知识库问答 | ✅ | 本地检索 + citations（`data/knowledge/articles.json` 7 条）；无命中明确回答“资料中没有”。AgentArts 增强为可选，未接入 |
 | 限流 | ✅ | `app/core/ratelimit.py`：按 token 指纹或 IP 滑动窗口，登录类接口单独更严；超限 429 + `Retry-After` |
 | JWT 刷新 / 吊销 | ✅ | `/auth/refresh` 轮换刷新令牌、`/auth/logout` 吊销 jti；黑名单只存 jti 与到期时间，到期自动清理。客户端撞到 401 先用刷新令牌换新的一对再重放请求（并发只换一次），退出时连带服务端吊销；钥匙串用访问令牌 + 刷新令牌两个槽位 |
 | 账户删除 | ✅ | `DELETE /auth/account`：内存态与 SQL 态都清用户及其全部数据 |
-| 接口清单 | ✅ | `docs/architecture/api-surface.md`：全量路由、错误码、mock/真机切换、待开通资源清单；`/health/capabilities` 可自查 |
+| 接口清单 | ✅ | `docs/architecture/api-surface.md`：全量路由、错误码、mock/huawei 切换、实测配置与资源清单；`/health/capabilities` 可自查 |
 
 ## 3. 客户端（Tauri 2 + Vue 3）
 
@@ -53,7 +55,7 @@
 | 动作页（分步展示 + 反馈） | ✅ | 去掉动作标题与多动作标签页：一个动作按步骤一步步展示、字号放大，计时器按步骤倒计时（按步骤文字里的「秒/次/组」推算，压进 10–75 秒后整体拟合到标签时长，估短了等比放大、估长了等比缩回，每步留 20%、至少 3 秒弹性），做完自动进下一步；S2 一轮串 2–3 条动作、合计满 5 分钟才进反馈，其余状态一条做完即进反馈；反馈卡只在全程走完、或点「结束运动」后出现；倒计时改由 Rust 会话推进，窗口隐藏也不掉秒；左栏摄像头与参考图同宽成组，计时块固定在右栏底部 |
 | 动作页取景 | ✅ | 取景按动作算（`src/data/actionFraming.js`）：坐姿只框上体、站立才要求膝盖、呼吸类不要求对齐；只画两端都看得见的骨头；「只看骨架」开关默认关、记忆在本地；画面默认显示可折叠，收起即关摄像头 |
 | 干预遮罩与倒计时 | ✅ | 覆盖 content-pane，含权威来源 |
-| 姿态监测与隐私开关 | 🟡 | 端侧关键点已通，真人关键点经手动验证正常；10 秒中立位校准已接 `/posture/baseline`，侧倾/前倾精度待扩样验证 |
+| 姿态监测与隐私开关 | 🟡 | 端侧关键点与 10 秒中立位校准已接 `/posture/baseline`；2026-11-28 已接真实 ModelArts，侧倾/前倾精度仍待扩样验证 |
 | 摄像头按需采样 | ✅ | 到点才开摄像头、采一帧就关；窗口在后台或动作页占用时跳过；头像菜单「会话记录」里分「操作记录 / 摄像头」两个页签，摄像头页显示当前状态与最近记录；日志落在 `%LOCALAPPDATA%\com.riseloop.app\logs\camera.log` |
 | 动作推荐排序 | ✅ | 当前状态优先；同状态先挑「不起身的工位可做」动作（`desk_friendly`），再按部位重合与时长；S1 补了坐姿伸膝与踝泵，云端 `_rank_actions`、MCP `get_actions_by_state` 两处同规则 |
 | 动作库文案 | ✅ | 15 个动作都拆成 4–5 步、每步自成一句（不出现「重复 N 轮」这种概括写法），深呼吸之间留出停顿；`duration_minutes` 按推算时长对齐到 1–3 分钟；工位动作在选择框、通知窗、方案卡三处标「工位可做」。11.15 增补 6 条：坐姿收下巴、坐姿胸椎旋转、靠墙俯卧撑、坐姿小腿泵、靠墙静蹲、坐姿髋绕环 |
@@ -69,7 +71,7 @@
 |---|---|---|
 | README（四问） | ✅ | 保持现状，不再往里面堆进度；两处占位图（demo.gif、architecture.png）已移除，仓库内无死链 |
 | `infra/docker` | ✅ | `docker-compose.cloud.yml`、`docker-compose.dev.yml`、`env.example` 三个文件；镜像由 `apps/cloud-api/Dockerfile` 构建 |
-| `infra/huawei-cloud` | ✅ | `README.md`：云服务接入与公网验证步骤；`cloud-test-checklist.md`：一次性链路测试的规格、预算与删除清单；云端资源仍未开通 |
+| `infra/huawei-cloud` | ✅ | `README.md`：复现与验证步骤；`cloud-test-checklist.md`：开通前的规格、预算与删除清单；`deployed-config.md`：2026-11-28 实测配置与结果；资源已开通并验证 |
 | `infra/k8s` | ⬜ | 不存在，本期部署走 Docker Compose on ECS，不上 CCE |
 | 架构图 / 演示素材 | ⬜ | 目录已删除，图未画；logo 现成：`apps/desktop-tauri/src-tauri/icons/appIcon.{ico,svg}` |
 | 演示数据脚本 | ⬜ | 未生成；落地时新建 `data/seeds` |
@@ -94,8 +96,8 @@
 - [x] 客户端接入刷新令牌（Rust 钥匙串加槽位 + api-client 自动续期）
 
 ### 11.17 姿态识别 + 风险融合
-- [ ] 开通 ModelArts 在线服务，上传 v0 模型包（`customize_service.py` / `posture_runtime.py` / `model.py` / `model.pt` / `feature_spec.json`）
-- [ ] 首次真实调用确认请求包络（裸 JSON vs `{"data": ...}`），填 `.env`，`/posture/infer` 返回 `source=huawei`
+- [x] 开通 ModelArts 在线服务并部署 v3 head A 版模型包（2026-11-28）
+- [x] 首次真实调用确认鉴权与包络（`Authorization: Bearer`、endpoint 末尾带 `/`），`/posture/infer` 返回 `source=huawei`（2026-11-28）
 - [ ] 真实环境验证断网、关摄像头、ModelArts 超时三条回退
 - [ ] 抓包确认不含原始画面；日志不打印关键点数组
 - [x] 真人关键点验证正常
@@ -114,7 +116,7 @@
 ### 11.20 MVP 冻结
 - [ ] 姿态特征 → BRLI → 干预方案全链路串起来
 - [x] 跨语言状态机一致性测试（Python vs JS 对拍）
-- [ ] RDS/DCS 真实接线（当前 mock）
+- [x] RDS/DCS 真实接线（2026-11-28 已验证）
 - [ ] P0 缺陷清零
 
 ### 11.25 文档与修缺陷
@@ -143,7 +145,16 @@
 - [x] 部署包重新生成并用当前 `customize_service.Model` 冒烟通过
 - [x] 密钥清理：`SecretStr` 包裹 JWT/RDS/Redis/OBS/KMS/ModelArts/CodeArts 密钥，删除未使用的 KMS AK/SK，prod 拒绝默认 JWT secret
 - [x] 后端 167 个测试、api-client 12 个测试、Tauri 前端构建通过
-- [ ] 开通 ModelArts endpoint 后按 `cloud-test-checklist.md` 验证真实调用与三条降级
+- [x] 真实调用已验证（`source=huawei`，延迟 101 ms）；三条降级（断网/关摄像头/超时）仍待在演示机逐条过
+
+### 11.28 华为云真实部署
+
+- [x] Flexus L（Ubuntu 24.04，2C4G，50GB，3Mbps/400GB）+ Docker Compose 部署 `cloud-api`，公网 `:8000` 可达
+- [x] RDS PostgreSQL 18（单机 2C4G / 40GB）与 DCS Redis 7.0（单机 1GB）同 VPC `vpc-default-smb`，`/health/ready` 200
+- [x] OBS `riseloop-models-20261128` 上传 v3 head A 版 6 个文件；ModelArts `service-af70` 部署 8C32G / 1 副本
+- [x] `cloud_provider=huawei` + `store_backend=sql`；公网 smoke OK；`/posture/infer` 返回 `source=huawei`
+- [ ] 关闭 8000 公网放行或改 HTTPS；轮换测试期口令与 API Key
+- [ ] 设置 ModelArts 自动停止，并按需释放 RDS/DCS/Flexus；实测配置见 `infra/huawei-cloud/deployed-config.md`
 
 ### 11.26 演示与录屏
 - [ ] 录屏脚本按最新界面重写
@@ -178,10 +189,13 @@
 
 ## 8. 已知风险
 
-- **没上云**：所有云服务仍是 mock，对外材料必须写清"适配层已就绪，资源待开通"。
+- **测试环境是 HTTP + 公网 8000**：没有 ELB/HTTPS，8000 入方向 `0.0.0.0/0`；对外材料只能写“公网链路已验证”，不能写成“已上云验收”。测试结束应关端口、轮换口令与 API Key。
+- **ModelArts 自签证书**：调用地址是 IP + 自签证书，测试期用 `RISELOOP_MODELARTS_TLS_VERIFY=false`；正式环境应换域名或把 CA 装进镜像。
+- **ModelArts 按需计费**：8C32G ¥3.40/小时，未设自动停止会持续计费；单副本无高可用。
+- **姿态精度仍不可对外**：v3 head 只有 14 人、单一设备/场景，LOSO macro-F1 0.7759 只能作内部评估。
 - **MCP 与运行时未接线**：cloud-api 运行时直接调 Store；`services/mcp-servers` 的 3 个工具与 `services/skills` 的 4 个 Skill 仍是独立资产，未被运行时调用（本条只记录，不在本线实现）。
 - **S2 轮次规则写在端侧**：一轮串几条、合计满 5 分钟才收，由 `ActivityPanel.vue` 的 `ROUND_MIN_MINUTES` 决定；改 `DURATION_BY_STATE[S2]` 的下限要同步这一处。
 - 两套状态机靠人工同步，任何一侧改动都要同步另一侧。
-- **迁移 SQL 缺表**：ORM 有 `revoked_tokens` 与 `posture_summaries`，`infra/migrations/0001_init.sql` 未建，真实接线 RDS 前要补。
+- **迁移 SQL 缺表**：真实 RDS 已由 ORM 建出 10 张表（含 `revoked_tokens`、`posture_summaries`），但 `infra/migrations/0001_init.sql` 仍未补，换库只能依赖 create_all。
 - 自制通知若自行实现，会绕开系统"专注助手"，需要自带免打扰开关。
 - Windows 通知点击只在通知仍在屏幕时上报，错过就没有历史。

@@ -3,9 +3,7 @@
 目标：一台云主机上用 Compose 起 `cloud-api`，`/health/ready` 返回 200，并从公网跑通
 注册 → 评估 → 上报久坐时间 → 反馈 → 状态迁移。
 
-用途：一次性云链路测试。初赛只提交 `docs/submission`，无答辩、无常驻环境；测试完按
-[`cloud-test-checklist.md`](cloud-test-checklist.md) §7 删除。本文只写技术前提、步骤与验证，
-规格、预算与开通顺序见该清单。
+用途：一次性云链路测试。2026-11-28 已按本手册完成一次真实部署并验证（Flexus L + RDS + DCS + ModelArts + OBS），实测配置与结果见 [`deployed-config.md`](deployed-config.md)。初赛只提交 `docs/submission`，无答辩、无常驻环境；测试完按 [`cloud-test-checklist.md`](cloud-test-checklist.md) §7 删除。本文只写技术前提、步骤与验证，规格、预算与开通顺序见该清单。
 
 ## 1. 前置条件
 
@@ -226,6 +224,8 @@ PowerShell：`$env:VITE_API_BASE="http://<公网IP>:8000"` 后再 `pnpm build`�
 | 客户端连不上 | 公网 IP 变了，`VITE_API_BASE` 是构建期常量，需重新构建 |
 
 ## 11. 验收清单
+
+2026-11-28 实测：除故障演练项外均已通过；具体值见 [`deployed-config.md`](deployed-config.md)。
 
 - [ ] 干净机器按 §2–§5 复现，`/health/ready` 返回 200。
 - [ ] `/health/capabilities` 显示 `store_backend=sql`、`cloud_provider=huawei`。
