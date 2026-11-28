@@ -72,7 +72,8 @@ access 过期(401 token_expired) → POST /auth/refresh（换新一对，旧的�
 | `RISELOOP_RDS_DSN` 或 `RDS_HOST/RDS_USER/RDS_DB/RDS_PASSWORD` | 配了就走 SQL 存储，否则内存存储 |
 | `RISELOOP_REDIS_URL` 或 `REDIS_HOST` | 配了实时状态走 DCS，否则进程内存 |
 | `RISELOOP_MODELARTS_ENDPOINT / _API_KEY / _PROJECT_ID / _MODEL_NAME` | 姿态推理；不配时 `/posture/infer` 返回 503，端侧显式降级 |
-| `RISELOOP_CODEARTS_ENDPOINT / _API_KEY / _PLANNING_AGENT_ID / _EXECUTING_AGENT_ID` | 问答与规划智能体 |
+| `RISELOOP_CODEARTS_ENDPOINT / _API_KEY / _PLANNING_AGENT_ID / _EXECUTING_AGENT_ID` | 问答与规划智能体（AgentArts，未开通） |
+| `RISELOOP_MAAS_ENDPOINT / _API_KEY / _MODEL` | 问答生成：MaaS 预置模型（西南-贵阳一，跨区调用；未配置时走知识库原文） |
 | `RISELOOP_OBS_*`、`RISELOOP_KMS_*` | 对象存储与密钥托管，业务尚未接线 |
 | `RISELOOP_JWT_SECRET` | **上线必须换**，默认值是本地开发用的 |
 | `RISELOOP_JWT_TTL_SECONDS / JWT_REFRESH_TTL_SECONDS` | 访问 1 小时 / 刷新 30 天 |

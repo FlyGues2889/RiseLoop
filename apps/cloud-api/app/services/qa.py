@@ -60,20 +60,44 @@ async def answer_question(
     articles = search_articles(request.question)
     answer = compose_answer(articles)
 
-    if settings.cloud_provider == "huawei" and cloud.codearts.configured:
-        try:
-            result = await cloud.codearts.invoke(
-                "planning",
-                {"question": request.question, "citations": [a["citation"] for a in articles]},
-            )
-            remote = result.get("output", {}).get("message")
-            if isinstance(remote, str) and remote.strip():
-                answer = _clip(remote)
-        except Exception:
-            pass
-
     session = await store.get_session(user_id)
     state_hint = request.state or (session.state.value if session else None)
+
+    # 检索不到条目就不问大模型：没有依据的生成就是编造，宁可直说资料里没有。
+    # 优先用 MaaS 预置模型，未配置时再退回 AgentArts 智能体，两者都失败就保留检索原文。
+    if articles and settings.cloud_provider == "huawei":
+        cited = [
+            {
+                "id": article["citation"],
+                "title": article["title"],
+                "summary": article.get("summary", ""),
+                "actions": article.get("actions", []),
+            }
+            for article in articles
+        ]
+        if cloud.maas.configured:
+            try:
+                answer = _clip(await cloud.maas.answer(request.question, cited, state_hint))
+            except Exception:
+                pass
+        elif cloud.codearts.configured:
+            try:
+                result = await cloud.codearts.invoke(
+                    "planning",
+                    {
+                        "task": "answer_question",
+                        "question": request.question,
+                        "state": state_hint,
+                        "body_parts": request.body_parts,
+                        "citations": cited,
+                    },
+                )
+                remote = result.get("output", {}).get("message")
+                if isinstance(remote, str) and remote.strip():
+                    answer = _clip(remote)
+            except Exception:
+                pass
+
     citations = [article["citation"] for article in articles]
     await store.add_qa_log(user_id, request.question, answer, citations)
 

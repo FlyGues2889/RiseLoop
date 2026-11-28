@@ -71,6 +71,12 @@ class Settings(BaseSettings):
     codearts_executing_agent_id: str | None = None
     codearts_timeout_seconds: float = 10.0
 
+    # MaaS 预置模型服务（西南-贵阳一），跨区调用；不配就走知识库原文
+    maas_endpoint: str | None = None
+    maas_api_key: SecretStr | None = None
+    maas_model: str = "openpangu-2.1-pro"
+    maas_timeout_seconds: float = 8.0
+
     obs_endpoint: str | None = None
     obs_bucket: str | None = None
     obs_region: str = ""
