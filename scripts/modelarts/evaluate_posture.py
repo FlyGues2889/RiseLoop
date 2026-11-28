@@ -26,12 +26,12 @@ import torch
 from torch.utils.data import DataLoader, Dataset
 
 from posture_contract import (
-    FEATURE_ORDER,
     FEATURE_SPEC_VERSION,
     LABELS as LABEL_ORDER,
     ContractError,
     features_from_keypoints as compute_features,
-    features_vector,
+    model_features_from_keypoints as compute_model_features,
+    model_features_vector,
     validate_keypoints,
 )
 from metrics_util import compute_metrics
@@ -58,11 +58,11 @@ def _normalise_points(raw) -> list[dict[str, float]]:
     ]
 
 
-def build_input_vector(input_version: str, keypoints, features) -> list[float]:
+def build_input_vector(input_version: str, keypoints, model_features) -> list[float]:
     if input_version == "A":
-        return features_vector(features)
+        return model_features_vector(model_features)
     if input_version == "B":
-        return coordinates_vector(keypoints) + features_vector(features)
+        return coordinates_vector(keypoints) + model_features_vector(model_features)
     raise ContractError("input_version must be A or B")
 
 
@@ -74,7 +74,7 @@ class EvalDataset(Dataset):
         labels = []
         for row in rows:
             raw = np.asarray(
-                build_input_vector(row["version"], row["points"], row["features"]),
+                build_input_vector(row["version"], row["points"], row["model_features"]),
                 dtype=np.float64,
             )
             vectors.append((raw - mean) / std)
@@ -133,12 +133,20 @@ def _load_rows(path: Path, frame_ids: set[str], warnings: list[str]) -> list[dic
             except ContractError:
                 skipped += 1
                 continue
+            raw_baseline = record.get("baseline")
+            try:
+                features = compute_features(points, raw_baseline)
+                model_features = compute_model_features(points, raw_baseline)
+            except ContractError:
+                skipped += 1
+                continue
             rows.append(
                 {
                     "frame_id": frame_id,
                     "label": label,
                     "points": points,
-                    "features": compute_features(points),
+                    "features": features,
+                    "model_features": model_features,
                 }
             )
     if skipped:
@@ -249,7 +257,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             continue
         prepared = [
             {"frame_id": row["frame_id"], "label": row["label"], "points": row["points"],
-             "features": row["features"], "version": version}
+             "features": row["features"], "model_features": row["model_features"],
+             "version": version}
             for row in rows
         ]
         predictions, _ = _predict(model, meta, prepared)
@@ -277,7 +286,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     model, meta = load_checkpoint(str(artifacts / "model.pt"))
     prepared = [
         {"frame_id": row["frame_id"], "label": row["label"], "points": row["points"],
-         "features": row["features"], "version": chosen}
+         "features": row["features"], "model_features": row["model_features"],
+         "version": chosen}
         for row in rows
     ]
     predictions, _ = _predict(model, meta, prepared)

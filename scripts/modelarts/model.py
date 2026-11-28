@@ -10,10 +10,12 @@ import torch
 from torch import nn
 
 from posture_runtime import (
+    BASELINE_FIELDS,
     FEATURE_ORDER,
     FEATURE_SPEC_VERSION,
     LABELS,
     MIN_MODEL_CONFIDENCE,
+    MODEL_FEATURE_ORDER,
 )
 
 # Version-B coordinate preprocessing: shoulder midpoint origin, shoulder width scale.
@@ -78,6 +80,10 @@ def load_checkpoint(path: str, map_location: str = "cpu") -> tuple[PostureMLP, d
         raise ValueError("checkpoint label order does not match runtime")
     if meta.get("feature_names") != list(FEATURE_ORDER):
         raise ValueError("checkpoint feature order does not match runtime")
+    if meta.get("model_feature_order") != list(MODEL_FEATURE_ORDER):
+        raise ValueError("checkpoint model feature order does not match runtime")
+    if meta.get("baseline_fields") != list(BASELINE_FIELDS):
+        raise ValueError("checkpoint baseline fields do not match runtime")
     model = build_model(meta)
     model.load_state_dict(payload["state_dict"])
     model.eval()

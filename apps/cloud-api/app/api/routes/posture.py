@@ -1,11 +1,29 @@
 from fastapi import APIRouter, HTTPException
 
 from ..deps import CloudDep, StoreDep, UserIdDep
-from ...schemas.posture import PostureInferRequest, PostureInferResponse, PostureRiskRequest, PostureRiskResponse
+from ...schemas.posture import (
+    PostureBaselineRequest,
+    PostureBaselineResponse,
+    PostureInferRequest,
+    PostureInferResponse,
+    PostureRiskRequest,
+    PostureRiskResponse,
+)
 from ...services.posture import handle_posture_risk
+from ...services.posture_features import baseline_from_frames
 from ...services.posture_infer import InferenceUnavailable, handle_posture_infer
 
 router = APIRouter(tags=["posture"])
+
+
+@router.post("/posture/baseline", response_model=PostureBaselineResponse)
+async def posture_baseline(
+    payload: PostureBaselineRequest, user_id: UserIdDep
+) -> PostureBaselineResponse:
+    return PostureBaselineResponse(
+        baseline=baseline_from_frames(payload.frames),
+        frames=len(payload.frames),
+    )
 
 
 @router.post("/posture/risk", response_model=PostureRiskResponse)

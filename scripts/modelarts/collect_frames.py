@@ -108,15 +108,11 @@ def _baselines(
     baselines: dict[str, dict[str, float]] = {}
     for subject, values in samples.items():
         baselines[subject] = {
-            "shoulder_tilt_deg": round(
-                statistics.median(value["shoulder_tilt_deg"] for value in values), 2
-            ),
-            "neck_ratio": round(
-                statistics.median(value["neck_ratio"] for value in values), 4
-            ),
-            "head_offset_ratio": round(
-                statistics.median(value["head_offset_ratio"] for value in values), 4
-            ),
+            name: round(
+                statistics.median(value[name] for value in values),
+                2 if name in ("shoulder_tilt_deg", "head_roll_deg") else 4,
+            )
+            for name in BASELINE_ORDER
         }
     return baselines
 

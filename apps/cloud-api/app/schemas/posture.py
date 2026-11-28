@@ -73,6 +73,14 @@ class PostureBaseline(BaseModel):
     shoulder_tilt_deg: float = Field(default=0.0, ge=-90.0, le=90.0)
     neck_ratio: float = Field(default=0.65, ge=-6.0, le=6.0)
     head_offset_ratio: float = Field(default=0.0, ge=-6.0, le=6.0)
+    # 头部几何量：模型内部使用，不进公开 PostureFeatures 契约。
+    head_scale: float = Field(default=0.3859, ge=-100.0, le=100.0)
+    eye_scale: float = Field(default=0.2082, ge=-100.0, le=100.0)
+    face_height: float = Field(default=0.1059, ge=-100.0, le=100.0)
+    ear_shoulder_y: float = Field(default=0.7748, ge=-100.0, le=100.0)
+    head_roll_deg: float = Field(default=1.2305, ge=-180.0, le=180.0)
+    nose_ear_y: float = Field(default=0.2679, ge=-100.0, le=100.0)
+    ear_mid_offset: float = Field(default=-0.0045, ge=-100.0, le=100.0)
 
 
 class PostureFeatures(BaseModel):
@@ -139,15 +147,39 @@ class PostureInferRequest(PostureContext):
 
     @model_validator(mode="after")
     def _validate_keypoints(self) -> "PostureInferRequest":
-        names = [point.name.strip().lower() for point in self.keypoints]
-        if len(names) != len(MEDIAPIPE_33):
-            raise ValueError(f"需要 {len(MEDIAPIPE_33)} 个关键点，实际收到 {len(names)} 个")
-        for index, (actual, expected) in enumerate(zip(names, MEDIAPIPE_33)):
-            if actual != expected:
-                raise ValueError(
-                    f"关键点顺序不符：索引 {index} 应为 {expected}，实际为 {actual}"
-                )
+        _validate_keypoint_sequence(self.keypoints)
         return self
+
+
+def _validate_keypoint_sequence(keypoints: list[Keypoint]) -> None:
+    names = [point.name.strip().lower() for point in keypoints]
+    if len(names) != len(MEDIAPIPE_33):
+        raise ValueError(f"需要 {len(MEDIAPIPE_33)} 个关键点，实际收到 {len(names)} 个")
+    for index, (actual, expected) in enumerate(zip(names, MEDIAPIPE_33)):
+        if actual != expected:
+            raise ValueError(
+                f"关键点顺序不符：索引 {index} 应为 {expected}，实际为 {actual}"
+            )
+
+
+class PostureBaselineRequest(BaseModel):
+    """10 秒中立位校准：多帧 33 点，服务端取逐字段中位数。"""
+
+    frames: list[list[Keypoint]] = Field(min_length=3, max_length=120)
+
+    @model_validator(mode="after")
+    def _validate_frames(self) -> "PostureBaselineRequest":
+        for index, frame in enumerate(self.frames):
+            try:
+                _validate_keypoint_sequence(frame)
+            except ValueError as exc:
+                raise ValueError(f"第 {index + 1} 帧：{exc}") from exc
+        return self
+
+
+class PostureBaselineResponse(BaseModel):
+    baseline: PostureBaseline
+    frames: int
 
 
 class PostureGuidance(BaseModel):

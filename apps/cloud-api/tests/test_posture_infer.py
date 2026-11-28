@@ -1,3 +1,5 @@
+import statistics
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -5,7 +7,7 @@ from app.cloud.modelarts import ModelArtsError
 from app.core.config import Settings
 from app.main import create_app
 from app.schemas.posture import MEDIAPIPE_33, Keypoint
-from app.services.posture_features import extract_features
+from app.services.posture_features import baseline_from_keypoints, extract_features
 
 
 @pytest.fixture()
@@ -211,6 +213,58 @@ def test_infer_returns_503_when_mock_disabled():
 def test_infer_in_openapi(client):
     schema = client.get("/openapi.json").json()
     assert "/posture/infer" in schema["paths"]
+    assert "/posture/baseline" in schema["paths"]
+
+
+def test_baseline_endpoint_returns_median_of_frames(client, auth_headers):
+    poses = [_pose(nose={"y": 0.18 + delta}) for delta in (0.0, 0.005, -0.005, 0.01)]
+    response = client.post(
+        "/posture/baseline", json={"frames": poses}, headers=auth_headers
+    )
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["frames"] == len(poses)
+    assert set(body["baseline"]) == {
+        "shoulder_tilt_deg",
+        "neck_ratio",
+        "head_offset_ratio",
+        "head_scale",
+        "eye_scale",
+        "face_height",
+        "ear_shoulder_y",
+        "head_roll_deg",
+        "nose_ear_y",
+        "ear_mid_offset",
+    }
+    values = [
+        baseline_from_keypoints([Keypoint(**point) for point in pose]).neck_ratio
+        for pose in poses
+    ]
+    assert body["baseline"]["neck_ratio"] == pytest.approx(
+        statistics.median(values), abs=1e-4
+    )
+
+
+def test_baseline_endpoint_rejects_too_few_frames(client, auth_headers):
+    response = client.post(
+        "/posture/baseline", json={"frames": [_pose(), _pose()]}, headers=auth_headers
+    )
+    assert response.status_code == 422
+
+
+def test_baseline_endpoint_rejects_wrong_keypoint_order(client, auth_headers):
+    pose = _pose()
+    pose[0], pose[1] = pose[1], pose[0]
+    response = client.post(
+        "/posture/baseline", json={"frames": [pose, pose, pose]}, headers=auth_headers
+    )
+    assert response.status_code == 422
+    assert "关键点顺序不符" in response.text
+
+
+def test_baseline_endpoint_requires_auth(client):
+    response = client.post("/posture/baseline", json={"frames": [_pose()] * 3})
+    assert response.status_code == 401
 
 
 def test_mock_predict_zero_shoulder_width_is_undetermined():

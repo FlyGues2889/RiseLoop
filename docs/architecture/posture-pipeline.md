@@ -1,15 +1,16 @@
-# 端云姿态感知链路（11.10 路线决策，11.23 模型 v1 / 特征契约 v2，11.26 契约 v3）
+# 端云姿态感知链路（11.10 路线决策，11.23 模型 v1 / 特征契约 v2，11.26 契约 v3，11.28 16 维模型与基线校准）
 
 > 2026-11-23：姿态模型 v1（特征契约 v2）训练包与离线报告已完成；真实 ModelArts endpoint 尚未开通，当前线上仍是 mock 几何规则。
-> 2026-11-26：第一批真实采集完成（14 人、去重后 3,974 帧）；特征契约 v3（2D 几何 + 个人中立位基线）已落地，真实与合成数据都已按 v3 重生成。v3 内部 LOSO 已完成（B 版 OOF macro-F1 0.7305），尚未部署；对外报告仍只引用 v1/v2 合成数据结果。
+> 2026-11-26：第一批真实采集完成（14 人、去重后 3,974 帧）；特征契约 v3（2D 几何 + 个人中立位基线）已落地，真实与合成数据都已按 v3 重生成。
+> 2026-11-28：v3 head 在公开 9 特征外增加 7 个头部几何 delta（模型输入 16 维）；A 版 OOF macro-F1 0.7759、forward_head F1 0.7142，部署包按 A 版生成；新增 `/posture/baseline` 与客户端 10 秒校准；仍未部署，对外报告只引用 v1/v2 合成数据结果。
 
 ## 1. 目标与边界
 
 | 项 | 内容 |
 |---|---|
-| 目标 | 11.13 跑通“摄像头 → 本地关键点 → 云端推理 → 客户端提示”的最小链路；姿态模型 v1（特征契约 v2）已完成训练与离线评估（11.23），v3 内部 LOSO 已完成（11.26），尚未部署，真实 endpoint 待开通 |
+| 目标 | 11.13 跑通“摄像头 → 本地关键点 → 云端推理 → 客户端提示”的最小链路；姿态模型 v1（特征契约 v2）已完成训练与离线评估（11.23），v3 head 内部 LOSO 已完成（11.28，A 版 16 维 macro-F1 0.7759），尚未部署，真实 endpoint 待开通 |
 | 输入 | 摄像头画面仅在本地处理；上传归一化骨骼关键点，不上传原始图像/视频；只要求头部与双肩清晰入画，不要求全身 |
-| 云端 | ModelArts 在线推理（mock / huawei 两种云端配置）：v1 模型用 A 版 5 个派生特征 MLP；v3 改为 9 个 2D 特征 + 个人基线偏差，四分类 + 置信度 <0.5 判 `undetermined` |
+| 云端 | ModelArts 在线推理（mock / huawei 两种云端配置）：v1 模型用 A 版 5 个派生特征 MLP；v3 公开 9 个 2D 特征，模型额外用 7 个头部几何 delta（16 维），四分类 + 置信度 <0.5 判 `undetermined` |
 | 客户端 | Tauri 2 + Vue 3；叠加姿态引导框、风险解释与回退提示 |
 | 边界 | 姿态识别只用于行为指导，不做医疗诊断；安全红线仍由 `safety-check` 中间件前置 |
 
@@ -33,7 +34,7 @@
 | 工作流 | 范围 | 当前状态 | 关键依赖 |
 |---|---|---|---|
 | 端侧与前端 | Tauri、摄像头、关键点提取、隐私开关、姿态引导 UI | spike 已完成；真人关键点/演示机性能待验证 | 演示机摄像头 |
-| 云端与模型 | ModelArts、ECS/FastAPI、APIG、模型部署、性能测试 | v1 训练包与离线报告已完成（5 特征 MLP，合成数据 test macro-F1 0.9670）；v3 内部 LOSO 完成（B 版 141 维，OOF macro-F1 0.7305），尚未部署；`/posture/infer` + 适配层就绪；真实 endpoint 待开通 | ModelArts endpoint（需付费开通）、v3 扩样复评 |
+| 云端与模型 | ModelArts、ECS/FastAPI、APIG、模型部署、性能测试 | v1 训练包与离线报告已完成（5 特征 MLP，合成数据 test macro-F1 0.9670）；v3 head 内部 LOSO 完成（A 版 16 维，OOF macro-F1 0.7759、forward_head F1 0.7142），尚未部署；`/posture/infer` + `/posture/baseline` + 适配层就绪；真实 endpoint 待开通 | ModelArts endpoint（需付费开通）、v3 扩样复评 |
 | 算法与运动健康 | 数据集、姿态分类评价、风险规则、循证 JSON、动作适配 | 证据台账已完成；规则草稿/姿态评价待做 | 运康专业审核 |
 | 集成与交付 | S0–S3 集成、DCS/RDS/ModelArts、自动化测试、文档与演示 | 状态机/动作库已有；真实 DCS/RDS/ModelArts 与端到端集成未开始 | 云端环境与演示机 |
 
@@ -90,19 +91,20 @@
 `framing`（默认 `upper_body`），评估按机位分开统计。姿态能力边界仍是
 “头颈前伸与肩部不对称识别”，不宣称能测其他部位。
 
-版本关系：**当前特征契约 `v3`；v1 模型与 `reports/v1/` 仍是 `v2`**；`reports/v0/` 只作历史保留。三代指标不可直接比较；v3 内部 LOSO 已完成，尚未部署。指标只证明特征契约、训练与部署脚本可复现，**不代表真实场景准确率**；对外不得把 0.9670 或 v3 的 0.7305 写成泛化准确率。权重与原始数据不入库。
+版本关系：**当前特征契约 `v3`；v1 模型与 `reports/v1/` 仍是 `v2`**；`reports/v0/` 只作历史保留。三代指标不可直接比较；v3 head 内部 LOSO 已完成（A 版 macro-F1 0.7759），尚未部署。指标只证明特征契约、训练与部署脚本可复现，**不代表真实场景准确率**；对外不得把 0.9670 或 v3 的 0.7759 写成泛化准确率。权重与原始数据不入库。
 
-### 特征契约 v3（2026-11-26）
+### 特征契约 v3（2026-11-26，模型输入 2026-11-28）
 
 | 项 | v3 |
 |---|---|
-| 派生特征 | 9 个：`shoulder_tilt_deg`、`shoulder_width`、`shoulder_visibility`、`upper_body_visibility`、`neck_ratio`、`head_offset_ratio`、`neck_ratio_delta`、`head_offset_delta`、`tilt_delta_deg` |
-| 2D 几何 | `neck_ratio = (肩中点 y − 鼻 y) / 肩宽`；`head_offset_ratio = (鼻 x − 肩中点 x) / 肩宽` |
-| 个人基线 | 采集时取 `label=baseline` 段落的中位数；请求可带 `baseline`，缺省回退总体中立值 `tilt=0`、`neck_ratio=0.65`、`head_offset=0` |
+| 公开特征 | 9 个：`shoulder_tilt_deg`、`shoulder_width`、`shoulder_visibility`、`upper_body_visibility`、`neck_ratio`、`head_offset_ratio`、`neck_ratio_delta`、`head_offset_delta`、`tilt_delta_deg` |
+| 模型输入 | 16 维：公开 9 特征 + 7 个头部几何量相对个人基线的 delta（`head_scale`、`eye_scale`、`face_height`、`ear_shoulder_y`、`head_roll_deg`、`nose_ear_y`、`ear_mid_offset`） |
+| 2D 几何 | `neck_ratio = (肩中点 y − 鼻 y) / 肩宽`；`head_offset_ratio = (鼻 x − 肩中点 x) / 肩宽`；`head_scale = 耳宽 / 肩宽` |
+| 个人基线 | 采集时取 `label=baseline` 段落的 10 字段中位数；线上 `POST /posture/baseline` 收 3–120 帧取中位数；缺省回退总体中位数（旧 3 字段 `tilt=0`、`neck_ratio=0.65`、`head_offset=0`） |
 | 去掉 | z 轴 `head_forward_ratio`：真实数据 baseline 中位数 1.77、forward_head 1.84，p5–p95 完全重叠 |
 | 同步范围 | `apps/cloud-api`、`scripts/modelarts/posture_contract.py`、`posture_runtime.py`、`label_policy.py`、`generate_synthetic_frames.py`、`collect_frames.py`、`dataset_check.py` 与测试 |
-| 数据 | `data/posture/capture.jsonl` 已按 v3 重生成：3,974 帧 / 14 人 / 0 errors；合成数据也已重生成 |
-| 模型 | v3 内部 LOSO 已完成：B 版 141 维、11,300 参数，OOF macro-F1 0.7305 / accuracy 0.7323；尚未部署；mock 只用 `|肩倾| ≥ 8°` 与 `−neck_ratio_delta ≥ 0.08` 验证链路 |
+| 数据 | `data/posture/capture.jsonl` 已按 10 字段基线重生成：3,974 帧 / 14 人 / 0 errors |
+| 模型 | v3 head LOSO：A 版 16 维、3,300 参数，OOF macro-F1 0.7759 / accuracy 0.7765 / forward_head F1 0.7142；B 版 148 维、11,748 参数，OOF macro-F1 0.7722；部署包按 A 版；尚未部署；mock 只用 `|肩倾| ≥ 8°` 与 `−neck_ratio_delta ≥ 0.08` 验证链路 |
 
 **真实采集第一批（2026-11-26）：** 12 个 jsonl 共 4,934 条，`data (2).jsonl` 与
 `data (3).jsonl` 字节级相同，去重后 3,975 帧；`collect_frames.py` 跳过 1 帧关键点越界，
@@ -111,19 +113,21 @@
 
 | 版本 | 输入 | OOF macro-F1 | OOF accuracy | forward_head F1 |
 |---|---|---:|---:|---:|
-| A | 9 个 2D 特征 | 0.7146 | 0.7159 | 0.630 |
-| **B（选中）** | 132 坐标 + 9 个 2D 特征 | **0.7305** | **0.7323** | **0.603** |
+| **A（部署）** | 16 个模型特征 | **0.7759** | **0.7765** | **0.714** |
+| B | 132 坐标 + 16 个模型特征 | 0.7722 | 0.7743 | 0.689 |
 
-B 版每类 F1：baseline 0.677 / forward_head 0.603 / lateral_tilt 0.765 /
-undetermined 0.878。`forward_head` 召回 0.501，仍有 326 帧真前伸被判成 baseline；
-14 人、单一设备/场景，不能外推。完整报告在 `scripts/modelarts/reports/v3-loso/`。
+A 版每类 F1：baseline 0.763 / forward_head 0.714 / lateral_tilt 0.787 /
+undetermined 0.839；forward_head 召回 0.649。验证集 macro-F1 选了 B（0.7978 vs
+0.7744），但 B 的 OOF forward_head F1 未过 0.70 且输入 148 维；`--deploy-version A`
+把部署钉在 A 版，两版 OOF 都写入报告。14 人、单一设备/场景，不能外推。完整报告在
+`scripts/modelarts/reports/v3-loso-head/`。
 
 - v2 的 `head_forward_ratio` 依赖 MediaPipe `z`：baseline 中位数 1.77、forward_head 1.84，
   p5–p95 完全重叠；99% 帧超过旧 mock 阈值 0.25。旧 mock 跑这 3,974 帧得到
   forward_head 3,188、lateral_tilt 784、baseline 2、undetermined 0，因此必须换特征。
-- 跨受试者 LOSO 试算（HistGradientBoosting）：v2 的 5 特征 macro-F1 0.629；8 个 2D
-  几何量 0.643；按个人 baseline 中位数归一后 0.755；137 维坐标 0.726。v3 采用
-  2D 特征 + 基线偏差，离线试算仍不足以对外。
+- 跨受试者 LOSO 试算（HistGradientBoosting）：公开 9 特征 0.705；16 个模型特征
+  （个人基线）0.805、forward_head F1 0.727；回退总体中位数 0.755。增益主要来自
+  `head_scale`（pooled AUC 0.910），`neck_ratio` 在 s01/s03/s20 上方向不稳。
 - 标签一致性：用 `neck_ratio`（鼻–肩中点垂直距离 / 肩宽）区分 baseline 与 forward_head，
   9 人 AUC ≥ 0.72；s02（0.658）、s19（0.688）偏弱；s03（0.032）反向；
   s01（0.518）、s20（0.491）几乎无分离。
@@ -384,7 +388,7 @@ Tauri WebView
 | 实时缓存（DCS） | 已实现 | `posture:latest:{user_id}`，TTL 600s；同时作为写入节流的跨实例依据；DCS 不可用时退回进程内缓存 |
 | 周报消费 | 已实现 | `/review/weekly` 新增 `posture` 块（样本数、主姿态、高风险占比）；高风险占比 ≥30% 时追加一条提示 |
 | 本地资源 | 已打包，不走 CDN | `public/models/pose_landmarker_lite.task`（5.5 MB）、`public/mediapipe/wasm/*`（14.6 MB + 334 KB），本地 200 可访问 |
-| 测试 | 155 passed | `python -m pytest -q`；前端 `pnpm build` 通过 |
+| 测试 | 167 passed | `python -m pytest -q`；前端 `pnpm build` 通过 |
 
 真实 ModelArts endpoint 尚未开通（**需付费**），因此当前所有推理结果都带 `source: "mock"`，界面显示「演示模型」，不得对外表述为「已接入华为云推理」。
 
@@ -395,7 +399,12 @@ Tauri WebView
 ```json
 {
   "keypoints": [{ "name": "nose", "x": 0.5, "y": 0.30, "z": 0.0, "visibility": 0.99 }, "... 共 33 条"],
-  "baseline": { "shoulder_tilt_deg": 0.0, "neck_ratio": 0.67, "head_offset_ratio": 0.0 },
+  "baseline": {
+    "shoulder_tilt_deg": 0.0, "neck_ratio": 0.67, "head_offset_ratio": 0.0,
+    "head_scale": 0.386, "eye_scale": 0.208, "face_height": 0.106,
+    "ear_shoulder_y": 0.775, "head_roll_deg": 1.23, "nose_ear_y": 0.268,
+    "ear_mid_offset": -0.0045
+  },
   "source": "mediapipe-pose-33",
   "captured_at": "2026-11-09T12:30:00+08:00",
   "posture_duration_minutes": 2.5,
@@ -416,7 +425,7 @@ Tauri WebView
   "confidence": 0.95,
   "deviation_deg": 27.0,
   "source": "mock",
-  "model": "riseloop-posture-v1-mock",
+  "model": "riseloop-posture-v3-mock",
   "latency_ms": 0.01,
   "guidance": { "message": "检测到头前伸，收下巴并把屏幕上沿抬到视线高度。", "overlay": "align_guide", "disclaimer": "..." },
   "features": {
@@ -482,6 +491,19 @@ Tauri WebView
 | 决策规则 | `argmax`，`confidence < 0.5` 输出 `undetermined`；训练、评估、serving 共用同一函数 |
 | 离线复跑 | `generate_synthetic_frames.py` → `dataset_check.py` → `train_posture.py` → `evaluate_posture.py`，命令见 `scripts/modelarts/README.md` |
 | 本机冒烟 | `customize_service.Model` 对 `s01-000000` 返回 `forward_head` / `0.9862`，与样本标签一致；日志不含关键点数组 |
-| 测试 | `python -m pytest -q`：155 passed（含决策规则、生成器跨 hash seed 复现、采集链路、头肩受限视野回归） |
+| 测试 | `python -m pytest -q`：167 passed（含决策规则、生成器跨 hash seed 复现、采集链路、头肩受限视野回归） |
 | 未完成 | 真实 endpoint 未创建；未上传模型包；未用真实摄像头数据复评 |
+
+### A.7 姿态 v3 head 与个人基线校准（2026-11-28）
+
+| 项 | 内容 |
+|---|---|
+| 模型包 | `customize_service.py`、`posture_runtime.py`（9 公开特征 + 10 字段基线 + 16 维模型特征）、`model.py`、`model.pt`（A 版 16 维、3,300 参数）、`feature_spec.json` |
+| 训练输入 | 公开特征 9 个 + 7 个头部几何 delta（`head_scale` / `eye_scale` / `face_height` / `ear_shoulder_y` / `head_roll_deg` / `nose_ear_y` / `ear_mid_offset`） |
+| LOSO | 14 折：A 版 OOF macro-F1 0.7759、accuracy 0.7765、forward_head F1 0.7142；B 版 148 维 0.7722；部署钉在 A，报告在 `scripts/modelarts/reports/v3-loso-head/` |
+| 校准接口 | `POST /posture/baseline`：3–120 帧 33 点 → 服务端逐字段中位数 → 10 字段 `baseline`；少于 3 帧或顺序不符返回 422 |
+| 客户端 | 「校准坐姿 · 10 秒」连续取样后调用 `/posture/baseline`，结果写本机 `riseloop.posture.prefs.v1`；之后每次 `/posture/infer` 带 `baseline`，未校准时省略并回退总体中位数 |
+| 本机冒烟 | 当前代码生成的部署包加载 `model.pt`，对 `s01-000000` 返回 `baseline` / `0.596057`，与 `smoke_test.json` 一致 |
+| 测试 | 后端 167 passed；api-client 12 passed；Tauri 前端 `pnpm build` 通过 |
+| 未完成 | ModelArts endpoint 未开通；14 人、单一设备/场景；s01 / s03 / s20 需重采，扩到 ≥20 人后再更新指标 |
 

@@ -297,6 +297,8 @@ export function createApiClient({ baseUrl, getBaseUrl, getToken, onRefresh }) {
     heartbeat: (payload) => request("/sitting/heartbeat", { method: "POST", body: payload }),
     postureRisk: (payload) => request("/posture/risk", { method: "POST", body: payload }),
     postureInfer: (payload) => request("/posture/infer", { method: "POST", body: payload }),
+    postureBaseline: (payload) =>
+      request("/posture/baseline", { method: "POST", body: payload }),
     currentIntervention: () => request("/intervention/current"),
     feedback: (payload) => request("/intervention/feedback", { method: "POST", body: payload }),
     askQuestion: (payload) => request("/qa/ask", { method: "POST", body: payload }),

@@ -1,0 +1,204 @@
+{
+  "contract_version": "v3",
+  "feature_spec_version": "v3",
+  "input_version": "A",
+  "model_file": "model.pt",
+  "model_sha256": "6bc82df0fb078f814688a5ffe7e9907a69d2443982e9146fa7267fe124e88524",
+  "created_at": "2026-11-28T05:00:31+00:00",
+  "note": "expected_posture is the stored model output for this feature vector; ground_truth is the label. sample carries derived features only and no raw keypoints. Endpoint replay also needs the 33 keypoints for the same frame_id, which are not committed.",
+  "samples": [
+    {
+      "frame_id": "s01-000000",
+      "split": "test",
+      "ground_truth": "baseline",
+      "expected_posture": "baseline",
+      "expected_confidence": 0.596057,
+      "expected_probabilities": {
+        "baseline": 0.596057,
+        "forward_head": 0.314916,
+        "lateral_tilt": 0.046769,
+        "undetermined": 0.042257
+      },
+      "sample": {
+        "subject": "s01",
+        "device": "laptop-cam",
+        "scene": "office",
+        "features": {
+          "shoulder_tilt_deg": -2.97,
+          "shoulder_width": 0.4896,
+          "shoulder_visibility": 0.987,
+          "upper_body_visibility": 1.0,
+          "neck_ratio": 0.683,
+          "head_offset_ratio": -0.08,
+          "neck_ratio_delta": 0.025,
+          "head_offset_delta": -0.06,
+          "tilt_delta_deg": -0.81
+        },
+        "model_features": {
+          "shoulder_tilt_deg": -2.97,
+          "shoulder_width": 0.4896,
+          "shoulder_visibility": 0.987,
+          "upper_body_visibility": 1.0,
+          "neck_ratio": 0.683,
+          "head_offset_ratio": -0.08,
+          "neck_ratio_delta": 0.025,
+          "head_offset_delta": -0.06,
+          "tilt_delta_deg": -0.81,
+          "head_scale_delta": 0.0008,
+          "eye_scale_delta": 0.0105,
+          "face_height_delta": 0.0092,
+          "ear_shoulder_y_delta": 0.0398,
+          "head_roll_deg_delta": 1.57,
+          "nose_ear_y_delta": 0.0274,
+          "ear_mid_offset_delta": -0.0325
+        }
+      }
+    },
+    {
+      "frame_id": "s01-000060",
+      "split": "test",
+      "ground_truth": "forward_head",
+      "expected_posture": "baseline",
+      "expected_confidence": 0.685846,
+      "expected_probabilities": {
+        "baseline": 0.685846,
+        "forward_head": 0.273724,
+        "lateral_tilt": 0.033203,
+        "undetermined": 0.007227
+      },
+      "sample": {
+        "subject": "s01",
+        "device": "laptop-cam",
+        "scene": "office",
+        "features": {
+          "shoulder_tilt_deg": -0.67,
+          "shoulder_width": 0.4815,
+          "shoulder_visibility": 0.994,
+          "upper_body_visibility": 1.0,
+          "neck_ratio": 0.697,
+          "head_offset_ratio": -0.073,
+          "neck_ratio_delta": 0.039,
+          "head_offset_delta": -0.054,
+          "tilt_delta_deg": 1.49
+        },
+        "model_features": {
+          "shoulder_tilt_deg": -0.67,
+          "shoulder_width": 0.4815,
+          "shoulder_visibility": 0.994,
+          "upper_body_visibility": 1.0,
+          "neck_ratio": 0.697,
+          "head_offset_ratio": -0.073,
+          "neck_ratio_delta": 0.039,
+          "head_offset_delta": -0.054,
+          "tilt_delta_deg": 1.49,
+          "head_scale_delta": 0.0025,
+          "eye_scale_delta": 0.0102,
+          "face_height_delta": -0.0181,
+          "ear_shoulder_y_delta": 0.0248,
+          "head_roll_deg_delta": 0.12,
+          "nose_ear_y_delta": -0.0492,
+          "ear_mid_offset_delta": -0.0235
+        }
+      }
+    },
+    {
+      "frame_id": "s01-000120",
+      "split": "test",
+      "ground_truth": "lateral_tilt",
+      "expected_posture": "baseline",
+      "expected_confidence": 0.697902,
+      "expected_probabilities": {
+        "baseline": 0.697902,
+        "forward_head": 0.163183,
+        "lateral_tilt": 0.126007,
+        "undetermined": 0.012909
+      },
+      "sample": {
+        "subject": "s01",
+        "device": "laptop-cam",
+        "scene": "office",
+        "features": {
+          "shoulder_tilt_deg": -1.94,
+          "shoulder_width": 0.5162,
+          "shoulder_visibility": 0.994,
+          "upper_body_visibility": 1.0,
+          "neck_ratio": 0.699,
+          "head_offset_ratio": 0.137,
+          "neck_ratio_delta": 0.041,
+          "head_offset_delta": 0.157,
+          "tilt_delta_deg": 0.22
+        },
+        "model_features": {
+          "shoulder_tilt_deg": -1.94,
+          "shoulder_width": 0.5162,
+          "shoulder_visibility": 0.994,
+          "upper_body_visibility": 1.0,
+          "neck_ratio": 0.699,
+          "head_offset_ratio": 0.137,
+          "neck_ratio_delta": 0.041,
+          "head_offset_delta": 0.157,
+          "tilt_delta_deg": 0.22,
+          "head_scale_delta": 0.0117,
+          "eye_scale_delta": -0.0314,
+          "face_height_delta": 0.0145,
+          "ear_shoulder_y_delta": 0.027,
+          "head_roll_deg_delta": -0.39,
+          "nose_ear_y_delta": -0.0549,
+          "ear_mid_offset_delta": 0.071
+        }
+      }
+    },
+    {
+      "frame_id": "s01-000180",
+      "split": "test",
+      "ground_truth": "undetermined",
+      "expected_posture": "lateral_tilt",
+      "expected_confidence": 0.770735,
+      "expected_probabilities": {
+        "baseline": 0.083639,
+        "forward_head": 0.114772,
+        "lateral_tilt": 0.770735,
+        "undetermined": 0.030854
+      },
+      "sample": {
+        "subject": "s01",
+        "device": "laptop-cam",
+        "scene": "office",
+        "features": {
+          "shoulder_tilt_deg": 2.52,
+          "shoulder_width": 0.4656,
+          "shoulder_visibility": 0.997,
+          "upper_body_visibility": 1.0,
+          "neck_ratio": 0.612,
+          "head_offset_ratio": -0.092,
+          "neck_ratio_delta": -0.046,
+          "head_offset_delta": -0.073,
+          "tilt_delta_deg": 4.68
+        },
+        "model_features": {
+          "shoulder_tilt_deg": 2.52,
+          "shoulder_width": 0.4656,
+          "shoulder_visibility": 0.997,
+          "upper_body_visibility": 1.0,
+          "neck_ratio": 0.612,
+          "head_offset_ratio": -0.092,
+          "neck_ratio_delta": -0.046,
+          "head_offset_delta": -0.073,
+          "tilt_delta_deg": 4.68,
+          "head_scale_delta": 0.0134,
+          "eye_scale_delta": 0.0133,
+          "face_height_delta": 0.0363,
+          "ear_shoulder_y_delta": -0.0071,
+          "head_roll_deg_delta": -2.44,
+          "nose_ear_y_delta": 0.078,
+          "ear_mid_offset_delta": -0.029
+        }
+      }
+    }
+  ],
+  "warnings": [
+    "smoke_sample_s01-000060_predicted_baseline_ground_truth_forward_head",
+    "smoke_sample_s01-000120_predicted_baseline_ground_truth_lateral_tilt",
+    "smoke_sample_s01-000180_predicted_lateral_tilt_ground_truth_undetermined"
+  ]
+}

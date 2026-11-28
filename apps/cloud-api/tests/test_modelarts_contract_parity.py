@@ -88,6 +88,22 @@ def test_constants_follow_cloud_api():
         "shoulder_tilt_deg",
         "neck_ratio",
         "head_offset_ratio",
+        "head_scale",
+        "eye_scale",
+        "face_height",
+        "ear_shoulder_y",
+        "head_roll_deg",
+        "nose_ear_y",
+        "ear_mid_offset",
+    )
+    assert contract.MODEL_FEATURE_ORDER == contract.FEATURE_ORDER + (
+        "head_scale_delta",
+        "eye_scale_delta",
+        "face_height_delta",
+        "ear_shoulder_y_delta",
+        "head_roll_deg_delta",
+        "nose_ear_y_delta",
+        "ear_mid_offset_delta",
     )
 
 
@@ -119,12 +135,22 @@ def test_upper_body_only_framing_still_labels():
 def test_runtime_copy_matches_cloud_features():
     assert runtime.FEATURE_SPEC_VERSION == contract.FEATURE_SPEC_VERSION
     assert runtime.LABELS == contract.LABELS
+    assert runtime.MODEL_FEATURE_ORDER == contract.MODEL_FEATURE_ORDER
+    assert tuple(runtime.DEFAULT_BASELINE) == contract.BASELINE_ORDER
     rng = random.Random(20261119)
     for _ in range(300):
         keypoints = _pose(rng)
         expected = contract.features_from_keypoints(keypoints)
         actual = runtime.features_from_keypoints(keypoints)
         assert actual == pytest.approx(expected, abs=1e-12)
+        assert runtime.baseline_from_keypoints(keypoints) == pytest.approx(
+            contract.baseline_from_keypoints(keypoints), abs=1e-12
+        )
+        assert runtime.model_features_from_keypoints(
+            keypoints
+        ) == pytest.approx(
+            contract.model_features_from_keypoints(keypoints), abs=1e-12
+        )
 
 
 def test_runtime_copy_matches_cloud_features_with_baseline():
@@ -139,10 +165,16 @@ def test_runtime_copy_matches_cloud_features_with_baseline():
 
 
 def test_runtime_vector_order_is_schema_order():
-    features = _frame()["features"]
+    frame = _frame()
+    features = frame["features"]
+    model_features = contract.model_features_from_keypoints(frame["keypoints"])
     assert runtime.features_vector(features) == contract.features_vector(features)
     assert len(contract.features_vector(features)) == 9
-    assert len(contract.coordinates_vector(_frame()["keypoints"])) == 132
+    assert runtime.model_features_vector(model_features) == contract.model_features_vector(
+        model_features
+    )
+    assert len(contract.model_features_vector(model_features)) == 16
+    assert len(contract.coordinates_vector(frame["keypoints"])) == 132
     assert runtime.UPPER_BODY_POINTS == contract.UPPER_BODY_POINTS
 
 

@@ -1,9 +1,19 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import LoadingOverlay from "./LoadingOverlay.vue";
-import { applyPostureRecommendation, evaluatePostureInfer, state } from "../state/session.js";
+import {
+  applyPostureRecommendation,
+  evaluatePostureBaseline,
+  evaluatePostureInfer,
+  state,
+} from "../state/session.js";
 import { toContractKeypoints } from "../data/keypoints.js";
-import { monitor, prefs as cameraPrefs } from "../state/postureMonitor.js";
+import {
+  clearBaseline,
+  monitor,
+  prefs as cameraPrefs,
+  saveBaseline,
+} from "../state/postureMonitor.js";
 
 const props = defineProps({
   inline: { type: Boolean, default: false },
@@ -29,6 +39,9 @@ const source = ref("unavailable");
 const latency = ref(0);
 const guidanceText = ref("");
 const cloudError = ref("");
+const calibrating = ref(false);
+const calibrationText = ref("");
+const calibrated = computed(() => Boolean(cameraPrefs.baseline));
 
 const POSTURE_LABELS = {
   baseline: "基准姿态",
@@ -90,6 +103,7 @@ let lastInferAt = 0;
 let postureSince = performance.now();
 let lastPostureClass = null;
 let latestLandmarks = null;
+let calibrationTimer = 0;
 
 function resizeCanvas() {
   const video = videoEl.value;
@@ -201,6 +215,58 @@ function describeInferError(err) {
   return "云端识别未成功，暂不进行姿态判定";
 }
 
+function describeCalibrationError(err) {
+  if (err?.status === 0) return "无法连接云端，校准未完成。";
+  if (err?.status === 422) return "关键点不完整，校准未完成。";
+  return "校准未完成，请稍后重试。";
+}
+
+function stopCalibration() {
+  if (calibrationTimer) {
+    clearInterval(calibrationTimer);
+    calibrationTimer = 0;
+  }
+  calibrating.value = false;
+}
+
+function calibrate() {
+  if (!running.value || calibrating.value) return;
+  calibrating.value = true;
+  calibrationText.value = "保持自然坐正，正在采样…";
+  const frames = [];
+  const startedAt = performance.now();
+  calibrationTimer = setInterval(async () => {
+    const keypoints = toContractKeypoints(latestLandmarks);
+    if (keypoints) frames.push(keypoints);
+    const left = Math.max(0, Math.ceil((10000 - (performance.now() - startedAt)) / 1000));
+    calibrationText.value = `保持自然坐正，${left} 秒（已取 ${frames.length} 帧）`;
+    if (performance.now() - startedAt < 10000) return;
+
+    stopCalibration();
+    if (frames.length < 3) {
+      calibrationText.value = "画面里没有稳定的上半身，请调整位置后重试。";
+      return;
+    }
+    try {
+      const result = await evaluatePostureBaseline({ frames });
+      if (result?.localMode) {
+        calibrationText.value = "本地模式不连接云端，无法校准。";
+        return;
+      }
+      calibrationText.value = saveBaseline(result?.baseline)
+        ? `已用 ${result.frames} 帧校准，之后的判定按你的中立坐姿对比。`
+        : "校准结果不完整，请重试。";
+    } catch (err) {
+      calibrationText.value = describeCalibrationError(err);
+    }
+  }, 500);
+}
+
+function clearCalibration() {
+  clearBaseline();
+  calibrationText.value = "已清除个人基线，改用通用基线。";
+}
+
 async function maybeInfer() {
   if (!running.value || inferBusy.value) return;
   const now = performance.now();
@@ -218,6 +284,7 @@ async function maybeInfer() {
     const sittingMinutes = Math.floor((state.timer?.sitting_seconds ?? 0) / 60);
     const result = await evaluatePostureInfer({
       keypoints,
+      baseline: cameraPrefs.baseline ?? undefined,
       source: "mediapipe-pose-33",
       captured_at: new Date().toISOString(),
       posture_duration_minutes: Math.max(0, (now - postureSince) / 60000),
@@ -356,6 +423,7 @@ async function start() {
     latency.value = 0;
     guidanceText.value = "";
     cloudError.value = "";
+    calibrationText.value = "";
     source.value = "unavailable";
     status.value = "画面不上传，每 2 秒上传一次关键点坐标";
     tick();
@@ -371,6 +439,7 @@ async function start() {
 
 function stop() {
   running.value = false;
+  stopCalibration();
   if (pausedMonitor) {
     pausedMonitor = false;
     monitor.resume().catch(() => { });
@@ -513,7 +582,15 @@ onBeforeUnmount(() => {
           开启摄像头
         </m3e-button>
         <m3e-button v-else variant="outlined" size="small" @click="stop">关闭摄像头</m3e-button>
-        <span class="hint">关键点在本机提取，姿态与风险来自云端模型。</span>
+        <m3e-button v-if="running" variant="outlined" size="small" :disabled.prop="calibrating" @click="calibrate">
+          {{ calibrating ? "校准中…" : calibrated ? "重新校准" : "校准坐姿 · 10 秒" }}
+        </m3e-button>
+        <m3e-button v-if="running && calibrated" variant="text" size="small" @click="clearCalibration">
+          清除校准
+        </m3e-button>
+        <span class="hint">
+          {{ calibrationText || (calibrated ? "按个人基线判定" : "未校准：使用通用基线") }}
+        </span>
       </footer>
     </section>
   </div>

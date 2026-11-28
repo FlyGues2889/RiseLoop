@@ -1,0 +1,562 @@
+{
+  "contract_version": "v3",
+  "feature_spec_version": "v3",
+  "label_policy": {
+    "version": "v3",
+    "tilt_threshold_deg": 8.0,
+    "tilt_gray_deg": 2.0,
+    "head_forward_delta_threshold": 0.08,
+    "head_forward_delta_gray": 0.03,
+    "min_shoulder_visibility": 0.5,
+    "min_upper_body_visibility": 0.5,
+    "min_model_confidence": 0.5,
+    "baseline_defaults": {
+      "shoulder_tilt_deg": 0.0,
+      "neck_ratio": 0.65,
+      "head_offset_ratio": 0.0,
+      "head_scale": 0.3859,
+      "eye_scale": 0.2082,
+      "face_height": 0.1059,
+      "ear_shoulder_y": 0.7748,
+      "head_roll_deg": 1.2305,
+      "nose_ear_y": 0.2679,
+      "ear_mid_offset": -0.0045
+    }
+  },
+  "generated_at": "2026-11-28T05:00:29+00:00",
+  "git_head": "560df9c2c0fbc96c08cd80326af4334224d8fcd6",
+  "seed": 20261117,
+  "chosen_input_version": "A",
+  "selection": {
+    "criterion": "validation macro-F1",
+    "chosen": "B",
+    "deployed": "A",
+    "deploy_override": true,
+    "A": 0.7744476243013627,
+    "B": 0.7977707018499124,
+    "note": "validation macro-F1 selects the reference variant; --deploy-version can pin the shipped checkpoint. Both variants' out-of-fold test metrics are reported, so an override is visible, not hidden"
+  },
+  "decision_rule": {
+    "policy": "argmax; confidence below threshold becomes undetermined",
+    "min_confidence": 0.5,
+    "low_confidence_count": 182,
+    "applied_in_evaluation": true
+  },
+  "input_versions": {
+    "A": 16,
+    "B": 148
+  },
+  "model": {
+    "architecture": "MLP",
+    "hidden": [
+      64,
+      32
+    ],
+    "dropout": 0.15,
+    "activation": "ReLU",
+    "params": 3300,
+    "label_order": [
+      "baseline",
+      "forward_head",
+      "lateral_tilt",
+      "undetermined"
+    ],
+    "checkpoint": "model.pt",
+    "model_sha256": "6bc82df0fb078f814688a5ffe7e9907a69d2443982e9146fa7267fe124e88524"
+  },
+  "models": {
+    "A": {
+      "input_version": "A",
+      "input_dim": 16,
+      "params": 3300,
+      "epochs_run": null,
+      "best_epoch": null,
+      "best_val_macro_f1": 0.7744476243013627,
+      "mean_val_macro_f1": 0.7744476243013627,
+      "train_seconds": 47.821,
+      "val": null,
+      "test": {
+        "accuracy": 0.7765475591343735,
+        "macro_f1": 0.7759090372547865,
+        "weighted_f1": 0.7740344558207374,
+        "per_class": {
+          "baseline": {
+            "precision": 0.7448888888888889,
+            "recall": 0.7817164179104478,
+            "f1": 0.7628584433318161,
+            "support": 1072
+          },
+          "forward_head": {
+            "precision": 0.7944711538461539,
+            "recall": 0.6486751717369971,
+            "f1": 0.7142085359265262,
+            "support": 1019
+          },
+          "lateral_tilt": {
+            "precision": 0.7921940928270043,
+            "recall": 0.7822916666666667,
+            "f1": 0.7872117400419287,
+            "support": 960
+          },
+          "undetermined": {
+            "precision": 0.7820392890551918,
+            "recall": 0.905742145178765,
+            "f1": 0.8393574297188755,
+            "support": 923
+          }
+        },
+        "confusion_matrix": {
+          "labels": [
+            "baseline",
+            "forward_head",
+            "lateral_tilt",
+            "undetermined"
+          ],
+          "matrix": [
+            [
+              838,
+              98,
+              88,
+              48
+            ],
+            [
+              209,
+              661,
+              76,
+              73
+            ],
+            [
+              72,
+              25,
+              751,
+              112
+            ],
+            [
+              6,
+              48,
+              33,
+              836
+            ]
+          ],
+          "rows": "ground_truth",
+          "columns": "predicted"
+        },
+        "support": 3974
+      },
+      "test_low_confidence": 182,
+      "history": null,
+      "fold_val_macro_f1": [
+        0.612753,
+        0.661025,
+        0.913063,
+        1.0,
+        0.995833,
+        0.548508,
+        0.223653,
+        0.987429,
+        0.874186,
+        0.949404,
+        0.874471,
+        0.927516,
+        0.622587,
+        0.651837
+      ]
+    },
+    "B": {
+      "input_version": "B",
+      "input_dim": 148,
+      "params": 11748,
+      "epochs_run": null,
+      "best_epoch": null,
+      "best_val_macro_f1": 0.7977707018499124,
+      "mean_val_macro_f1": 0.7977707018499124,
+      "train_seconds": 51.808,
+      "val": null,
+      "test": {
+        "accuracy": 0.7742828384499245,
+        "macro_f1": 0.772248599483155,
+        "weighted_f1": 0.7699562670331501,
+        "per_class": {
+          "baseline": {
+            "precision": 0.712171052631579,
+            "recall": 0.8078358208955224,
+            "f1": 0.756993006993007,
+            "support": 1072
+          },
+          "forward_head": {
+            "precision": 0.8457142857142858,
+            "recall": 0.5809617271835132,
+            "f1": 0.6887725421756835,
+            "support": 1019
+          },
+          "lateral_tilt": {
+            "precision": 0.7841584158415842,
+            "recall": 0.825,
+            "f1": 0.8040609137055837,
+            "support": 960
+          },
+          "undetermined": {
+            "precision": 0.7891221374045801,
+            "recall": 0.8959913326110509,
+            "f1": 0.839167935058346,
+            "support": 923
+          }
+        },
+        "confusion_matrix": {
+          "labels": [
+            "baseline",
+            "forward_head",
+            "lateral_tilt",
+            "undetermined"
+          ],
+          "matrix": [
+            [
+              866,
+              63,
+              69,
+              74
+            ],
+            [
+              276,
+              592,
+              78,
+              73
+            ],
+            [
+              58,
+              36,
+              792,
+              74
+            ],
+            [
+              16,
+              9,
+              71,
+              827
+            ]
+          ],
+          "rows": "ground_truth",
+          "columns": "predicted"
+        },
+        "support": 3974
+      },
+      "test_low_confidence": 194,
+      "history": null,
+      "fold_val_macro_f1": [
+        0.570803,
+        0.65503,
+        0.905585,
+        0.983315,
+        0.991666,
+        0.389594,
+        0.574218,
+        0.987492,
+        0.887234,
+        0.975015,
+        0.860692,
+        0.942218,
+        0.777585,
+        0.668342
+      ]
+    }
+  },
+  "chosen": {
+    "input_version": "A",
+    "val": null,
+    "test": {
+      "accuracy": 0.7765475591343735,
+      "macro_f1": 0.7759090372547865,
+      "weighted_f1": 0.7740344558207374,
+      "per_class": {
+        "baseline": {
+          "precision": 0.7448888888888889,
+          "recall": 0.7817164179104478,
+          "f1": 0.7628584433318161,
+          "support": 1072
+        },
+        "forward_head": {
+          "precision": 0.7944711538461539,
+          "recall": 0.6486751717369971,
+          "f1": 0.7142085359265262,
+          "support": 1019
+        },
+        "lateral_tilt": {
+          "precision": 0.7921940928270043,
+          "recall": 0.7822916666666667,
+          "f1": 0.7872117400419287,
+          "support": 960
+        },
+        "undetermined": {
+          "precision": 0.7820392890551918,
+          "recall": 0.905742145178765,
+          "f1": 0.8393574297188755,
+          "support": 923
+        }
+      },
+      "confusion_matrix": {
+        "labels": [
+          "baseline",
+          "forward_head",
+          "lateral_tilt",
+          "undetermined"
+        ],
+        "matrix": [
+          [
+            838,
+            98,
+            88,
+            48
+          ],
+          [
+            209,
+            661,
+            76,
+            73
+          ],
+          [
+            72,
+            25,
+            751,
+            112
+          ],
+          [
+            6,
+            48,
+            33,
+            836
+          ]
+        ],
+        "rows": "ground_truth",
+        "columns": "predicted"
+      },
+      "support": 3974
+    },
+    "macro_f1": 0.7759090372547865,
+    "accuracy": 0.7765475591343735,
+    "per_class": {
+      "baseline": {
+        "precision": 0.7448888888888889,
+        "recall": 0.7817164179104478,
+        "f1": 0.7628584433318161,
+        "support": 1072
+      },
+      "forward_head": {
+        "precision": 0.7944711538461539,
+        "recall": 0.6486751717369971,
+        "f1": 0.7142085359265262,
+        "support": 1019
+      },
+      "lateral_tilt": {
+        "precision": 0.7921940928270043,
+        "recall": 0.7822916666666667,
+        "f1": 0.7872117400419287,
+        "support": 960
+      },
+      "undetermined": {
+        "precision": 0.7820392890551918,
+        "recall": 0.905742145178765,
+        "f1": 0.8393574297188755,
+        "support": 923
+      }
+    },
+    "confusion_matrix": {
+      "labels": [
+        "baseline",
+        "forward_head",
+        "lateral_tilt",
+        "undetermined"
+      ],
+      "matrix": [
+        [
+          838,
+          98,
+          88,
+          48
+        ],
+        [
+          209,
+          661,
+          76,
+          73
+        ],
+        [
+          72,
+          25,
+          751,
+          112
+        ],
+        [
+          6,
+          48,
+          33,
+          836
+        ]
+      ],
+      "rows": "ground_truth",
+      "columns": "predicted"
+    }
+  },
+  "by_framing": {},
+  "confusion_matrix": {
+    "labels": [
+      "baseline",
+      "forward_head",
+      "lateral_tilt",
+      "undetermined"
+    ],
+    "matrix": [
+      [
+        838,
+        98,
+        88,
+        48
+      ],
+      [
+        209,
+        661,
+        76,
+        73
+      ],
+      [
+        72,
+        25,
+        751,
+        112
+      ],
+      [
+        6,
+        48,
+        33,
+        836
+      ]
+    ],
+    "rows": "ground_truth",
+    "columns": "predicted"
+  },
+  "data": {
+    "path": "data\\posture\\capture.jsonl",
+    "sha256": "f301abd9d07b733e60ade1bd554c729413361c5783508045d0eb946197375bad",
+    "origin": "capture",
+    "origin_counts": {
+      "capture": 3974
+    },
+    "real_capture_frames": 3974,
+    "synthetic_frames": 0,
+    "framing_counts": {
+      "upper_body": 3974
+    },
+    "label_source_counts": {
+      "human": 3974
+    },
+    "frames_total": 3974,
+    "frames_used": 3974,
+    "label_distribution": {
+      "baseline": 1072,
+      "forward_head": 1019,
+      "lateral_tilt": 960,
+      "undetermined": 923
+    },
+    "subjects": [
+      "s01",
+      "s02",
+      "s03",
+      "s04",
+      "s11",
+      "s12",
+      "s13",
+      "s14",
+      "s15",
+      "s16",
+      "s17",
+      "s18",
+      "s19",
+      "s20"
+    ],
+    "subject_count": 14,
+    "devices": [
+      "laptop-cam"
+    ],
+    "device_count": 1,
+    "scenes": [
+      "office"
+    ],
+    "scene_count": 1,
+    "frames_per_split": {
+      "loso_folds": 14,
+      "oof_frames": 3974
+    },
+    "label_distribution_by_split": {
+      "oof": {
+        "baseline": 1072,
+        "forward_head": 1019,
+        "lateral_tilt": 960,
+        "undetermined": 923
+      }
+    },
+    "metrics_scope": "real_capture",
+    "metrics_warning": null,
+    "split_note": "LOSO metrics are out-of-fold; every subject is test exactly once"
+  },
+  "split": {
+    "scheme": "loso",
+    "seed": 20261117,
+    "train_subjects": [
+      "s01",
+      "s02",
+      "s03",
+      "s04",
+      "s11",
+      "s12",
+      "s13",
+      "s14",
+      "s15",
+      "s16",
+      "s17",
+      "s18",
+      "s19",
+      "s20"
+    ],
+    "val_subjects": [],
+    "test_subjects": [
+      "s01",
+      "s02",
+      "s03",
+      "s04",
+      "s11",
+      "s12",
+      "s13",
+      "s14",
+      "s15",
+      "s16",
+      "s17",
+      "s18",
+      "s19",
+      "s20"
+    ],
+    "frames": {
+      "train": 3974,
+      "val": 0,
+      "test": 3974
+    }
+  },
+  "training": {
+    "device": "cpu",
+    "torch_version": "2.15.0+cpu",
+    "num_threads": 1,
+    "duration_seconds": 99.629,
+    "epochs_requested": 160,
+    "patience": 25,
+    "batch_size": 64,
+    "learning_rate": 0.001,
+    "weight_decay": 0.0001,
+    "class_weight": "inverse-frequency CrossEntropyLoss",
+    "started_at": "2026-11-28T04:58:43+00:00",
+    "deploy_seconds": 1.504,
+    "deploy_epochs": 18
+  },
+  "warnings": [
+    "capture_scope: real capture metrics; report subject count and device/scene; do not present as external accuracy",
+    "loso_used: 14 subjects; metrics are out-of-fold leave-one-subject-out"
+  ],
+  "metrics_scope": "real_capture"
+}

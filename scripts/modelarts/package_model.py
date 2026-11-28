@@ -74,8 +74,14 @@ def main(argv: list[str] | None = None) -> int:
         )
     if list(spec.get("feature_order", [])) != list(posture_runtime.FEATURE_ORDER):
         raise SystemExit("feature_order mismatch between feature_spec and posture_runtime")
+    if list(spec.get("model_feature_order", [])) != list(
+        posture_runtime.MODEL_FEATURE_ORDER
+    ):
+        raise SystemExit("model_feature_order mismatch between feature_spec and posture_runtime")
     if list(spec.get("baseline_fields", [])) != list(posture_runtime.BASELINE_FIELDS):
         raise SystemExit("baseline_fields mismatch between feature_spec and posture_runtime")
+    if spec.get("baseline_defaults") != posture_runtime.DEFAULT_BASELINE:
+        raise SystemExit("baseline_defaults mismatch between feature_spec and posture_runtime")
 
     output.mkdir(parents=True, exist_ok=True)
     files = []

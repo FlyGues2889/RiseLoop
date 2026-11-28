@@ -40,12 +40,42 @@ UPPER_BODY_POINTS = (
 UPPER_BODY_VISIBILITY_MIN = 0.5
 REQUIRED_POINTS = ("nose", "left_shoulder", "right_shoulder")
 MIN_MODEL_CONFIDENCE = 0.5
-BASELINE_FIELDS = ("shoulder_tilt_deg", "neck_ratio", "head_offset_ratio")
+BASELINE_FIELDS = (
+    "shoulder_tilt_deg",
+    "neck_ratio",
+    "head_offset_ratio",
+    "head_scale",
+    "eye_scale",
+    "face_height",
+    "ear_shoulder_y",
+    "head_roll_deg",
+    "nose_ear_y",
+    "ear_mid_offset",
+)
 DEFAULT_BASELINE = {
     "shoulder_tilt_deg": 0.0,
     "neck_ratio": 0.65,
     "head_offset_ratio": 0.0,
+    "head_scale": 0.3859,
+    "eye_scale": 0.2082,
+    "face_height": 0.1059,
+    "ear_shoulder_y": 0.7748,
+    "head_roll_deg": 1.2305,
+    "nose_ear_y": 0.2679,
+    "ear_mid_offset": -0.0045,
 }
+HEAD_GEOMETRY_ORDER = (
+    "head_scale",
+    "eye_scale",
+    "face_height",
+    "ear_shoulder_y",
+    "head_roll_deg",
+    "nose_ear_y",
+    "ear_mid_offset",
+)
+MODEL_FEATURE_ORDER = FEATURE_ORDER + tuple(
+    f"{name}_delta" for name in HEAD_GEOMETRY_ORDER
+)
 
 
 def _index(keypoints: Sequence[Mapping[str, Any]]) -> dict[str, Mapping[str, Any]]:
@@ -95,6 +125,20 @@ def _baseline(raw: Mapping[str, Any] | None) -> dict[str, float]:
     return baseline
 
 
+def _angle(left: Mapping[str, Any], right: Mapping[str, Any]) -> float:
+    angle = degrees(
+        atan2(
+            _number(right, "y") - _number(left, "y"),
+            _number(right, "x") - _number(left, "x"),
+        )
+    )
+    if angle > 90:
+        angle -= 180
+    if angle < -90:
+        angle += 180
+    return angle
+
+
 def _raw_geometry(
     left: Mapping[str, Any],
     right: Mapping[str, Any],
@@ -108,17 +152,7 @@ def _raw_geometry(
     neck_ratio = 0.0
     head_offset_ratio = 0.0
     if width > 0:
-        angle = degrees(
-            atan2(
-                _number(right, "y") - _number(left, "y"),
-                _number(right, "x") - _number(left, "x"),
-            )
-        )
-        if angle > 90:
-            angle -= 180
-        if angle < -90:
-            angle += 180
-        tilt = angle
+        tilt = _angle(left, right)
         shoulder_mid_x = (_number(left, "x") + _number(right, "x")) / 2
         shoulder_mid_y = (_number(left, "y") + _number(right, "y")) / 2
         neck_ratio = (shoulder_mid_y - _number(nose, "y")) / width
@@ -126,17 +160,76 @@ def _raw_geometry(
     return tilt, width, neck_ratio, head_offset_ratio
 
 
+def _head_geometry(
+    points: Mapping[str, Mapping[str, Any]], width: float
+) -> dict[str, float]:
+    if width <= 0:
+        return {name: 0.0 for name in HEAD_GEOMETRY_ORDER}
+
+    left_shoulder = points["left_shoulder"]
+    right_shoulder = points["right_shoulder"]
+    left_ear = points["left_ear"]
+    right_ear = points["right_ear"]
+    left_eye = points["left_eye"]
+    right_eye = points["right_eye"]
+    nose = points["nose"]
+
+    ear_width = hypot(
+        _number(right_ear, "x") - _number(left_ear, "x"),
+        _number(right_ear, "y") - _number(left_ear, "y"),
+    )
+    ear_mid_x = (_number(left_ear, "x") + _number(right_ear, "x")) / 2
+    ear_mid_y = (_number(left_ear, "y") + _number(right_ear, "y")) / 2
+    shoulder_mid_x = (_number(left_shoulder, "x") + _number(right_shoulder, "x")) / 2
+    shoulder_mid_y = (_number(left_shoulder, "y") + _number(right_shoulder, "y")) / 2
+
+    return {
+        "head_scale": ear_width / width,
+        "eye_scale": hypot(
+            _number(right_eye, "x") - _number(left_eye, "x"),
+            _number(right_eye, "y") - _number(left_eye, "y"),
+        )
+        / width,
+        "face_height": hypot(
+            _number(nose, "x") - ear_mid_x, _number(nose, "y") - ear_mid_y
+        )
+        / width,
+        "ear_shoulder_y": (shoulder_mid_y - ear_mid_y) / width,
+        "head_roll_deg": _angle(left_ear, right_ear) - _angle(left_shoulder, right_shoulder),
+        "nose_ear_y": (
+            (_number(nose, "y") - ear_mid_y) / ear_width if ear_width >= 1e-3 else 0.0
+        ),
+        "ear_mid_offset": (ear_mid_x - shoulder_mid_x) / width,
+    }
+
+
+def _rounded_head_geometry(
+    points: Mapping[str, Mapping[str, Any]], width: float
+) -> dict[str, float]:
+    values = _head_geometry(points, width)
+    return {
+        "head_scale": round(values["head_scale"], 4),
+        "eye_scale": round(values["eye_scale"], 4),
+        "face_height": round(values["face_height"], 4),
+        "ear_shoulder_y": round(values["ear_shoulder_y"], 4),
+        "head_roll_deg": round(values["head_roll_deg"], 2),
+        "nose_ear_y": round(values["nose_ear_y"], 4),
+        "ear_mid_offset": round(values["ear_mid_offset"], 4),
+    }
+
+
 def baseline_from_keypoints(
     keypoints: Sequence[Mapping[str, Any]],
 ) -> dict[str, float]:
     points = _index(keypoints)
-    tilt, _, neck_ratio, head_offset_ratio = _raw_geometry(
+    tilt, width, neck_ratio, head_offset_ratio = _raw_geometry(
         points["left_shoulder"], points["right_shoulder"], points["nose"]
     )
     return {
         "shoulder_tilt_deg": round(tilt, 2),
         "neck_ratio": round(neck_ratio, 4),
         "head_offset_ratio": round(head_offset_ratio, 4),
+        **_rounded_head_geometry(points, width),
     }
 
 
@@ -179,6 +272,29 @@ def features_vector(features: Mapping[str, float]) -> list[float]:
     if missing:
         raise ValueError(f"特征缺字段：{', '.join(missing)}")
     return [float(features[name]) for name in FEATURE_ORDER]
+
+
+def model_features_from_keypoints(
+    keypoints: Sequence[Mapping[str, Any]],
+    baseline: Mapping[str, Any] | None = None,
+) -> dict[str, float]:
+    points = _index(keypoints)
+    reference = _baseline(baseline)
+    values = dict(features_from_keypoints(keypoints, baseline))
+    _, width, _, _ = _raw_geometry(
+        points["left_shoulder"], points["right_shoulder"], points["nose"]
+    )
+    head = _rounded_head_geometry(points, width)
+    for name in HEAD_GEOMETRY_ORDER:
+        values[f"{name}_delta"] = round(head[name] - reference[name], 4)
+    return values
+
+
+def model_features_vector(features: Mapping[str, float]) -> list[float]:
+    missing = [name for name in MODEL_FEATURE_ORDER if name not in features]
+    if missing:
+        raise ValueError(f"模型特征缺字段：{', '.join(missing)}")
+    return [float(features[name]) for name in MODEL_FEATURE_ORDER]
 
 
 def build_response(probabilities: Mapping[str, float]) -> dict[str, Any]:

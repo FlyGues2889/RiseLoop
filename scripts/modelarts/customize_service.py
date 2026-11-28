@@ -123,8 +123,13 @@ class Model(PTServingBaseService):
         self.feature_order = list(spec["feature_order"])
         if self.feature_order != list(runtime.FEATURE_ORDER):
             raise ValueError("feature_spec feature_order mismatch")
+        self.model_feature_order = list(spec.get("model_feature_order", []))
+        if self.model_feature_order != list(runtime.MODEL_FEATURE_ORDER):
+            raise ValueError("feature_spec model_feature_order mismatch")
         if list(spec.get("baseline_fields", [])) != list(runtime.BASELINE_FIELDS):
             raise ValueError("feature_spec baseline_fields mismatch")
+        if spec.get("baseline_defaults") != runtime.DEFAULT_BASELINE:
+            raise ValueError("feature_spec baseline_defaults mismatch")
         checkpoint_order = list(self.meta.get("mediapipe_landmarks", []))
         if checkpoint_order and self.keypoint_order != checkpoint_order:
             raise ValueError("feature_spec/checkpoint keypoint order mismatch")
@@ -261,6 +266,9 @@ class Model(PTServingBaseService):
 
         try:
             computed = runtime.features_from_keypoints(points, data.get("baseline"))
+            model_features = runtime.model_features_from_keypoints(
+                points, data.get("baseline")
+            )
         except ValueError as exc:
             return self._error(request_id, "invalid_baseline", str(exc), started)
         features_raw = data.get("features")
@@ -284,9 +292,11 @@ class Model(PTServingBaseService):
 
         try:
             if self.input_version == "A":
-                raw = runtime.features_vector(features)
+                raw = runtime.model_features_vector(model_features)
             elif self.input_version == "B":
-                raw = coordinates_vector(points) + runtime.features_vector(features)
+                raw = coordinates_vector(points) + runtime.model_features_vector(
+                    model_features
+                )
             else:
                 raise InputContractError(
                     "unsupported_input_version", "checkpoint input_version must be A or B"

@@ -30,8 +30,11 @@ from app.schemas.posture import (  # noqa: E402
     PostureFeatures,
 )
 from app.services.posture_features import (  # noqa: E402
+    HEAD_GEOMETRY_ORDER,
+    MODEL_FEATURE_ORDER,
     baseline_from_keypoints as _server_baseline,
     extract_features as _server_features,
+    model_features_from_keypoints as _server_model_features,
 )
 from intervention_engine import PostureClass  # noqa: E402
 
@@ -123,6 +126,22 @@ def features_vector(features: dict[str, float]) -> list[float]:
     return [float(features[name]) for name in FEATURE_ORDER]
 
 
+def model_features_from_keypoints(
+    keypoints: Sequence[dict[str, Any]],
+    baseline: Mapping[str, Any] | None = None,
+) -> dict[str, float]:
+    validate_keypoints(keypoints)
+    points = [_to_keypoint(index, raw) for index, raw in enumerate(keypoints)]
+    return _server_model_features(points, _baseline(baseline))
+
+
+def model_features_vector(features: dict[str, float]) -> list[float]:
+    missing = [name for name in MODEL_FEATURE_ORDER if name not in features]
+    if missing:
+        raise ContractError(f"模型特征缺字段：{', '.join(missing)}")
+    return [float(features[name]) for name in MODEL_FEATURE_ORDER]
+
+
 def coordinates_vector(keypoints: Sequence[dict[str, Any]]) -> list[float]:
     validate_keypoints(keypoints)
     values: list[float] = []
@@ -140,6 +159,7 @@ def feature_spec() -> dict[str, Any]:
         "keypoints": list(KEYPOINT_ORDER),
         "upper_body_points": list(UPPER_BODY_POINTS),
         "features": list(FEATURE_ORDER),
+        "model_features": list(MODEL_FEATURE_ORDER),
         "baseline_fields": list(BASELINE_ORDER),
         "baseline_defaults": BASELINE_DEFAULTS,
         "labels": list(LABELS),

@@ -652,6 +652,11 @@ export async function evaluatePostureInfer(payload) {
   }
 }
 
+export async function evaluatePostureBaseline(payload) {
+  if (state.mode === MODES.demo.id) return { localMode: true };
+  return activeApi.postureBaseline(payload);
+}
+
 export function applyPostureRecommendation(result) {
   if (!result?.actions?.length) return false;
   state.pendingActions = result.actions;

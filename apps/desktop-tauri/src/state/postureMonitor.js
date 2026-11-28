@@ -9,6 +9,18 @@ import { liveCameraBusy, record } from "./cameraLog.js";
 import { evaluatePostureInfer, state } from "./session.js";
 
 const PREFS_KEY = "riseloop.posture.prefs.v1";
+const BASELINE_FIELDS = [
+  "shoulder_tilt_deg",
+  "neck_ratio",
+  "head_offset_ratio",
+  "head_scale",
+  "eye_scale",
+  "face_height",
+  "ear_shoulder_y",
+  "head_roll_deg",
+  "nose_ear_y",
+  "ear_mid_offset",
+];
 // 每一分钟开一次摄像头，窗口内连续取帧；摄像头启动有数秒黑屏，单帧采样拿不到人。
 const SAMPLE_INTERVAL_MS = 60_000;
 const CAPTURE_WINDOW_MS = 10_000;
@@ -39,6 +51,17 @@ let lastSkip = "";
 let confirmedPosture = null;
 let confirmedSince = 0;
 
+function normaliseBaseline(raw) {
+  if (!raw || typeof raw !== "object") return null;
+  const baseline = {};
+  for (const name of BASELINE_FIELDS) {
+    const value = Number(raw[name]);
+    if (!Number.isFinite(value)) return null;
+    baseline[name] = value;
+  }
+  return baseline;
+}
+
 function loadPrefs() {
   try {
     const parsed = JSON.parse(localStorage.getItem(PREFS_KEY) ?? "{}");
@@ -46,9 +69,10 @@ function loadPrefs() {
       asked: Boolean(parsed.asked),
       enabled: Boolean(parsed.enabled),
       deviceId: typeof parsed.deviceId === "string" ? parsed.deviceId : null,
+      baseline: normaliseBaseline(parsed.baseline),
     };
   } catch {
-    return { asked: false, enabled: false, deviceId: null };
+    return { asked: false, enabled: false, deviceId: null, baseline: null };
   }
 }
 
@@ -58,6 +82,19 @@ export function savePrefs() {
   } catch {
     /* 存储不可用时只保留内存态 */
   }
+}
+
+export function saveBaseline(baseline) {
+  const normalised = normaliseBaseline(baseline);
+  if (!normalised) return false;
+  prefs.baseline = normalised;
+  savePrefs();
+  return true;
+}
+
+export function clearBaseline() {
+  prefs.baseline = null;
+  savePrefs();
 }
 
 export function cameraErrorMessage(err) {
@@ -154,6 +191,7 @@ async function report(keypoints, frameCount) {
   try {
     const result = await evaluatePostureInfer({
       keypoints,
+      baseline: prefs.baseline ?? undefined,
       source: "mediapipe-pose-33",
       captured_at: new Date().toISOString(),
       posture_duration_minutes: duration,

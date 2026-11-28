@@ -108,10 +108,12 @@ from posture_contract import (
     KEYPOINT_ORDER as MEDIAPIPE_33,
     LABELS as LABEL_ORDER,
     MIN_UPPER_BODY_VISIBILITY as VISIBILITY_THRESHOLD,
+    MODEL_FEATURE_ORDER,
     UPPER_BODY_POINTS,
     ContractError,
     features_from_keypoints as compute_features,
-    features_vector,
+    model_features_from_keypoints as compute_model_features,
+    model_features_vector,
     validate_keypoints,
 )
 from metrics_util import compute_metrics
@@ -151,6 +153,14 @@ def _validate_features(raw) -> dict[str, float]:
     return {name: float(raw[name]) for name in FEATURE_NAMES}
 
 
+def _validate_model_features(raw) -> dict[str, float]:
+    if not isinstance(raw, dict):
+        raise ContractError("model_features must be an object")
+    if set(raw.keys()) != set(MODEL_FEATURE_ORDER):
+        raise ContractError("model_features must contain exactly the model fields")
+    return {name: float(raw[name]) for name in MODEL_FEATURE_ORDER}
+
+
 def _features_close(left, right, tol: float = 1e-9) -> bool:
     return all(abs(float(left[name]) - float(right[name])) <= tol for name in FEATURE_NAMES)
 
@@ -162,11 +172,11 @@ def _label_counts(labels) -> dict[str, int]:
     return counts
 
 
-def build_input_vector(input_version: str, keypoints, features) -> list[float]:
+def build_input_vector(input_version: str, keypoints, model_features) -> list[float]:
     if input_version == "A":
-        return features_vector(features)
+        return model_features_vector(model_features)
     if input_version == "B":
-        return coordinates_vector(keypoints) + features_vector(features)
+        return coordinates_vector(keypoints) + model_features_vector(model_features)
     raise ContractError("input_version must be A or B")
 
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -186,6 +196,8 @@ class Frame:
     label: str
     points: list[dict[str, float]]
     features: dict[str, float]
+    model_features: dict[str, float]
+    baseline: dict[str, float]
 
 
 def _sha256(path: Path) -> str:
@@ -251,10 +263,16 @@ def load_frames(path: Path, warnings: list[str]) -> list[Frame]:
                 skipped["invalid_keypoints"] += 1
                 continue
             try:
-                features = compute_features(points, record.get("baseline"))
+                raw_baseline = record.get("baseline")
+                features = compute_features(points, raw_baseline)
+                model_features = compute_model_features(points, raw_baseline)
             except ContractError:
                 skipped["invalid_baseline"] += 1
                 continue
+            baseline = {
+                name: float((raw_baseline or {}).get(name, BASELINE_DEFAULTS[name]))
+                for name in BASELINE_ORDER
+            }
             supplied = record.get("features")
             if supplied is not None:
                 try:
@@ -277,6 +295,8 @@ def load_frames(path: Path, warnings: list[str]) -> list[Frame]:
                     label=label,
                     points=points,
                     features=features,
+                    model_features=model_features,
+                    baseline=baseline,
                 )
             )
 
@@ -370,7 +390,7 @@ def split_subjects(
 
 def fit_stats(frames: Sequence[Frame], input_version: str) -> tuple[np.ndarray, np.ndarray]:
     matrix = np.asarray(
-        [build_input_vector(input_version, frame.points, frame.features) for frame in frames],
+        [build_input_vector(input_version, frame.points, frame.model_features) for frame in frames],
         dtype=np.float64,
     )
     mean = matrix.mean(axis=0)
@@ -388,7 +408,7 @@ class FrameDataset(Dataset):
         std: np.ndarray,
     ) -> None:
         raw = np.asarray(
-            [build_input_vector(input_version, frame.points, frame.features) for frame in frames],
+            [build_input_vector(input_version, frame.points, frame.model_features) for frame in frames],
             dtype=np.float64,
         )
         self.x = torch.tensor((raw - mean) / std, dtype=torch.float32)
@@ -637,6 +657,10 @@ def _rounded_sample(frame: Frame) -> dict[str, Any]:
         "features": {
             name: round(float(frame.features[name]), 6) for name in FEATURE_NAMES
         },
+        "model_features": {
+            name: round(float(frame.model_features[name]), 6)
+            for name in MODEL_FEATURE_ORDER
+        },
     }
 
 
@@ -646,9 +670,9 @@ def _predict_payload(
     sample: dict[str, Any],
 ) -> tuple[str, float, dict[str, float]]:
     points = _normalise_points(sample["keypoints"])
-    features = _validate_features(sample["features"])
+    model_features = _validate_model_features(sample["model_features"])
     raw = np.asarray(
-        build_input_vector(meta["input_version"], points, features), dtype=np.float64
+        build_input_vector(meta["input_version"], points, model_features), dtype=np.float64
     )
     mean = np.asarray(meta["mean"], dtype=np.float64)
     std = np.asarray(meta["std"], dtype=np.float64)
@@ -666,13 +690,14 @@ def _predict_payload(
 
 def _feature_spec(mean_a: np.ndarray, std_a: np.ndarray, mean_b: np.ndarray, std_b: np.ndarray,
                   args: argparse.Namespace) -> dict[str, Any]:
-    feature_count = len(FEATURE_NAMES)
+    model_feature_count = len(MODEL_FEATURE_ORDER)
     return {
         "contract_version": CONTRACT_VERSION,
         "feature_spec_version": FEATURE_SPEC_VERSION,
         "mediapipe_landmarks": list(MEDIAPIPE_33),
         "upper_body_points": list(UPPER_BODY_POINTS),
         "feature_order": list(FEATURE_NAMES),
+        "model_feature_order": list(MODEL_FEATURE_ORDER),
         "baseline_fields": list(BASELINE_ORDER),
         "baseline_defaults": BASELINE_DEFAULTS,
         "label_order": list(LABEL_ORDER),
@@ -680,8 +705,11 @@ def _feature_spec(mean_a: np.ndarray, std_a: np.ndarray, mean_b: np.ndarray, std
         "label_policy": describe_label_policy(),
         "input_versions": {
             "A": {
-                "dimension": feature_count,
-                "layout": f"{feature_count} 2D features in feature_order",
+                "dimension": model_feature_count,
+                "layout": (
+                    f"{model_feature_count} model features in model_feature_order: "
+                    f"{len(FEATURE_NAMES)} public features + 7 head-geometry deltas"
+                ),
                 "standardization": {
                     "method": "z-score with train-split mean/std",
                     "mean": mean_a.tolist(),
@@ -692,7 +720,7 @@ def _feature_spec(mean_a: np.ndarray, std_a: np.ndarray, mean_b: np.ndarray, std
                 "dimension": len(mean_b),
                 "layout": (
                     "132 coordinates (33 landmarks x [x, y, z, visibility]) + "
-                    f"{feature_count} 2D features"
+                    f"{model_feature_count} model features"
                 ),
                 "coordinate_normalization": {
                     "origin": "shoulder midpoint (left_shoulder, right_shoulder), including z",
@@ -922,10 +950,10 @@ def _run_loso(
     if abs(versions["A"]["mean_val_macro_f1"] - versions["B"]["mean_val_macro_f1"]) < 1e-9:
         chosen = "A"
 
-    # Deployment model: all subjects, fixed epochs (median of fold best epochs).
-    fixed_epochs = max(1, int(statistics.median(versions[chosen]["best_epochs"])))
-    mean, std = fit_stats(frames, chosen)
-    dataset = FrameDataset(frames, chosen, mean, std)
+    deploy_version = args.deploy_version if args.deploy_version in ("A", "B") else chosen
+    fixed_epochs = max(1, int(statistics.median(versions[deploy_version]["best_epochs"])))
+    mean, std = fit_stats(frames, deploy_version)
+    dataset = FrameDataset(frames, deploy_version, mean, std)
     torch.manual_seed(args.seed)
     np.random.seed(args.seed)
     random.seed(args.seed)
@@ -951,6 +979,7 @@ def _run_loso(
     return {
         "results": versions,
         "chosen": chosen,
+        "deploy_version": deploy_version,
         "train_frames": list(frames),
         "val_frames": [],
         "test_frames": list(frames),
@@ -984,6 +1013,15 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--hidden", type=int, nargs="+", default=[64, 32])
     parser.add_argument("--dropout", type=float, default=0.15)
     parser.add_argument("--allow-unreviewed-capture", action="store_true")
+    parser.add_argument(
+        "--deploy-version",
+        choices=("auto", "A", "B"),
+        default="auto",
+        help=(
+            "checkpoint to ship; auto follows validation macro-F1. Override only "
+            "with a recorded reason, e.g. a simpler model that meets the acceptance gate"
+        ),
+    )
     args = parser.parse_args(argv)
 
     torch.set_num_threads(1)
@@ -1021,6 +1059,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         val_frames = run["val_frames"]
         test_frames = run["test_frames"]
         chosen = run["chosen"]
+        deploy_version = run["deploy_version"]
         results = run["results"]
         model_a = results["A"].get("model")
         model_b = results["B"].get("model")
@@ -1036,13 +1075,17 @@ def main(argv: Sequence[str] | None = None) -> int:
         val_frames = run["val_frames"]
         test_frames = run["test_frames"]
         chosen = run["chosen"]
+        deploy_version = args.deploy_version if args.deploy_version in ("A", "B") else chosen
         results = run["results"]
         model_a = results["A"]["model"]
         model_b = results["B"]["model"]
-        deploy_model = results[chosen]["model"]
+        deploy_model = results[deploy_version]["model"]
         mean_a, std_a = results["A"]["mean"], results["A"]["std"]
         mean_b, std_b = results["B"]["mean"], results["B"]["std"]
-        deploy_mean, deploy_std = results[chosen]["mean"], results[chosen]["std"]
+        deploy_mean, deploy_std = (
+            results[deploy_version]["mean"],
+            results[deploy_version]["std"],
+        )
 
     # ------------------------------------------------------------------
     # Persist weights.
@@ -1063,6 +1106,9 @@ def main(argv: Sequence[str] | None = None) -> int:
             "dropout": args.dropout,
             "label_order": list(LABEL_ORDER),
             "feature_names": list(FEATURE_NAMES),
+            "model_feature_order": list(MODEL_FEATURE_ORDER),
+            "baseline_fields": list(BASELINE_ORDER),
+            "baseline_defaults": BASELINE_DEFAULTS,
             "mediapipe_landmarks": list(MEDIAPIPE_33),
             "mean": [float(value) for value in mean],
             "std": [float(value) for value in std],
@@ -1078,15 +1124,18 @@ def main(argv: Sequence[str] | None = None) -> int:
     deploy_meta = {
         "contract_version": CONTRACT_VERSION,
         "feature_spec_version": FEATURE_SPEC_VERSION,
-        "input_version": chosen,
-        "input_dim": int(len(mean_a if chosen == "A" else mean_b)),
+        "input_version": deploy_version,
+        "input_dim": int(len(mean_a if deploy_version == "A" else mean_b)),
         "hidden": list(args.hidden),
         "dropout": args.dropout,
         "label_order": list(LABEL_ORDER),
         "feature_names": list(FEATURE_NAMES),
+        "model_feature_order": list(MODEL_FEATURE_ORDER),
+        "baseline_fields": list(BASELINE_ORDER),
+        "baseline_defaults": BASELINE_DEFAULTS,
         "mediapipe_landmarks": list(MEDIAPIPE_33),
-        "mean": [float(value) for value in (mean_a if chosen == "A" else mean_b)],
-        "std": [float(value) for value in (std_a if chosen == "A" else std_b)],
+        "mean": [float(value) for value in (mean_a if deploy_version == "A" else mean_b)],
+        "std": [float(value) for value in (std_a if deploy_version == "A" else std_b)],
         "coord_scale_floor": COORD_SCALE_FLOOR,
         "seed": args.seed,
         "data_scope": scope,
@@ -1100,7 +1149,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     # ------------------------------------------------------------------
     if split["scheme"] != "loso":
         predicted, probabilities = _predict_frames(
-            deploy_model, test_frames, chosen, deploy_meta["mean"], deploy_meta["std"]
+            deploy_model, test_frames, deploy_version, deploy_meta["mean"], deploy_meta["std"]
         )
         deploy_test_metrics = compute_metrics(
             [frame.label for frame in test_frames], predicted
@@ -1119,15 +1168,15 @@ def main(argv: Sequence[str] | None = None) -> int:
                 ),
             }
         predicted_val, _ = _predict_frames(
-            deploy_model, val_frames, chosen, deploy_meta["mean"], deploy_meta["std"]
+            deploy_model, val_frames, deploy_version, deploy_meta["mean"], deploy_meta["std"]
         )
         deploy_val_metrics = compute_metrics(
             [frame.label for frame in val_frames], predicted_val
         )
     else:
-        deploy_test_metrics = results[chosen]["test"]
+        deploy_test_metrics = results[deploy_version]["test"]
         deploy_val_metrics = None
-        deploy_low_confidence = int(results[chosen].get("test_low_confidence", 0))
+        deploy_low_confidence = int(results[deploy_version].get("test_low_confidence", 0))
         framing_metrics = {}
 
     # ------------------------------------------------------------------
@@ -1149,14 +1198,15 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
     spec = _feature_spec(mean_a, std_a, mean_b, std_b, args)
     spec["deployment"] = {
-        "input_version": chosen,
+        "input_version": deploy_version,
         "checkpoint": "model.pt",
         "standardization": {
             "mean": deploy_mean.tolist(),
             "std": deploy_std.tolist(),
         },
     }
-    spec["model"]["chosen_input_version"] = chosen
+    spec["model"]["chosen_input_version"] = deploy_version
+    spec["model"]["validation_choice"] = chosen
     spec["model"]["parameter_counts"] = {
         version: int(results[version].get("params", 0)) for version in ("A", "B")
     }
@@ -1205,7 +1255,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             "fold_val_macro_f1": entry.get("fold_val_macro_f1"),
         }
 
-    chosen_entry = results[chosen]
+    chosen_entry = results[deploy_version]
     metrics_payload: dict[str, Any] = {
         "contract_version": CONTRACT_VERSION,
         "feature_spec_version": FEATURE_SPEC_VERSION,
@@ -1213,15 +1263,18 @@ def main(argv: Sequence[str] | None = None) -> int:
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "git_head": _git_head(),
         "seed": args.seed,
-        "chosen_input_version": chosen,
+        "chosen_input_version": deploy_version,
         "selection": {
             "criterion": "validation macro-F1",
             "chosen": chosen,
+            "deployed": deploy_version,
+            "deploy_override": bool(args.deploy_version in ("A", "B")),
             "A": results["A"].get("best_val_macro_f1"),
             "B": results["B"].get("best_val_macro_f1"),
             "note": (
-                "selection used validation macro-F1 only; test is reported for both "
-                "variants as a diagnostic and was not used for selection"
+                "validation macro-F1 selects the reference variant; --deploy-version "
+                "can pin the shipped checkpoint. Both variants' out-of-fold test "
+                "metrics are reported, so an override is visible, not hidden"
             ),
         },
         "decision_rule": {
@@ -1231,8 +1284,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             "applied_in_evaluation": True,
         },
         "input_versions": {
-            "A": len(FEATURE_NAMES),
-            "B": len(MEDIAPIPE_33) * 4 + len(FEATURE_NAMES),
+            "A": len(MODEL_FEATURE_ORDER),
+            "B": len(MEDIAPIPE_33) * 4 + len(MODEL_FEATURE_ORDER),
         },
         "model": {
             "architecture": "MLP",
@@ -1246,7 +1299,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         },
         "models": models_payload,
         "chosen": {
-            "input_version": chosen,
+            "input_version": deploy_version,
             "val": deploy_val_metrics or chosen_entry.get("val"),
             "test": deploy_test_metrics,
             "macro_f1": deploy_test_metrics["macro_f1"],
@@ -1297,7 +1350,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     _plot_confusion(
         deploy_test_metrics,
         out_dir / "confusion_matrix.png",
-        f"Posture v1 test confusion matrix ({scope})",
+        f"Posture {CONTRACT_VERSION} test confusion matrix ({scope})",
     )
 
     # Smoke samples: one per ground-truth class, fixed by frame_id.
@@ -1342,7 +1395,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     smoke_payload = {
         "contract_version": CONTRACT_VERSION,
         "feature_spec_version": FEATURE_SPEC_VERSION,
-        "input_version": chosen,
+        "input_version": deploy_version,
         "model_file": "model.pt",
         "model_sha256": _sha256(deploy_path),
         "created_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
@@ -1359,7 +1412,8 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     summary = {
         "out": str(out_dir),
-        "chosen_input_version": chosen,
+        "chosen_input_version": deploy_version,
+        "validation_chosen_version": chosen,
         "A_val_macro_f1": results["A"].get("best_val_macro_f1"),
         "B_val_macro_f1": results["B"].get("best_val_macro_f1"),
         "A_test_macro_f1": results["A"]["test"]["macro_f1"],

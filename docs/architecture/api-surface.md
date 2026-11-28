@@ -6,7 +6,7 @@
 ## 1. 现状一句话
 
 接口层已经完整：从注册登录到评估、计时、姿态、干预、反馈、问答、周复盘全部有路由、有 schema、有测试。
-缺的是**云资源本身**（DCS、RDS、ModelArts endpoint；OBS、KMS 为可选），所以现在所有云服务走 `mock` 适配层。姿态模型 v1（特征契约 v2）的训练包与离线报告已完成（`scripts/modelarts/reports/v1/`）；v3 内部 LOSO 完成（B 版 141 维，OOF macro-F1 0.7305），尚未部署，真实 endpoint 仍未开通。
+缺的是**云资源本身**（DCS、RDS、ModelArts endpoint；OBS、KMS 为可选），所以现在所有云服务走 `mock` 适配层。姿态模型 v1（特征契约 v2）是合成数据历史包（`scripts/modelarts/reports/v1/`）；v3 head 内部 LOSO 完成（A 版 16 维，OOF macro-F1 0.7759、forward_head F1 0.7142），部署包已生成但尚未部署，真实 endpoint 仍未开通。
 `GET /health/capabilities` 是自查入口：返回各依赖的 `provider / configured / reachable` 与限流参数。
 
 ## 2. 路由全表
@@ -31,6 +31,7 @@
 | POST | `/ingest/wearable` | 穿戴设备上报，**未实现**，固定 501 | `not_implemented`(501) |
 | POST | `/posture/risk` | 姿态特征 + 久坐/疼痛 → BRLI 风险与推荐动作、 citations | — |
 | POST | `/posture/infer` | 关键点 → ModelArts 姿态四分类（低置信度返回 `undetermined`）；训练包已完成，endpoint 待开通 | `modelarts_unavailable`(503) |
+| POST | `/posture/baseline` | 3–120 帧中立位 → 10 字段个人基线（服务端取中位数） | 422 |
 | GET | `/intervention/current` | 当前待完成动作 | `no_pending_intervention`(404)、`action_not_found`(404) |
 | POST | `/intervention/feedback` | 反馈触发状态迁移（完成/部分/跳过 + 障碍归因） | `safety_short_circuit`(403) |
 | POST | `/qa/ask` | 循证问答，返回答案与引用 id | — |
@@ -91,6 +92,8 @@ access 过期(401 token_expired) → POST /auth/refresh（换新一对，旧的�
 | — | AgentArts（可选） | 问答与方案解释的编排替身 | `/qa/ask` 返回真实答案与 citations |
 
 开通后必须补的三项验证：断网、关摄像头、ModelArts 超时回退（见 PROGRESS §5 手测清单）。
+
+初赛阶段只做一次性链路测试：云主机 + DCS + RDS，ModelArts 可选，OBS/KMS/AgentArts 不在本次范围。规格、预算、开通与删除步骤见 [`infra/huawei-cloud/cloud-test-checklist.md`](../../infra/huawei-cloud/cloud-test-checklist.md)。
 
 ## 7. 客户端接入状态
 
