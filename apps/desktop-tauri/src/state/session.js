@@ -546,6 +546,24 @@ export async function submitFeedback(payload) {
   }
 }
 
+export const advice = reactive({});
+
+// 切页时拉一次个性化建议；模型不可用就保留页面现有文案
+export async function loadAdvice(surface, fallback, context = {}) {
+  if (!aiEnabled.value) return;
+  try {
+    const result = await activeApi.advice({
+      surface,
+      state: state.currentState,
+      context,
+      fallback,
+    });
+    if (result?.text && result.source === "model") advice[surface] = result.text;
+  } catch {
+    /* 保持现有文案 */
+  }
+}
+
 export async function askQuestion() {
   const question = state.ai.question.trim();
   if (!aiEnabled.value || state.ai.busy) return;
