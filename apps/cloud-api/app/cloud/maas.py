@@ -111,6 +111,7 @@ class MaaSClient:
             ],
             "temperature": 0.2,
             "max_tokens": 300,
+            "enable_thinking": self._settings.maas_enable_thinking,
         }
 
         try:

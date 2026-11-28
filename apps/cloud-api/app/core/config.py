@@ -75,7 +75,9 @@ class Settings(BaseSettings):
     maas_endpoint: str | None = None
     maas_api_key: SecretStr | None = None
     maas_model: str = "openpangu-2.0-flash"
-    maas_timeout_seconds: float = 8.0
+    maas_timeout_seconds: float = 15.0
+    # 预览版是思考模型：默认关掉思考，1.5s 出答案、约 240 tokens；开思考要 10s、800+ tokens
+    maas_enable_thinking: bool = False
 
     obs_endpoint: str | None = None
     obs_bucket: str | None = None
