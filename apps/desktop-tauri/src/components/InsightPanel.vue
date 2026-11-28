@@ -3,6 +3,7 @@ import { computed, onMounted, watch } from "vue";
 import ErrorBanner from "./ErrorBanner.vue";
 import EvidenceCallout from "./EvidenceCallout.vue";
 import LoadingOverlay from "./LoadingOverlay.vue";
+import MarkdownText from "./MarkdownText.vue";
 import MedicalNote from "./MedicalNote.vue";
 import { REVIEW_SOURCE } from "../data/actionSources.js";
 import { aiEnabled, askQuestion, loadWeeklyReview, state } from "../state/session.js";
@@ -82,34 +83,34 @@ watch(
 
       <EvidenceCallout v-if="hasNotes" v-bind="REVIEW_SOURCE" />
 
-      <m3e-list variant="segmented" v-if="aiEnabled" class="qa">
-        <m3e-list-item>
-          <span class="material-symbols-rounded" slot="leading">chat</span>
-          问答
-        </m3e-list-item>
-        <m3e-list-item>
-          <div class="body">
-            <m3e-form-field variant="filled" class="ask">
-              <label slot="label" for="ai-question">输入你想问的问题...</label>
-              <input id="ai-question" v-model="state.ai.question" type="text" @keyup.enter="askQuestion" />
-              <m3e-icon-button slot="suffix" variant="filled"
-                :disabled.prop="state.ai.busy || !state.ai.question.trim()" @click="askQuestion">
-                <span class="material-symbols-rounded-fill">send</span>
-              </m3e-icon-button>
-            </m3e-form-field>
+      <header class="title-head">
+        <h2>问答</h2>
+      </header>
 
-            <ErrorBanner :error="state.errors.qa" />
+      <section v-if="aiEnabled" class="qa">
+        <div class="qa-input">
+          <input id="ai-question" v-model="state.ai.question" type="text"
+            placeholder="例如：开会时颈肩紧张，怎么快速缓解？" @keyup.enter="askQuestion" />
+          <m3e-icon-button variant="filled"
+            :disabled.prop="state.ai.busy || !state.ai.question.trim()" @click="askQuestion">
+            <span class="material-symbols-rounded-fill">send</span>
+          </m3e-icon-button>
+        </div>
 
-            <div class="answer" v-if="state.ai.answer">
-              <p>{{ state.ai.answer }}</p>
-              <p class="cites" v-if="state.ai.citations.length">
-                参考 {{ state.ai.citations.length }} 条文献
-              </p>
-              <p class="disclaimer" v-if="state.ai.disclaimer">{{ state.ai.disclaimer }}</p>
-            </div>
-          </div>
-        </m3e-list-item>
-      </m3e-list>
+        <ErrorBanner :error="state.errors.qa" />
+
+        <div class="qa-body">
+          <MarkdownText v-if="state.ai.answer" :text="state.ai.answer" />
+          <details v-if="state.ai.citations.length" class="qa-refs">
+            <summary>参考 {{ state.ai.citations.length }} 条文献</summary>
+            <ul>
+              <li v-for="item in state.ai.citations" :key="item">{{ item }}</li>
+            </ul>
+          </details>
+          <p class="qa-disclaimer" v-if="state.ai.disclaimer">{{ state.ai.disclaimer }}</p>
+          <LoadingOverlay v-if="state.ai.busy" label="正在生成回答…" />
+        </div>
+      </section>
 
       <MedicalNote />
     </div>
@@ -120,6 +121,70 @@ watch(
 <style scoped>
 .insight-card {
   position: relative;
+}
+
+.qa {
+  margin-top: 0.5rem;
+}
+
+.qa-title {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+}
+
+.qa-input {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.qa-input input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0.6rem 0.75rem;
+  border: 0.0625rem solid var(--md-sys-color-outline-variant);
+  border-radius: 0.625rem;
+  background: var(--md-sys-color-surface-container-lowest);
+  color: var(--md-sys-color-on-surface);
+  font: inherit;
+  font-size: 0.875rem;
+}
+
+.qa-input input::placeholder {
+  color: var(--md-sys-color-outline);
+}
+
+.qa-input input:focus {
+  outline: none;
+  border-color: var(--md-sys-color-secondary);
+}
+
+.qa-body {
+  position: relative;
+  margin-top: 0.75rem;
+}
+
+.qa-refs {
+  margin-top: 0.5rem;
+  color: var(--md-sys-color-tertiary);
+  font-size: 0.688rem;
+}
+
+.qa-refs summary {
+  cursor: pointer;
+}
+
+.qa-refs ul {
+  margin: 0.25rem 0 0;
+  padding-left: 1.1rem;
+  line-height: 1.6;
+}
+
+.qa-disclaimer {
+  margin-top: 0.375rem;
+  color: var(--md-sys-color-tertiary);
+  font-size: 0.688rem;
+  line-height: 1.6;
 }
 
 .body {
@@ -198,5 +263,10 @@ watch(
   margin-top: 0.75rem;
   color: var(--md-sys-color-outline);
   font-size: 0.75rem;
+}
+
+.title-head{
+  margin-top: 1.6rem;
+  padding-top: 1rem;
 }
 </style>
