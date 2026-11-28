@@ -196,9 +196,23 @@ function fieldErrorText(error) {
   const detail = error.payload?.detail;
   if (!Array.isArray(detail)) return null;
   return detail
-    .map((item) => item?.msg ?? String(item))
+    .map((item) => translateFieldMessage(item?.msg ?? String(item)))
     .filter(Boolean)
     .join("；");
+}
+
+// 后端校验信息是英文，直接展示会漏到界面上
+function translateFieldMessage(message) {
+  const text = String(message ?? "");
+  const min = /at least (\d+) characters?/i.exec(text);
+  if (min) return `至少填写 ${min[1]} 个字`;
+  if (/field required/i.test(text)) return "有必填项没填";
+  if (/should be a valid/i.test(text)) return "格式不正确";
+  const atLeast = /greater than or equal to (\d+)/i.exec(text);
+  if (atLeast) return `不能小于 ${atLeast[1]}`;
+  const atMost = /less than or equal to (\d+)/i.exec(text);
+  if (atMost) return `不能大于 ${atMost[1]}`;
+  return text;
 }
 
 function describePlainError(error) {

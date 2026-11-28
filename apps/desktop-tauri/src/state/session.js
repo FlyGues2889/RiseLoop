@@ -548,7 +548,11 @@ export async function submitFeedback(payload) {
 
 export async function askQuestion() {
   const question = state.ai.question.trim();
-  if (!aiEnabled.value || state.ai.busy || !question) return;
+  if (!aiEnabled.value || state.ai.busy) return;
+  if (question.length < 2) {
+    state.error = { title: "问题太短", message: "至少输入两个字再提问。", detail: null, hint: null };
+    return;
+  }
   state.ai.busy = true;
   state.error = null;
   try {
