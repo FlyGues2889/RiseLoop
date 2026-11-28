@@ -74,7 +74,7 @@ class Settings(BaseSettings):
     # MaaS 预置模型服务（西南-贵阳一），跨区调用；不配就走知识库原文
     maas_endpoint: str | None = None
     maas_api_key: SecretStr | None = None
-    maas_model: str = "openpangu-2.1-pro"
+    maas_model: str = "openpangu-2.0-flash"
     maas_timeout_seconds: float = 8.0
 
     obs_endpoint: str | None = None
