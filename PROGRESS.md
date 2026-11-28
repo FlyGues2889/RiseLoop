@@ -63,7 +63,7 @@
 | 默认形态 | ✅ | 只提供云端模式，登录页不展示离线入口 |
 | 错误提示 | ✅ | 按错误码说话；凭证真失效才回登录页 |
 | 亮暗色主题 | ✅ | 首屏预应用，避免白闪 |
-| 打包产物 | ✅ | `bundle.active=false`：`pnpm tauri build` 只产出免安装单文件 `target/release/rise-loop.exe`（约 30MB），不生成 msi / setup.exe；目标机需 WebView2 运行时 |
+| 打包产物 | ✅ | `bundle.active=false`：只产出免安装单文件 `target/release/rise-loop.exe`（约 30MB），不生成 msi / setup.exe；`tauri build` 走 `build:release` 守卫，没有 `VITE_API_BASE` 或地址是回环直接失败，构建日志打印最终云端地址；目标机需 WebView2 运行时 |
 
 ## 4. 交付与文档
 
@@ -71,7 +71,7 @@
 |---|---|---|
 | README（四问） | ✅ | 保持现状，不再往里面堆进度；两处占位图（demo.gif、architecture.png）已移除，仓库内无死链 |
 | `infra/docker` | ✅ | `docker-compose.cloud.yml`、`docker-compose.dev.yml`、`env.example` 三个文件；镜像由 `apps/cloud-api/Dockerfile` 构建 |
-| `infra/huawei-cloud` | ✅ | `README.md`：复现与验证步骤；`cloud-test-checklist.md`：开通前的规格、预算与删除清单；`deployed-config.md`：2026-11-28 实测配置与结果；资源已开通并验证 |
+| `infra/huawei-cloud` | ✅ | `README.md`：复现与验证步骤；`cloud-test-checklist.md`：开通前的规格、预算与删除清单；`deployed-config.md`：2026-11-28 实测配置与结果；`ai-test-checklist.md` + `ai_checks.py`：AI 建议链路检查；资源已开通并验证 |
 | `infra/k8s` | ⬜ | 不存在，本期部署走 Docker Compose on ECS，不上 CCE |
 | 架构图 / 演示素材 | ⬜ | 目录已删除，图未画；logo 现成：`apps/desktop-tauri/src-tauri/icons/appIcon.{ico,svg}` |
 | 演示数据脚本 | ⬜ | 未生成；落地时新建 `data/seeds` |

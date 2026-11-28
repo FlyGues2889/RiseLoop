@@ -182,11 +182,15 @@ pnpm dev
 
 ### 打包桌面端
 
-```bash
-pnpm tauri build
+打包前必须先指定云端地址，否则构建直接失败——避免打出一个只能连本机的空壳安装包：
+
+```powershell
+$env:VITE_API_BASE="http://<ECS 公网 IP>:8000"; pnpm tauri build
 ```
 
 产出免安装单文件 `apps/desktop-tauri/src-tauri/target/release/rise-loop.exe`。目标机需要 WebView2 运行时；Windows 11 自带，Windows 10 一般随 Edge 预装。
+
+只做本机联调包时显式放行：`$env:ALLOW_LOCAL_API="1"`。地址也可以写在 `apps/desktop-tauri/.env.production`，构建日志会打印最终生效的地址。
 
 ## 测试与部署复现
 
