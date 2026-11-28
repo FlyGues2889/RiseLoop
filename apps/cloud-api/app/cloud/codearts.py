@@ -3,7 +3,7 @@ from typing import Any, Literal
 
 import httpx
 
-from ..core.config import Settings
+from ..core.config import Settings, secret_text
 from .base import ServiceStatus
 
 AgentName = Literal["planning", "executing"]
@@ -17,7 +17,10 @@ class CodeArtsService:
 
     @property
     def configured(self) -> bool:
-        return bool(self._settings.codearts_endpoint and self._settings.codearts_api_key)
+        return bool(
+            self._settings.codearts_endpoint
+            and secret_text(self._settings.codearts_api_key)
+        )
 
     def _agent_id(self, agent: AgentName) -> str | None:
         if agent == "planning":
@@ -26,7 +29,7 @@ class CodeArtsService:
 
     def _headers(self) -> dict[str, str]:
         return {
-            "Authorization": f"Bearer {self._settings.codearts_api_key}",
+            "Authorization": f"Bearer {secret_text(self._settings.codearts_api_key) or ''}",
             "Content-Type": "application/json",
         }
 

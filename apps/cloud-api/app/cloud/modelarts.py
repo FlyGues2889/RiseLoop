@@ -15,7 +15,7 @@ from typing import Any, Literal
 import httpx
 from pydantic import BaseModel
 
-from ..core.config import Settings
+from ..core.config import Settings, secret_text
 from ..schemas.posture import (
     UPPER_BODY_VISIBILITY_MIN,
     PostureBaseline,
@@ -114,7 +114,7 @@ class ModelArtsService:
 
     def _headers(self) -> dict[str, str]:
         headers = {"Content-Type": "application/json"}
-        key = self._settings.modelarts_api_key
+        key = secret_text(self._settings.modelarts_api_key)
         if not key:
             return headers
         header = self._settings.modelarts_auth_header

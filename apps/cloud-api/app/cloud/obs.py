@@ -4,7 +4,7 @@ import hmac
 from datetime import UTC, datetime, timedelta
 from urllib.parse import quote, urlparse
 
-from ..core.config import Settings
+from ..core.config import Settings, secret_text
 from .base import ServiceStatus
 
 
@@ -19,8 +19,8 @@ class ObsService:
         return bool(
             self._settings.obs_endpoint
             and self._settings.obs_bucket
-            and self._settings.obs_ak
-            and self._settings.obs_sk
+            and secret_text(self._settings.obs_ak)
+            and secret_text(self._settings.obs_sk)
         )
 
     def _scheme(self) -> str:
@@ -37,7 +37,7 @@ class ObsService:
             f"{method}\n\n\n{expires_at}\n/{self._settings.obs_bucket}{object_path}"
         )
         digest = hmac.new(
-            (self._settings.obs_sk or "").encode(),
+            (secret_text(self._settings.obs_sk) or "").encode(),
             string_to_sign.encode(),
             hashlib.sha1,
         ).digest()
@@ -57,12 +57,16 @@ class ObsService:
             (datetime.now(UTC) + timedelta(seconds=expires_seconds)).timestamp()
         )
         signature = self._signature(method, key, expires_at)
-        return (
+        url = (
             f"{self._scheme()}://{self._host()}{object_path}"
-            f"?AccessKeyId={self._settings.obs_ak}"
+            f"?AccessKeyId={secret_text(self._settings.obs_ak)}"
             f"&Expires={expires_at}"
             f"&Signature={signature}"
         )
+        token = secret_text(self._settings.obs_security_token)
+        if token:
+            url += f"&SecurityToken={quote(token, safe='')}"
+        return url
 
     async def check(self) -> ServiceStatus:
         if self._settings.cloud_provider == "mock":

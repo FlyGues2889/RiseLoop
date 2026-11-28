@@ -70,7 +70,7 @@ def test_dependency_report_never_leaks_credentials():
         redis_password="redis-secret-value",
         codearts_api_key="codearts-secret-value",
         obs_sk="obs-secret-value",
-        kms_sk="kms-secret-value",
+        kms_master_key="kms-secret-value",
     ) as client:
         response = client.get("/health/deps")
         body = response.text

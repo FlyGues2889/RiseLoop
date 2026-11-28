@@ -9,7 +9,7 @@ from typing import Any
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-from .config import Settings
+from .config import Settings, secret_text
 
 _ALG = "HS256"
 _bearer = HTTPBearer(auto_error=False)
@@ -94,7 +94,7 @@ async def get_token_claims(
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="missing_token")
     settings: Settings = request.app.state.settings
     try:
-        payload = decode_token(credentials.credentials, settings.jwt_secret)
+        payload = decode_token(credentials.credentials, secret_text(settings.jwt_secret))
     except TokenError as exc:
         # 过期和伪造要分开：前者只需重新登录，后者说明凭证本身有问题。
         detail = "token_expired" if str(exc) == "expired" else "invalid_token"

@@ -3,7 +3,7 @@ from datetime import UTC, datetime
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from ..deps import SettingsDep, StoreDep, UserIdDep
-from ...core.config import Settings
+from ...core.config import Settings, secret_text
 from ...core.security import (
     TokenError,
     decode_token,
@@ -25,10 +25,10 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 def _tokens(user_id: str, settings: Settings) -> TokenResponse:
     return TokenResponse(
-        access_token=encode_token(user_id, settings.jwt_secret, settings.jwt_ttl_seconds),
+        access_token=encode_token(user_id, secret_text(settings.jwt_secret), settings.jwt_ttl_seconds),
         expires_in=settings.jwt_ttl_seconds,
         refresh_token=encode_token(
-            user_id, settings.jwt_secret, settings.jwt_refresh_ttl_seconds, "refresh"
+            user_id, secret_text(settings.jwt_secret), settings.jwt_refresh_ttl_seconds, "refresh"
         ),
         refresh_expires_in=settings.jwt_refresh_ttl_seconds,
     )
@@ -64,7 +64,7 @@ async def login(payload: LoginRequest, store: StoreDep, settings: SettingsDep) -
 @router.post("/refresh", response_model=TokenResponse)
 async def refresh(payload: RefreshRequest, store: StoreDep, settings: SettingsDep) -> TokenResponse:
     try:
-        claims = decode_token(payload.refresh_token, settings.jwt_secret)
+        claims = decode_token(payload.refresh_token, secret_text(settings.jwt_secret))
     except TokenError as exc:
         # 过期与伪造分开说，但都只影响续期，不需要再走一次密码
         detail = "refresh_expired" if str(exc) == "expired" else "invalid_refresh_token"
@@ -95,7 +95,7 @@ async def logout(
     await _revoke(store, claims)
     if payload is not None and payload.refresh_token:
         try:
-            refresh_claims = decode_token(payload.refresh_token, settings.jwt_secret)
+            refresh_claims = decode_token(payload.refresh_token, secret_text(settings.jwt_secret))
         except TokenError:
             refresh_claims = None
         if refresh_claims is not None:

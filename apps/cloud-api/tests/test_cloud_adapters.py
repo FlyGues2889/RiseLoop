@@ -66,6 +66,22 @@ async def test_obs_huawei_presign_contains_signature():
 
 
 @pytest.mark.asyncio
+async def test_obs_presign_carries_temporary_security_token():
+    service = ObsService(
+        _settings(
+            cloud_provider="huawei",
+            obs_endpoint="https://riseloop.obs.cn-north-4.myhuaweicloud.com",
+            obs_bucket="riseloop",
+            obs_ak="AK",
+            obs_sk="SK",
+            obs_security_token="temporary-token",
+        )
+    )
+    url = await service.presign_get("exports/weekly.json", expires_seconds=600)
+    assert "SecurityToken=temporary-token" in url
+
+
+@pytest.mark.asyncio
 async def test_obs_requires_configuration_in_huawei_mode():
     service = ObsService(_settings(cloud_provider="huawei"))
     with pytest.raises(RuntimeError):

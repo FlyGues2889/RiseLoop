@@ -4,7 +4,7 @@ import os
 
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
-from ..core.config import Settings
+from ..core.config import Settings, secret_text
 from .base import ServiceStatus
 
 KEY_BYTES = 32
@@ -23,13 +23,15 @@ class KmsService:
         return bool(self._settings.kms_endpoint and self._settings.kms_key_id)
 
     def _master_key(self) -> bytes:
-        if self._settings.kms_master_key:
-            key = base64.b64decode(self._settings.kms_master_key)
+        master = secret_text(self._settings.kms_master_key)
+        if master:
+            key = base64.b64decode(master)
             if len(key) != KEY_BYTES:
                 raise ValueError("kms_master_key must be 32 bytes base64 encoded")
             return key
         if self._settings.cloud_provider == "mock":
-            return hashlib.sha256(self._settings.jwt_secret.encode()).digest()
+            jwt = secret_text(self._settings.jwt_secret) or ""
+            return hashlib.sha256(jwt.encode()).digest()
         raise RuntimeError("kms_master_key is not configured")
 
     async def check(self) -> ServiceStatus:
