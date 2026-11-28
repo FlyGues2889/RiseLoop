@@ -8,7 +8,7 @@ Agent 编排层中的**决策编排者**（可选资产，平台无关：AgentAr
 
 - Skill：`posture-assessment`、`intervention-state-machine`、`safety-check`
 - MCP 工具：`read_realtime_state`、`get_actions_by_state`、`write_intervention_result`
-- 知识检索：仅 `qa-responder` 场景
+- 知识检索：仅 `qa-responder` 场景；生成由云端 `qa-responder` 调用 MaaS 盘古，Agent 不直接持有模型密钥
 
 ## 工作流
 

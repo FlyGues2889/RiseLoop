@@ -99,7 +99,7 @@ cloud-api  FastAPI
 intervention-engine
   纯函数状态迁移 · 无 IO · 四分支 + hold
             │
-华为云  RDS 事实数据 · DCS 实时状态 · ModelArts 姿态推理
+华为云  RDS 事实数据 · DCS 实时状态 · ModelArts 姿态推理 · MaaS 盘古问答
 ```
 
 | 层 | 组件 | 职责 | 状态 |
@@ -110,6 +110,7 @@ intervention-engine
 | 事实数据 | RDS for PostgreSQL | 用户、评估、迁移历史、执行记录、动作库、问答日志、安全事件 | ✅ 已接入（2026-11-28） |
 | 实时状态 | DCS for Redis | 会话、久坐计时、待响应干预、安全短缓存 | ✅ 已接入（2026-11-28） |
 | 姿态推理 | ModelArts 在线服务 | 33 点 → 2D 特征 + 个人基线 → 四分类；2.5 秒超时降级 | ✅ v3 head A 版已部署（2026-11-28），实测 `source=huawei`；精度仅内部评估 |
+| 问答生成 | MaaS 盘古预置模型 | 知识库命中后生成回答；无命中或失败回退原文 | ✅ 已接入（2026-11-28，`openpangu-2.0-flash`） |
 | 工具与技能 | MCP Server + Skills | 3 个固定工具、4 个平台无关 Skill，不直连数据库 | ✅ 已实现 |
 | 部署 | 华为云 ECS + Docker Compose | 公网 API、镜像与编排清单 | ✅ 已部署（2026-11-28，HTTP 测试期） |
 | 加密与分发 | KMS + OBS | 健康字段加密、安装包与演示材料分发 | 🟡 OBS 已用于模型包；KMS 未接线 |
@@ -129,12 +130,14 @@ v1 模型输入 5 个派生特征，结构为 64 → 32 的 MLP，共 2,596 个�
 
 特征契约 v3 去掉 z 轴 `head_forward_ratio`，改用 2D 颈长比、头偏移与每人中立位基线偏差；模型内部再加 7 个头部几何 delta。v3 head 内部 LOSO 已完成（14 人逐个留出）：A 版 16 维、3,300 参数，out-of-fold macro-F1 0.7759、accuracy 0.7765；每类 F1 为 baseline 0.763 / forward_head 0.714 / lateral_tilt 0.787 / undetermined 0.839。B 版 148 维为 0.7722，部署包按 A 版。只有 14 人、单一设备/场景，不能当作对外准确率；报告在 `scripts/modelarts/reports/v3-loso-head/`。v3 已部署到 ModelArts（2026-11-28），推理超时或失败时客户端不展示姿态结论，也不伪造结果。
 
+问答走“知识库检索 → MaaS 盘古生成 → 引用校验”：只把命中的条目和问题发给 `openpangu-2.0-flash`，不传用户标识或健康档案；思考默认关闭（约 1.5 秒 / 240 tokens），未命中不调用、失败回退知识库原文。状态迁移、BRLI 风险融合与安全短路仍由纯 Python / 状态机完成，没有外移给大模型。
+
 ## 工程验证
 
 | 项目 | 结果 |
 | :--- | :--- |
 | 状态机 | 4 状态 × 4 分支 + `hold`；25 个 Python / JS 跨语言场景全字段对拍 |
-| 自动化测试 | 167 项 Python 测试、21 项 Rust 测试、12 项 api-client 测试通过；`pnpm build` 通过 |
+| 自动化测试 | 170 项 Python 测试、21 项 Rust 测试、12 项 api-client 测试通过；`pnpm build` 通过 |
 | 动作库 | 15 条动作覆盖四状态，单条 1–3 分钟；S2 一轮 2–3 条、合计 5–8 分钟 |
 | 安全 | 8 类红旗短路；高风险在中间件层拦截，返回 403 与就医提示 |
 | 接口 | 登录限流 10 次/60 秒，业务 120 次/60 秒；JWT access 1 小时、refresh 30 天，支持轮换与 jti 吊销 |

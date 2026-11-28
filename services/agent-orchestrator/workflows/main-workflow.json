@@ -54,7 +54,7 @@
   },
   "step_prefixes": {
     "guard:": "cloud-api 中间件，不产生工具调用",
-    "skill:": "CodeArts Skill，不访问数据库",
+    "skill:": "平台无关 Skill 资产（可挂载 AgentArts/CodeArts/MCP 客户端），不访问数据库",
     "internal:": "cloud-api 内部处理，不计入 MCP 工具",
     "default": "MCP 工具调用"
   },

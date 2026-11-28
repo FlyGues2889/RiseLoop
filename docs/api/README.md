@@ -21,7 +21,7 @@ Base URL：本地 `http://127.0.0.1:8000`；测试环境为 `http://<ECS 公网 
 | GET | `/intervention/current` | 当前待执行干预 |
 | POST | `/intervention/feedback` | 提交反馈，返回下一状态 |
 | GET | `/actions/{state}` | 当前状态可用动作 |
-| POST | `/qa/ask` | 知识库问答，返回答案、引用与免责声明 |
+| POST | `/qa/ask` | 知识库检索 + MaaS 盘古生成，返回答案、引用与免责声明 |
 | GET | `/review/weekly` | 周度复盘：完成率、疼痛趋势、迁移次数、阻碍分布 |
 | POST | `/ingest/wearable` | 预留，返回 501 |
 
@@ -88,4 +88,4 @@ uvicorn app.main:app --app-dir apps/cloud-api --reload --port 8000
 python -m pytest -q
 ```
 
-问答走 `data/knowledge/articles.json` 检索，本地生成答案并附 `citations`；接入 AgentArts 后可增强（可选），未接入或调用失败一律回退本地。知识库无命中时明确返回“资料中没有”，不编造。
+问答先查 `data/knowledge/articles.json`，命中后把问题、当前阶段和命中条目交给 MaaS 盘古 `openpangu-2.0-flash` 生成回答，并附 `citations`；未配置、超时、非 2xx 或空回复一律回退知识库原文。知识库无命中时不调用模型，明确返回“资料中没有”，不编造。盘古只收到问题与条目，不收到用户标识或健康档案。

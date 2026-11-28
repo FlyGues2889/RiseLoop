@@ -1,4 +1,4 @@
-"""MaaS（ModelArts Studio 预置模型服务）适配层。
+"""MaaS（ModelArts Studio 盘古预置模型）适配层。
 
 职责边界：
 - 只发问题与已检索到的知识条目，不发健康档案、用户标识或原始日志；

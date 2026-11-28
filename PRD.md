@@ -73,12 +73,12 @@
 | 状态迁移 | 由 `intervention-engine` 纯函数实现，表驱动单测；迁移写 `state_transitions` |
 | 安全合规 | 所有推荐前强制 `safety-check` 前置中间件；高风险直接短路 |
 | 周度回顾 | 完成率、状态轨迹、平均久坐间隔、高频跳过时段、BCT 执行摘要、一句话建议 |
-| 智能问答 | 知识库检索；附免责声明；涉医疗判断引导就医 |
+| 智能问答 | 知识库检索 + MaaS 盘古生成；只依据命中条目，附引用与免责声明；无命中不生成，涉医疗判断引导就医 |
 
 ## 7. 技术架构约束
 
 - **三层分离**：MCP 工具层（确定性数据访问）→ Skill 能力层（评估/状态机/安全/问答）→ Agent 编排层（可选，平台无关；决策本身留在纯函数里）。
-- **云服务核心三件**：DCS for Redis（实时状态）、RDS for PostgreSQL（事实数据）、ModelArts 在线服务（姿态推理）。其余服务围绕这三件，能省则省。
+- **云服务核心三件**：DCS for Redis（实时状态）、RDS for PostgreSQL（事实数据）、ModelArts 在线服务（姿态推理）。其余服务围绕这三件，能省则省；问答生成另接 MaaS 盘古预置模型（可选，未配置回退知识库原文）。
 - **MCP 工具恰好 3 个**（平台建议 3–8 个，3 个最优）：
   1. `read_realtime_state`：读 Redis 当前状态、久坐计时、待响应干预。
   2. `get_actions_by_state`：按状态/部位/时长筛选动作库。
@@ -92,7 +92,7 @@
 - **云适配层**：所有华为云访问统一收口在 `apps/cloud-api/app/cloud/`（rds / dcs / modelarts / obs / kms / codearts），业务代码不自行建连接；适配层支持 `cloud_provider=mock|huawei` 两种云端配置，本地无云资源也能跑通全部测试。
 - **健康检查**：`GET /health/live`（存活，不依赖外部）、`/health/deps`（逐项依赖状态）、`/health/ready`（必需项 rds/redis 任一不可达返回 503）；响应仅含布尔与耗时，不含 DSN、密码、AK/SK、原始健康数据。
 - **华为云高可用**：RDS PostgreSQL 兼容、多可用区、自动备份、KMS 加密；DCS Redis 主备（1 主 1 备）；`cloud-api` 无状态部署 ECS/CCE，支持水平扩展。
-- **AI 绑定**：核心 AI 使用华为云 ModelArts 在线推理与华为 AI 技术，禁止纯第三方大模型套壳；CodeArts 仅作研发工具，不参与运行时决策。
+- **AI 绑定**：核心 AI 使用华为云 ModelArts 在线推理（姿态）与 MaaS 盘古预置模型（问答生成），禁止纯第三方大模型套壳；状态迁移、风险融合与安全判定留在纯 Python；CodeArts 仅作研发工具，不参与运行时决策。
 
 ## 8. 云端/本地职责划分
 
@@ -127,7 +127,7 @@
 | GET | `/intervention/current` | 当前待执行干预 |
 | POST | `/intervention/feedback` | 提交反馈，返回下一状态 |
 | GET | `/review/weekly` | 周度回顾洞察 |
-| POST | `/qa` | 智能问答 |
+| POST | `/qa/ask` | 智能问答 |
 | GET | `/actions/{state}` | 当前状态可用动作（经 MCP） |
 | POST | `/ingest/wearable` | MVP 返回 501，架构预留 |
 

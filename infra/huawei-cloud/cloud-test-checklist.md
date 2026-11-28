@@ -104,6 +104,15 @@ RISELOOP_MODELARTS_MODEL_NAME=serve
 RISELOOP_MODELARTS_TLS_VERIFY=true
 ```
 
+可选（问答生成）：MaaS 盘古预置模型；不填则回退知识库原文。
+
+```dotenv
+RISELOOP_MAAS_ENDPOINT=https://api.modelarts-maas.com/openai/v1
+RISELOOP_MAAS_API_KEY=
+RISELOOP_MAAS_MODEL=openpangu-2.0-flash
+RISELOOP_MAAS_ENABLE_THINKING=false
+```
+
 ## 6. 验证
 
 ```bash
@@ -116,6 +125,7 @@ python3 infra/huawei-cloud/smoke.py http://<公网IP>:8000
 
 - `/health/ready` 为 200，`rds.reachable=true`、`redis.reachable=true`。
 - `/health/capabilities` 为 `store_backend=sql`、`cloud_provider=huawei`。
+- 填了 MaaS 时 `/health/capabilities` 的 `maas.configured=true`；问答命中返回引用与生成答案，未命中不编造。
 - `smoke.py` 最后一行 `OK`，反馈含 `from_state` / `to_state` / `transition_type`。
 - RDS 可见 `users`、`assessments`、`state_transitions`；Redis 可见 `session:*`。
 

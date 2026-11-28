@@ -87,7 +87,11 @@ def main():
     check(caps.get("store_backend") == "sql", f"store_backend={caps.get('store_backend')}, expected sql")
     modelarts = next((d for d in caps.get("dependencies", []) if d.get("name") == "modelarts"), {})
     check(modelarts.get("configured") is True, "modelarts not configured")
-    print(f"[1] health              ready, provider={caps['cloud_provider']}, store={caps['store_backend']}")
+    maas = next((d for d in caps.get("dependencies", []) if d.get("name") == "maas"), {})
+    print(
+        f"[1] health              ready, provider={caps['cloud_provider']}, store={caps['store_backend']}, "
+        f"modelarts={modelarts.get('configured')}, maas={maas.get('configured')}"
+    )
 
     email = f"ai-check-{int(time.time())}@riseloop.app"
     _, auth = call(
@@ -189,7 +193,11 @@ def main():
     )
     check(qa.get("citations"), "qa citations empty for a known question")
     check("资料中没有" not in qa.get("answer", ""), "known question fell back to no-match")
-    print(f"[8] qa hit              citations={qa['citations']} answer={qa['answer'][:40]}")
+    model_label = "pangu" if maas.get("configured") else "template"
+    print(
+        f"[8] qa hit              model={model_label} citations={qa['citations']} "
+        f"answer={qa['answer'][:40]}"
+    )
 
     _, qa_miss = call(
         "POST", "/qa/ask", {"question": "今天天气怎么样", "state": "S1"}, token, expect=200

@@ -148,7 +148,7 @@ curl -s http://<公网IP>:8000/health/capabilities
 - `/health/ready`：HTTP 200，`status=ready`，`rds.reachable=true`、`redis.reachable=true`
 - `/health/capabilities`：`store_backend=sql`、`cloud_provider=huawei`，
   `redis.provider=huawei-dcs`、`rds.provider=huawei-rds`
-- `/health/deps` 六项里 `codearts` / `obs` / `kms` / `modelarts` 未配置属正常，不影响 ready
+- `/health/deps` 七项里的 `codearts` / `obs` / `kms` 未配置属正常；`modelarts` / `maas` 未配置只影响姿态推理或问答生成，不影响 ready
 
 `/health/*` 不回显 DSN、口令或密钥；不要为排障把这些字段加进响应。
 
@@ -207,6 +207,22 @@ RISELOOP_MODELARTS_TLS_VERIFY=false
 ```
 
 未配置或服务停掉时 `/posture/infer` 返回 503 `modelarts_unavailable`，不影响启动与 ready。
+
+## 8.1 接 MaaS 盘古（可选）
+
+问答生成走 MaaS 预置模型；不配则回退知识库原文。
+
+```dotenv
+RISELOOP_MAAS_ENDPOINT=https://api.modelarts-maas.com/openai/v1
+RISELOOP_MAAS_API_KEY=<API Key>
+RISELOOP_MAAS_MODEL=openpangu-2.0-flash
+RISELOOP_MAAS_ENABLE_THINKING=false
+```
+
+- 服务开通在西南-贵阳一，北京四后端跨区调用；`/health/capabilities` 的 `maas.configured=true` 表示已配置。
+- `enable_thinking=false`：约 1.5s / 240 tokens；开启思考约 10s / 800+ tokens。
+- 只有知识库命中才调用模型；未配置、超时、非 2xx 或空回复回退原文；无命中不调用、不编造。
+- 密钥只在服务器 `.env`，不进仓库、镜像或客户端；测试期密钥必须轮换。
 
 ## 9. 客户端接入
 

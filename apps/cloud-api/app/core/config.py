@@ -71,7 +71,7 @@ class Settings(BaseSettings):
     codearts_executing_agent_id: str | None = None
     codearts_timeout_seconds: float = 10.0
 
-    # MaaS 预置模型服务（西南-贵阳一），跨区调用；不配就走知识库原文
+    # MaaS 盘古预置模型服务（西南-贵阳一），跨区调用；不配就走知识库原文
     maas_endpoint: str | None = None
     maas_api_key: SecretStr | None = None
     maas_model: str = "openpangu-2.0-flash"

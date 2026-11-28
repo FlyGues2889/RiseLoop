@@ -34,7 +34,7 @@
 | POST | `/posture/baseline` | 3–120 帧中立位 → 10 字段个人基线（服务端取中位数） | 422 |
 | GET | `/intervention/current` | 当前待完成动作 | `no_pending_intervention`(404)、`action_not_found`(404) |
 | POST | `/intervention/feedback` | 反馈触发状态迁移（完成/部分/跳过 + 障碍归因） | `safety_short_circuit`(403) |
-| POST | `/qa/ask` | 循证问答，返回答案与引用 id | — |
+| POST | `/qa/ask` | 循证问答：知识库检索 + MaaS 盘古生成；无命中不生成，失败回退原文 | — |
 | GET | `/review/weekly` | 近 N 天周复盘（默认 7） | — |
 
 ## 3. 鉴权生命周期
@@ -72,8 +72,8 @@ access 过期(401 token_expired) → POST /auth/refresh（换新一对，旧的�
 | `RISELOOP_RDS_DSN` 或 `RDS_HOST/RDS_USER/RDS_DB/RDS_PASSWORD` | 配了就走 SQL 存储，否则内存存储 |
 | `RISELOOP_REDIS_URL` 或 `REDIS_HOST` | 配了实时状态走 DCS，否则进程内存 |
 | `RISELOOP_MODELARTS_ENDPOINT / _API_KEY / _PROJECT_ID / _MODEL_NAME` | 姿态推理；不配时 `/posture/infer` 返回 503，端侧显式降级 |
-| `RISELOOP_CODEARTS_ENDPOINT / _API_KEY / _PLANNING_AGENT_ID / _EXECUTING_AGENT_ID` | 问答与规划智能体（AgentArts，未开通） |
-| `RISELOOP_MAAS_ENDPOINT / _API_KEY / _MODEL` | 问答生成：MaaS 预置模型（西南-贵阳一，跨区调用；未配置时走知识库原文） |
+| `RISELOOP_CODEARTS_ENDPOINT / _API_KEY / _PLANNING_AGENT_ID / _EXECUTING_AGENT_ID` | CodeArts 研发工具，不进运行时；问答已走 MaaS，不再依赖 AgentArts |
+| `RISELOOP_MAAS_ENDPOINT / _API_KEY / _MODEL / _ENABLE_THINKING / _TIMEOUT_SECONDS` | 问答生成：MaaS 盘古（西南-贵阳一，跨区；思考默认关，约 1.5s；未配置或失败回退原文） |
 | `RISELOOP_OBS_*`、`RISELOOP_KMS_*` | 对象存储与密钥托管，业务尚未接线 |
 | `RISELOOP_JWT_SECRET` | **上线必须换**，默认值是本地开发用的 |
 | `RISELOOP_JWT_TTL_SECONDS / JWT_REFRESH_TTL_SECONDS` | 访问 1 小时 / 刷新 30 天 |
@@ -90,11 +90,12 @@ access 过期(401 token_expired) → POST /auth/refresh（换新一对，旧的�
 | 3 | ModelArts 在线服务 | 关键点 → 姿态四分类（v3 head A 版已部署） | `/posture/infer` 返回 `source=huawei`；超时 2.5s 返回 503 并端侧降级 |
 | 4 | OBS | 模型包 / 导出物 / 证据材料 | 已建桶 `riseloop-models-20261128` 用于模型包；业务分发未接线 |
 | 5 | KMS | 密钥托管与字段加密 | 同上 |
-| — | AgentArts（可选） | 问答与方案解释的编排替身 | `/qa/ask` 返回真实答案与 citations |
+| 6 | MaaS 盘古 | 问答生成（`openpangu-2.0-flash`，检索命中后调用） | `/health/capabilities` 的 `maas.configured=true`；`/qa/ask` 命中返回引用与生成答案，未命中不调用 |
+| — | AgentArts（可选） | 问答/方案解释的编排替身，未接 | 问答已由 MaaS 盘古生成，不依赖该编排 |
 
 开通后必须补的三项验证：断网、关摄像头、ModelArts 超时回退（见 PROGRESS §5 手测清单）。
 
-初赛阶段已完成一次性链路测试：云主机 + DCS + RDS + ModelArts + OBS（2026-11-28）；KMS/AgentArts 未接。规格、预算、开通与删除步骤见 [`infra/huawei-cloud/cloud-test-checklist.md`](../../infra/huawei-cloud/cloud-test-checklist.md)，实测配置见 [`deployed-config.md`](../../infra/huawei-cloud/deployed-config.md)。
+初赛阶段已完成一次性链路测试：云主机 + DCS + RDS + ModelArts + MaaS 盘古 + OBS（2026-11-28）；KMS/AgentArts 未接。规格、预算、开通与删除步骤见 [`infra/huawei-cloud/cloud-test-checklist.md`](../../infra/huawei-cloud/cloud-test-checklist.md)，实测配置见 [`deployed-config.md`](../../infra/huawei-cloud/deployed-config.md)。
 
 ## 7. 客户端接入状态
 

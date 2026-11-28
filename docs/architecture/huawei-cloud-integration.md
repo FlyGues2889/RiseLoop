@@ -1,10 +1,11 @@
 # 华为云接入（Rise Loop）
 
-三件核心，其余围绕它们按需接入：
+三件核心 + 问答生成，其余围绕它们按需接入：
 
 - **DCS for Redis** —— 实时状态
 - **RDS for PostgreSQL** —— 事实数据
 - **ModelArts 在线服务** —— 姿态推理（AI 创新的唯一硬证据）
+- **MaaS 预置模型** —— 问答生成（华为盘古，检索增强；可选，未配置回退原文）
 
 部署步骤见 [`infra/huawei-cloud/README.md`](../../infra/huawei-cloud/README.md)。本文只回答三件事：接什么、契约长什么样、怎么算验完。
 
@@ -15,22 +16,25 @@
 | DCS for Redis | `session:*`、`sitting:*`、`pending_intervention:*`、`safety:*` 四类实时 Key | 核心，可降级 | `app/cloud/dcs.py` | `ping/get/set/delete` 已实现 |
 | RDS for PostgreSQL | 用户、评估、迁移、执行记录、问答日志、安全事件、姿态摘要 | 核心 | `app/cloud/rds.py` | 连接与 `SELECT 1` 探活已实现 |
 | ModelArts 在线服务 | 33 关键点 → 姿态四分类 + 置信度 | 核心（AI） | `app/cloud/modelarts.py` | v3 head A 版已部署（2026-11-28）：16 维、3,300 参数，OOF macro-F1 0.7759；`/posture/infer` 实测 `source=huawei`、约 101 ms；调用、超时、显式降级已实现 |
+| MaaS 预置模型 | 知识库命中后的问答生成（盘古） | 推荐（AI） | `app/cloud/maas.py` | 2026-11-28 已接入 `openpangu-2.0-flash`；思考关闭约 1.5s；未配置/失败回退知识库原文 |
 | 云主机（Linux + Docker Compose） | 跑 `cloud-api` 容器 | 必须 | `infra/docker/` | 已部署 Flexus L（2026-11-28） |
 | IAM 子用户 + AK/SK | OBS/KMS 签名，最小权限 | 必须（间接） | 无（IAM 侧配置） | 已创建访问密钥，AK/SK 只存 DEW 凭据 |
 | OBS | 安装包、演示视频分发 | 推荐 | `app/cloud/obs.py` | 已建桶 `riseloop-models-20261128` 用于模型包；业务分发未接线 |
 | KMS | 健康字段加密 | 可选 | `app/cloud/kms.py` | AES-256-GCM 已实现 |
 | CodeArts | 代码补全、流水线 | 研发工具，**不进运行时** | 无 | — |
-| AgentArts | 问答/方案解释的编排替身 | 可选 | 待接入 | 未接 |
+| AgentArts | 问答/方案解释的编排替身，未接 | 可选 | — | 问答已由 MaaS 盘古生成，不依赖该编排 |
 | ELB + SSL 证书 | 域名与 HTTPS | 不做（直接用 `host:8000`） | — | — |
 | LTS / APM | 日志与链路追踪 | 暂不上 | — | — |
 
-## 2. 三件核心为什么不能省
+## 2. 三件核心与问答生成
 
 **DCS**：实时状态是状态机的输入，也是双存储结构的其中一半。它是**可降级项**：不配 `RISELOOP_REDIS_URL` 时代码自动降级到进程内存（`app/repositories/sql_store.py:365-380`），功能不中断，只是重启后实时状态丢失。
 
 **RDS**：事实数据是可追溯的基础。托管实例自带备份与快照，容器内自建 PostgreSQL 要自己承担备份与恢复；两条路代码一致，只改 `.env` 里的 DSN。
 
 **ModelArts**：`/posture/infer` 已接 `app/cloud/modelarts.py`。2026-11-28 已部署 v3 head A 版在线服务，`source=huawei`，端到端约 101 ms；模型输入 16 维（公开 9 特征 + 7 个头部几何 delta），个人基线经 `/posture/baseline` 取 10 字段中位数。`mock` 几何规则只在本地联调使用，可用 `RISELOOP_POSTURE_MOCK_POLICY=unavailable` 关闭。赛题要求 AI 创新，这一件是唯一能拿出真实推理结果的环节；精度仍受 14 人样本限制，不能对外写成真实准确率。
+
+**MaaS 盘古**：问答先用知识库检索，命中后才调用 `openpangu-2.0-flash` 生成；未配置、超时或空回复回退知识库原文。它只生成回答文本，不参与姿态分类、BRLI、状态迁移与安全短路。
 
 ## 3. 接入前置条件
 
@@ -60,6 +64,18 @@
 2. **样本**：`reports/v1/` 仍来自 1440 帧合成关键点（12 受试者、seed 20261117、`framing=upper_body`），只验证管线；真实采集第一批已有 14 名受试者、3,974 帧带段落标签（2026-11-26，去重后），已按 v3 重生成并通过 `dataset_check`；v3 报告在 `scripts/modelarts/reports/v3-loso-head/`，A 版 forward_head F1 0.7142、召回 0.649，仍未达到对外发布条件。
 3. **部署**：把 `customize_service.py`、`posture_runtime.py`、`model.py`、`model.pt`、`feature_spec.json` 打成模型包，上传 OBS 后部署为**在线服务**（CPU、1 副本）。2026-11-28 实测：OBS 桶 `riseloop-models-20261128`，服务 `service-af70`，8C32G，挂载 `/home/ma-user/infer/model/1`，调用地址见 `infra/huawei-cloud/deployed-config.md`。可用 `python scripts/modelarts/package_model.py --artifacts data/posture/reports/v3-loso-head --out <上传目录>` 生成包与 `MANIFEST.json`。
 4. **填入 `.env`**：见 §4。
+
+### 3.4 MaaS 盘古问答（可选）
+
+问答生成走华为云 MaaS（ModelArts Studio）预置模型，不改变状态迁移与风险融合的纯函数边界。
+
+- 模型：`openpangu-2.0-flash`，服务开通在西南-贵阳一；cloud-api 在北京四，跨区调用。
+- 接口：`https://api.modelarts-maas.com/openai/v1/chat/completions`，`Authorization: Bearer <API Key>`。
+- 输入只带问题、当前阶段和检索命中的知识条目；不带用户标识、健康档案或日志。
+- `enable_thinking=false`：约 1.5s / 240 tokens；开启思考约 10s / 800+ tokens；超时 15s。
+- 只有检索命中才调用；未配置、超时、非 2xx、空回复回退知识库原文；无命中不调用、不编造。
+- 2026-11-28 实测：`maas.configured=true`，问答 1.58s / 1.99s，引用非空；无关问题无引用，红旗仍 403。
+- 密钥只在服务器 `.env`，`maas_api_key` 用 `SecretStr`；不进仓库、镜像、日志或客户端。
 
 ## 4. ModelArts 调用契约
 
@@ -101,6 +117,10 @@ RISELOOP_MODELARTS_API_KEY=<API Key>
 RISELOOP_MODELARTS_AUTH_HEADER=authorization
 RISELOOP_MODELARTS_MODEL_NAME=serve
 RISELOOP_MODELARTS_TLS_VERIFY=false      # 仅 IP + 自签证书的测试环境
+RISELOOP_MAAS_ENDPOINT=https://api.modelarts-maas.com/openai/v1
+RISELOOP_MAAS_API_KEY=<API Key>
+RISELOOP_MAAS_MODEL=openpangu-2.0-flash
+RISELOOP_MAAS_ENABLE_THINKING=false      # 关闭思考约 1.5s；开启约 10s
 RISELOOP_POSTURE_MOCK_POLICY=heuristic   # 演示前改 unavailable，让 /posture/infer 明确 503
 ```
 
@@ -113,11 +133,12 @@ RISELOOP_POSTURE_MOCK_POLICY=heuristic   # 演示前改 unavailable，让 /postu
 | 端点 | 看什么 |
 |---|---|
 | `GET /health/live` | 进程活着，不依赖外部 |
-| `GET /health/deps` | 六项明细，`redis.provider=huawei-dcs`、`rds.provider=huawei-rds`、`modelarts.configured=true`（2026-11-28 实测） |
+| `GET /health/deps` | 七项明细，`redis.provider=huawei-dcs`、`rds.provider=huawei-rds`、`modelarts.configured=true`、`maas.configured=true`（2026-11-28 实测） |
 | `GET /health/capabilities` | `store_backend=sql` |
 | `POST /posture/infer` | 返回真实 `posture` + `confidence` + `source=huawei` |
+| `POST /qa/ask` | 命中时返回 `citations` 与盘古生成答案；未命中无引用、不编造 |
 
-就绪口径：`/health/ready` 只要求 `rds` + `redis`（`app/api/routes/health.py:13`）。ModelArts 未配置不阻塞启动，但 `/posture/infer` 会明确返回 503——这是有意的分离，避免模型没就绪就整体不可用。
+就绪口径：`/health/ready` 只要求 `rds` + `redis`（`app/api/routes/health.py:13`）。ModelArts 未配置不阻塞启动，但 `/posture/infer` 会明确返回 503——这是有意的分离，避免模型没就绪就整体不可用。MaaS 未配置同样不阻塞，问答回退知识库原文。
 
 RDS 运行中失联时，`/health/ready` 返回 503，业务请求返回 `503 {"detail":"store_unavailable"}`，客户端按 ready 状态判定即可；不会返回带堆栈的 500，也不会把 DSN 写进响应。
 
@@ -127,16 +148,18 @@ RDS 运行中失联时，`/health/ready` 返回 503，业务请求返回 `503 {"
 |---|---|---|
 | 最小可跑 | 云主机 + DCS | 公网链路、实时状态双存储 |
 | 完整证据 | 上面 + RDS + ModelArts | 事实数据持久化、真实姿态推理 |
+| AI 增强 | 上面 + MaaS 盘古 | 知识库命中后的问答生成、失败回退原文 |
 | 加分项 | 上面 + OBS + KMS | 分发与健康字段加密 |
 
 每阶段用 §6 的端点自检。未接入的服务在 `/health/deps` 显示为未配置，不影响其他链路。
 
-初赛阶段已按「云主机 + RDS + DCS + ModelArts + OBS」完成一次限时测试（2026-11-28），测完应按清单释放；KMS 不在本次范围。实测配置见 [`infra/huawei-cloud/deployed-config.md`](../../infra/huawei-cloud/deployed-config.md)，开通前配置与预算见 [`cloud-test-checklist.md`](../../infra/huawei-cloud/cloud-test-checklist.md)。
+初赛阶段已按「云主机 + RDS + DCS + ModelArts + MaaS 盘古 + OBS」完成一次限时测试（2026-11-28），测完应按清单释放；KMS 不在本次范围。实测配置见 [`infra/huawei-cloud/deployed-config.md`](../../infra/huawei-cloud/deployed-config.md)，开通前配置与预算见 [`cloud-test-checklist.md`](../../infra/huawei-cloud/cloud-test-checklist.md)。
 
 ## 8. 安全与合规
 
 - 健康数据只进 RDS；Redis 只放实时状态，不落完整档案。
 - AK/SK、ModelArts Token 只在服务端；Tauri 端禁止持有。
+- MaaS API Key 只在服务端；问答只发问题、阶段与命中条目，不发用户标识、健康档案或日志。
 - 安全组最小放行：6379/5432 仅内网，公网只开 8000（或后续 443）。
 - 日志不打印 DSN、密码、关键点原始数组。
 
@@ -146,6 +169,8 @@ RDS 运行中失联时，`/health/ready` 返回 503，业务请求返回 `503 {"
 - [x] Redis 里能 `--scan --pattern 'session:*'` 看到真实 key。
 - [x] RDS 里重启容器后数据仍在；`/health/capabilities` 显示 `store_backend=sql`。
 - [x] `/posture/infer` 返回 `source=huawei`，且在线服务侧能看到调用量与延迟。
+- [x] MaaS 盘古问答已接入：`/health/capabilities` 的 `maas.configured=true`，命中时 1.58s / 1.99s 返回生成答案与引用；无关问题无引用、不编造。
+- [ ] 轮换 MaaS API Key（测试期密钥已暴露在会话记录），并检查 `openpangu-2.0-flash` 是否仍可用。
 - [ ] 模型包版本对得上：响应含 `posture` / `confidence` / `probabilities`，四类齐全，与 `feature_spec.json` 的类别顺序一致。
 - [x] 首次真实调用确认请求包络（裸 JSON vs `{"data": ...}`），差异已收口在 `modelarts.py`。
 - [ ] 停掉 ModelArts 服务后 `/posture/infer` 返回 503 并提示降级，客户端不崩。

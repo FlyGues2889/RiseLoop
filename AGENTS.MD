@@ -15,8 +15,8 @@
 - 云端 API：Python 3.11 + FastAPI + SQLAlchemy + Pydantic v2
 - 状态机：纯 Python 函数库（无网络、无数据库依赖），表驱动 + 单测
 - 数据库：华为云 RDS（PostgreSQL 兼容）+ DCS Redis
-- 智能层：华为云 ModelArts 在线推理、MCP Server、Skill 定义；Agent 编排为可选资产（平台无关）
-- 云服务核心三件：DCS for Redis（实时状态）、RDS for PostgreSQL（事实数据）、ModelArts 在线服务（姿态推理）
+- 智能层：华为云 ModelArts 在线推理（姿态）、MaaS 盘古预置模型（问答生成）、MCP Server、Skill 定义；Agent 编排为可选资产（平台无关）
+- 云服务核心三件：DCS for Redis（实时状态）、RDS for PostgreSQL（事实数据）、ModelArts 在线服务（姿态推理）；问答生成另接 MaaS 盘古，未配置时回退知识库原文
 - 客户端：Tauri 2 + Vue 3 + JavaScript（Composition API），pnpm 管理；Rust 侧负责计时、托盘、通知、Keychain
 - 部署：Docker + 华为云 ECS/CCE + SWR + OBS
 - 契约：OpenAPI 生成 JS/Python 类型
@@ -29,7 +29,7 @@
 4. **cloud-api 禁止**：绕过 `safety-check` 中间件输出运动推荐；把智能体密钥下发客户端。
 5. **MCP 工具固定 3 个**：`read_realtime_state`、`get_actions_by_state`、`write_intervention_result`。新增数据访问须复用现有工具或放入 Skill 内部，不得私自扩工具。
 6. **RDS/Redis 职责**：RDS 存事实（用户、评估、迁移历史、执行记录、动作库、问答日志、安全事件）；Redis 存实时状态（session state、久坐计时、待响应干预、安全短缓存）。不得混用。
-7. **华为云绑定**：核心 AI 必须走华为云 ModelArts 在线推理（华为 AI 技术），禁止纯第三方大模型套壳；状态迁移与风险融合必须留在纯 Python 服务内，不得外移给大模型。CodeArts 仅作研发工具，不进运行时。
+7. **华为云绑定**：核心 AI 必须走华为云 ModelArts 在线推理（姿态）与 MaaS 盘古预置模型（问答生成），禁止纯第三方大模型套壳；状态迁移、风险融合与安全判定必须留在纯 Python 服务内，不得外移给大模型。CodeArts 仅作研发工具，不进运行时。
 8. **本地模式边界**：本地模式运行在 `packages/local-engine`（纯 JS 状态机 + `data/actions` 只读动作库 + 浏览器 `localStorage`），不发起任何网络请求；云端模式必须走 `cloud-api` + `intervention-engine`，两者互不自动切换；正式评审不得以本地模式替代云端公网链路验证。两套状态机必须保持同一迁移规则，修改任一侧须同步另一侧并补测试。
 
 ## 5. 目录结构（必须遵守）
@@ -41,7 +41,7 @@ riseloop/
 │   │   ├── src/             # Vue3 UI（JavaScript），只调 api-client
 │   │   └── src-tauri/       # Rust：久坐计时、托盘、原生通知、Keychain
 │   └── cloud-api/           # FastAPI BFF/网关：鉴权、限流、事件触发、调 Agent
-│       └── app/cloud/       # 华为云适配层：RDS / DCS / ModelArts / OBS / KMS / CodeArts（mock/huawei 双模式）
+│       └── app/cloud/       # 华为云适配层：RDS / DCS / ModelArts / MaaS / OBS / KMS / CodeArts（mock/huawei 双模式）
 ├── services/
 │   ├── agent-orchestrator/  # 可选：Agent 编排资产（agents/workflows/eval）
 │   ├── skills/              # posture-assessment / intervention-state-machine / safety-check / qa-responder

@@ -505,6 +505,6 @@ Tauri WebView
 | 校准接口 | `POST /posture/baseline`：3–120 帧 33 点 → 服务端逐字段中位数 → 10 字段 `baseline`；少于 3 帧或顺序不符返回 422 |
 | 客户端 | 「校准坐姿 · 10 秒」连续取样后调用 `/posture/baseline`，结果写本机 `riseloop.posture.prefs.v1`；之后每次 `/posture/infer` 带 `baseline`，未校准时省略并回退总体中位数 |
 | 本机冒烟 | 当前代码生成的部署包加载 `model.pt`，对 `s01-000000` 返回 `baseline` / `0.596057`，与 `smoke_test.json` 一致 |
-| 测试 | 后端 167 passed；api-client 12 passed；Tauri 前端 `pnpm build` 通过 |
+| 测试 | 后端 170 passed；api-client 12 passed；Tauri 前端 `pnpm build` 通过 |
 | 未完成 | 14 人、单一设备/场景；s01 / s03 / s20 需重采，扩到 ≥20 人后再更新指标；断网/关摄像头/ModelArts 超时三条降级待在演示机逐条过 |
 

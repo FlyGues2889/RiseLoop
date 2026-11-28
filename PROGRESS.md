@@ -7,20 +7,21 @@
 ## 1. 一眼看现状
 
 - 核心闭环（评估 → 久坐计时 → 按状态推送动作 → 反馈 → 迁移）**已实现**，并已在华为云完成真实部署与公网验证（2026-11-28），默认只展示云端模式。
-- 华为云资源已按一次性测试开通并验证：Flexus L（2C4G）+ RDS PostgreSQL + DCS Redis + ModelArts 在线服务，公网 API 走 Docker Compose；OBS 只用于模型包分发，KMS 未接线。测试资源按月/按小时计费，不再使用需按部署记录释放。
-- 云服务核心（2026-11-15 定）：**DCS for Redis + RDS for PostgreSQL + ModelArts 在线服务**三件为必接项；CodeArts 退为研发工具，不参与运行时；OBS / KMS 为可选加分项；AgentArts 为可选的问答编排替身。
+- 华为云资源已按一次性测试开通并验证：Flexus L（2C4G）+ RDS PostgreSQL + DCS Redis + ModelArts 在线服务，公网 API 走 Docker Compose；问答生成接入 MaaS 盘古预置模型；OBS 只用于模型包分发，KMS 未接线。测试资源按月/按小时计费，不再使用需按部署记录释放。
+- 云服务核心（2026-11-15 定）：**DCS for Redis + RDS for PostgreSQL + ModelArts 在线服务**三件为必接项；MaaS 盘古预置模型用于问答生成（2026-11-28 接入，未配置时回退知识库原文）；CodeArts 退为研发工具，不参与运行时；OBS / KMS 为可选加分项；AgentArts 为可选的问答编排替身，未接。
 - 交付物缺口集中在架构素材、演示数据与作品书评审；仓库空目录已清零（8 个约定目录 + 3 个残留空目录删除，README 去掉两处占位图）。
 - 最近一次验证（2026-11-28）：
 
 | 检查 | 结果 |
 |---|---|
-| `python -m pytest -q` | ✅ 167 passed（含跨语言对拍、鉴权生命周期、姿态契约与头肩机位回归） |
+| `python -m pytest -q` | ✅ 170 passed（含跨语言对拍、鉴权生命周期、姿态契约、问答模型与头肩机位回归） |
 | `packages/api-client` `node --test` | ✅ 12 passed |
 | `pnpm build` | ✅ 通过（有 chunk 体积告警） |
 | `cargo test --lib` | ✅ 21 passed |
 | 公网链路 `smoke.py` | ✅ OK（注册 → 评估 → 久坐时间 → 干预 → 反馈 → 姿态基线/推理） |
 | 云端依赖 | ✅ `store_backend=sql`、`cloud_provider=huawei`；RDS 8 ms、DCS 1.57 ms |
 | 真实推理 | ✅ `/posture/infer` 返回 `source=huawei`，延迟 101.1 ms，结果写入 RDS |
+| 问答生成 | ✅ `maas.configured=true`；命中 1.58s / 1.99s；无引用不调用，失败回退原文 |
 
 > 2026-11-23 复跑：`python -m pytest -q` 153 passed、`api-client` 8 passed、`cargo test` 20 passed、`pnpm build` 通过。
 
@@ -35,7 +36,7 @@
 | BRLI 风险指数 | 🟡 | 规则版 V1 有单测，已接 `/posture/risk`，未校准 |
 | 姿态分类推理（ModelArts） | ✅ | v3 head A 版（16 维、3,300 参数）已部署为在线服务：14 折 LOSO OOF macro-F1 0.7759、forward_head F1 0.7142，不能当对外准确率；2026-11-28 实测 `/posture/infer` 返回 `source=huawei`、延迟约 101 ms，结果写 RDS。v1 合成数据包仅作历史 |
 | 循证知识库 | ✅ | 39 条证据台账（PubMed 36 / WHO 1 / CDC 1 / NIOSH 1，共 40 个主题归属）+ `articles.json` 7 条问答语料，`scripts/validate_evidence.py` 0 error |
-| 知识库问答 | ✅ | 本地检索 + citations（`data/knowledge/articles.json` 7 条）；无命中明确回答“资料中没有”。AgentArts 增强为可选，未接入 |
+| 知识库问答 | ✅ | 本地检索 + citations（`data/knowledge/articles.json` 7 条）；命中后经 MaaS 盘古 `openpangu-2.0-flash` 生成（2026-11-28 接入，思考关闭约 1.5s / 240 tokens），未配置、超时或空回复回退知识库原文；无命中不调用、不编造。AgentArts 未接 |
 | 限流 | ✅ | `app/core/ratelimit.py`：按 token 指纹或 IP 滑动窗口，登录类接口单独更严；超限 429 + `Retry-After` |
 | JWT 刷新 / 吊销 | ✅ | `/auth/refresh` 轮换刷新令牌、`/auth/logout` 吊销 jti；黑名单只存 jti 与到期时间，到期自动清理。客户端撞到 401 先用刷新令牌换新的一对再重放请求（并发只换一次），退出时连带服务端吊销；钥匙串用访问令牌 + 刷新令牌两个槽位 |
 | 账户删除 | ✅ | `DELETE /auth/account`：内存态与 SQL 态都清用户及其全部数据 |
@@ -143,8 +144,8 @@
 - [x] 部署钉在 A 版（`--deploy-version A`），B 版 OOF 仍写入报告；报告在 `scripts/modelarts/reports/v3-loso-head/`
 - [x] `/posture/baseline` 接收 3–120 帧并取 10 字段中位数；客户端「校准坐姿 · 10 秒」后随 `/posture/infer` 发送 `baseline`
 - [x] 部署包重新生成并用当前 `customize_service.Model` 冒烟通过
-- [x] 密钥清理：`SecretStr` 包裹 JWT/RDS/Redis/OBS/KMS/ModelArts/CodeArts 密钥，删除未使用的 KMS AK/SK，prod 拒绝默认 JWT secret
-- [x] 后端 167 个测试、api-client 12 个测试、Tauri 前端构建通过
+- [x] 密钥清理：`SecretStr` 包裹 JWT/RDS/Redis/OBS/KMS/ModelArts/CodeArts/MaaS 密钥，删除未使用的 KMS AK/SK，prod 拒绝默认 JWT secret
+- [x] 后端 170 个测试、api-client 12 个测试、Tauri 前端构建通过
 - [x] 真实调用已验证（`source=huawei`，延迟 101 ms）；三条降级（断网/关摄像头/超时）仍待在演示机逐条过
 
 ### 11.28 华为云真实部署
@@ -155,6 +156,16 @@
 - [x] `cloud_provider=huawei` + `store_backend=sql`；公网 smoke OK；`/posture/infer` 返回 `source=huawei`
 - [ ] 关闭 8000 公网放行或改 HTTPS；轮换测试期口令与 API Key
 - [ ] 设置 ModelArts 自动停止，并按需释放 RDS/DCS/Flexus；实测配置见 `infra/huawei-cloud/deployed-config.md`
+
+### 11.28 盘古 MaaS 问答
+
+- [x] `app/cloud/maas.py`：OpenAI 兼容 `/chat/completions`，模型 `openpangu-2.0-flash`（MaaS，西南-贵阳一，跨区调用）
+- [x] 检索命中才调用；无命中不生成；未配置、超时、非 2xx 或空回复回退知识库原文
+- [x] `enable_thinking=false`：约 1.5s / 240 tokens；开启约 10s / 800+ tokens；超时 15s
+- [x] `/health/capabilities` 增加 `maas` 依赖；密钥 `SecretStr`，只存服务器 `.env`，不写日志/客户端
+- [x] 公网实测 `maas.configured=true`，问答 1.58s / 1.99s，引用非空；无关问题无引用
+- [ ] 测试期 API Key 已暴露在会话记录，轮换后更新服务器 `.env`
+- [ ] 演示前检查模型广场是否下线/替换 `openpangu-2.0-flash`
 
 ### 11.26 演示与录屏
 - [ ] 录屏脚本按最新界面重写

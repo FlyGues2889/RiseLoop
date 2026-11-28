@@ -15,8 +15,10 @@ Flexus L  Ubuntu 24.04 / 2C4G / 172.31.3.34
        ├─ RDS PostgreSQL 18  172.31.11.251:5432  db=riseloop
        └─ DCS Redis 7.0      172.31.13.31:6379
   │
-  └─ OBS riseloop-models-20261128
-       └─ ModelArts 在线服务 service-af70（8C32G，1 副本）
+  ├─ OBS riseloop-models-20261128
+  │    └─ ModelArts 在线服务 service-af70（8C32G，1 副本，姿态推理）
+  │
+  └─ MaaS 预置模型 openpangu-2.0-flash（西南-贵阳一，跨区，问答生成）
 ```
 
 同一 Region：华北-北京四（cn-north-4）；同一 VPC / 子网：`vpc-default-smb` / `subnet-default-smb`。
@@ -68,7 +70,22 @@ Flexus L  Ubuntu 24.04 / 2C4G / 172.31.3.34
 | 证书 | IP + 自签证书，测试期 `RISELOOP_MODELARTS_TLS_VERIFY=false` |
 | 计费 | 按需 ¥3.40/小时，必须设自动停止 |
 
-### 2.4 接口
+### 2.4 问答与盘古
+
+| 项 | 实测值 |
+|---|---|
+| 产品 | MaaS（ModelArts Studio）预置模型服务 |
+| 模型 | `openpangu-2.0-flash`（预览版，思考模型） |
+| 区域 | 西南-贵阳一；cloud-api 在北京四，跨区调用 |
+| 接口 | `https://api.modelarts-maas.com/openai/v1/chat/completions` |
+| 认证 | `Authorization: Bearer <API Key>` |
+| 思考模式 | 关闭：约 1.5s / 236 tokens；开启：约 9.7s / 830 tokens |
+| 成本 | 关闭思考约 ¥0.0004/问 |
+| 输入边界 | 只发问题、当前阶段与检索命中的知识条目；不发用户标识、健康档案或日志 |
+| 输出边界 | 只依据引用回答，≤120 字；不诊断、不给用药/康复周期/影像解读 |
+| 降级 | 未配置、超时、非 2xx、空回复 → 回退知识库原文；无检索命中不调用 |
+
+### 2.5 接口
 
 | 项 | 实测值 |
 |---|---|
@@ -90,6 +107,10 @@ RISELOOP_MODELARTS_API_KEY=<API Key>
 RISELOOP_MODELARTS_AUTH_HEADER=authorization
 RISELOOP_MODELARTS_MODEL_NAME=serve
 RISELOOP_MODELARTS_TLS_VERIFY=false
+RISELOOP_MAAS_ENDPOINT=https://api.modelarts-maas.com/openai/v1
+RISELOOP_MAAS_API_KEY=<API Key>
+RISELOOP_MAAS_MODEL=openpangu-2.0-flash
+RISELOOP_MAAS_ENABLE_THINKING=false
 ```
 
 两个易错点：
@@ -106,6 +127,9 @@ RISELOOP_MODELARTS_TLS_VERIFY=false
 | `smoke.py http://119.3.214.105:8000` | `OK`；注册 201、评估 200、久坐时间 `triggered=true`、反馈 `S1 -> S1 hold` |
 | `POST /posture/baseline` | 200，返回 10 字段中位数 |
 | `POST /posture/infer` | 200，`source=huawei`、`model=serve`、`latency_ms=101.1`、`recorded=true` |
+| `POST /qa/ask`（命中） | 200；`citations` 非空；盘古生成，实测 1.58s / 1.99s；无引用不调用 |
+| `POST /qa/ask`（未命中） | `citations=[]`；回答“资料中没有直接对应的条目” |
+| 红旗反馈 | 403；不进入模型、动作库或状态机 |
 | RDS | `riseloop` 库 10 张表：`users`、`assessments`、`state_transitions`、`sitting_events`、`intervention_logs`、`posture_summaries`、`qa_logs`、`safety_events`、`revoked_tokens`、`actions` |
 | DCS | `session:<userId>:state` 可扫描到 |
 
@@ -133,13 +157,16 @@ RISELOOP_MODELARTS_TLS_VERIFY=false
 4. 云主机装 Docker（国内网络需配 `registry-mirrors`），上传构建上下文，`docker compose up -d --build`。
 5. ModelArts 的坑按顺序排：DEW 凭据必须含 `accessKeyId` / `secretAccessKey`（不是 `apiKey`）；挂载路径 `/home/ma-user/infer/model/1`；容器端口 8080；启动命令要带 `TF_MODEL_ARGS`；endpoint 末尾带 `/`；自签证书测试期关闭校验。
 6. 验证顺序：`/health/ready` → `/health/capabilities` → `smoke.py` → `/posture/infer` → RDS/Redis 落库。
+7. 问答：`.env` 填 `RISELOOP_MAAS_*`，`ENABLE_THINKING=false`；`/health/capabilities` 的 `maas.configured=true` 后，问颈肩问题应返回引用与生成答案，问无关问题应无引用且不编造。
 
 ## 6. 已知限制与安全
 
 - **HTTP + 8000 全开**：没有 HTTPS/ELB，8000 对 `0.0.0.0/0`；测试结束应关闭端口或改成只允许固定 IP。
 - **自签证书**：ModelArts 调用地址是 IP + 自签证书，测试期关闭 TLS 校验；正式环境应换域名或把 CA 装进镜像。
 - **单副本**：ModelArts 与 API 都是单实例，无高可用；8C32G 按小时计费，必须设自动停止。
-- **凭据轮换**：测试期口令与 API Key 已经过聊天/日志链路，测试结束后应重置 RDS/DCS 口令、重建 ModelArts API Key、重新生成 JWT secret。
+- **凭据轮换**：测试期口令与 API Key 已经过聊天/日志链路，测试结束后应重置 RDS/DCS 口令、重建 ModelArts API Key 与 MaaS API Key、重新生成 JWT secret。
+- **盘古是预览版**：`openpangu-2.0-flash` 可能被下线或替换；演示前检查 MaaS 模型广场的公告，保留 `maas_model` 可配置。
+- **问答不是决策**：盘古只生成问答文本；姿态分类、BRLI、状态迁移与安全短路仍在纯 Python 服务内，未外移给大模型。
 - **精度边界**：v3 head A 版只有 14 名受试者、单一设备/场景，LOSO macro-F1 0.7759 只能作内部评估，不能对外写成真实准确率。
 - **不要提交 `.env`**：镜像与仓库都不应包含 DSN、口令、AK/SK。
 
