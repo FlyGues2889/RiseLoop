@@ -86,7 +86,7 @@ X-Auth-Token: <RISELOOP_MODELARTS_API_KEY>
 
 **响应**：三种都能解析（`parse_prediction`，`modelarts.py:63`）——`{"posture": "forward_head", "confidence": 0.82}`、`{"label": ..., "confidence": ...}`、或 `{"probabilities": {"baseline": 0.1, ...}}`。
 
-**鉴权头**：`RISELOOP_MODELARTS_AUTH_HEADER` 四选一（`x-auth-token` 默认 / `authorization` / `x-api-key` / `x-apig-appcode`），按在线服务实际要求的认证方式选；走 APIG 时通常用 `x-apig-appcode`。
+**鉴权头**：`RISELOOP_MODELARTS_AUTH_HEADER` 四选一（`x-auth-token` 默认 / `authorization` / `x-api-key` / `x-apig-appcode`），按在线服务实际要求的认证方式选；走 APIG 时通常用 `x-apig-appcode`。HTTPS 证书默认校验；只有自签证书测试环境才把 `RISELOOP_MODELARTS_TLS_VERIFY=false`。
 
 **失败语义**：超时 2.5 秒（`RISELOOP_MODELARTS_TIMEOUT_SECONDS`）或 HTTP 非 2xx → 抛 `ModelArtsError` → `/posture/infer` 返回 503 `modelarts_unavailable` → 端侧降级。**不伪造云端结果。**
 

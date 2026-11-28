@@ -8,7 +8,8 @@ from ..core.safety import MEDICAL_DISCLAIMER
 from ..repositories.store import Store
 from ..schemas.qa import QaRequest, QaResponse
 
-KNOWLEDGE_PATH = Path(__file__).resolve().parents[4] / "data" / "knowledge" / "articles.json"
+_PATHS = Path(__file__).resolve().parents
+KNOWLEDGE_PATH = (_PATHS[4] if len(_PATHS) > 4 else _PATHS[2]) / "data" / "knowledge" / "articles.json"
 NO_MATCH_ANSWER = (
     "资料中没有直接对应的条目。建议先起身走动 30 秒并观察变化；若症状持续加重，请及时就医。"
 )

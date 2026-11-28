@@ -189,7 +189,8 @@ class ModelArtsService:
 
         try:
             async with httpx.AsyncClient(
-                timeout=self._settings.modelarts_timeout_seconds
+                timeout=self._settings.modelarts_timeout_seconds,
+                verify=self._settings.modelarts_tls_verify,
             ) as client:
                 response = await client.post(
                     self._settings.modelarts_endpoint,

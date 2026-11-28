@@ -21,6 +21,8 @@ RUN pip install --no-cache-dir /tmp/intervention-engine \
 
 COPY apps/cloud-api/app ./app
 COPY data/actions/actions.json ./data/actions/actions.json
+COPY data/knowledge/evidence.json ./data/knowledge/evidence.json
+COPY data/knowledge/articles.json ./data/knowledge/articles.json
 
 EXPOSE 8000
 

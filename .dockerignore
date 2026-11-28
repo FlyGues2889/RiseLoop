@@ -6,7 +6,9 @@
 **/.mypy_cache
 .venv*
 data/actions/images/
-data/knowledge/
+data/knowledge/*
+!data/knowledge/evidence.json
+!data/knowledge/articles.json
 data/posture/
 docs/
 infra/

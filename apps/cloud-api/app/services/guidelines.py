@@ -9,7 +9,8 @@ from typing import Iterable
 
 from pydantic import BaseModel
 
-ROOT = Path(__file__).resolve().parents[4]
+_PATHS = Path(__file__).resolve().parents
+ROOT = _PATHS[4] if len(_PATHS) > 4 else _PATHS[2]
 EVIDENCE_PATH = ROOT / "data" / "knowledge" / "evidence.json"
 
 

@@ -92,6 +92,7 @@ class Settings(BaseSettings):
         "x-auth-token", "authorization", "x-api-key", "x-apig-appcode"
     ] = "x-auth-token"
     modelarts_timeout_seconds: float = 2.5
+    modelarts_tls_verify: bool = True
     # mock 只用于联调；演示前可设为 unavailable，让 /posture/infer 明确 503 降级。
     posture_mock_policy: Literal["heuristic", "unavailable"] = "heuristic"
 
