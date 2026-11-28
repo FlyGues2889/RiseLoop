@@ -12,6 +12,7 @@ from .api.routes.health import router as health_router
 from .api.routes.intervention import router as intervention_router
 from .api.routes.posture import router as posture_router
 from .api.routes.qa import router as qa_router
+from .api.routes.advice import router as advice_router
 from .api.routes.review import router as review_router
 from .api.routes.sitting import router as sitting_router
 from .cloud.registry import build_registry
@@ -92,6 +93,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         posture_router,
         intervention_router,
         qa_router,
+        advice_router,
         review_router,
     ):
         app.include_router(router)

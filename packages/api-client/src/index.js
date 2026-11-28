@@ -316,6 +316,7 @@ export function createApiClient({ baseUrl, getBaseUrl, getToken, onRefresh }) {
     currentIntervention: () => request("/intervention/current"),
     feedback: (payload) => request("/intervention/feedback", { method: "POST", body: payload }),
     askQuestion: (payload) => request("/qa/ask", { method: "POST", body: payload }),
+    advice: (payload) => request("/advice", { method: "POST", body: payload }),
     weeklyReview: (days = 7) => request(`/review/weekly?days=${days}`),
     actions: (state, { bodyPart, maxMinutes } = {}) => {
       const query = new URLSearchParams();

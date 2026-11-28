@@ -135,5 +135,37 @@ class MaaSClient:
             raise MaaSUnavailable("empty_answer")
         return text
 
+    async def complete(self, system: str, user: str, max_tokens: int = 300) -> str:
+        if not self.configured:
+            raise MaaSUnavailable("not_configured")
+        body = {
+            "model": self._settings.maas_model,
+            "messages": [
+                {"role": "system", "content": system},
+                {"role": "user", "content": user},
+            ],
+            "temperature": 0.3,
+            "max_tokens": max_tokens,
+            "enable_thinking": self._settings.maas_enable_thinking,
+        }
+        try:
+            async with httpx.AsyncClient(
+                timeout=self._settings.maas_timeout_seconds
+            ) as client:
+                response = await client.post(self._url(), headers=self._headers(), json=body)
+                response.raise_for_status()
+                payload = response.json()
+        except httpx.HTTPError as exc:
+            raise MaaSUnavailable(type(exc).__name__) from exc
+        except ValueError as exc:
+            raise MaaSUnavailable("invalid_response") from exc
+        choices = payload.get("choices") or []
+        if not choices:
+            raise MaaSUnavailable("empty_choices")
+        text = ((choices[0].get("message") or {}).get("content") or "").strip()
+        if not text:
+            raise MaaSUnavailable("empty_answer")
+        return text
+
     async def close(self) -> None:
         return None
