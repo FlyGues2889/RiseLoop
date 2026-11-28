@@ -14,7 +14,7 @@
 
 | 检查 | 结果 |
 |---|---|
-| `python -m pytest -q` | ✅ 155 passed（含跨语言对拍、鉴权生命周期、姿态契约与头肩机位回归） |
+| `python -m pytest -q` | ✅ 167 passed（含跨语言对拍、鉴权生命周期、姿态契约与头肩机位回归） |
 | `packages/api-client` `node --test` | ✅ 8 passed |
 | `pnpm build` | ✅ 通过（有 chunk 体积告警） |
 | `cargo check --lib --tests` | ✅ 通过 |
@@ -31,7 +31,7 @@
 | 跨语言一致性测试 | ✅ | `packages/intervention-engine/tests/test_cross_language.py`：25 个场景 Python/JS 全字段对拍，桥接脚本 `scripts/engine_dump.mjs` |
 | 安全中间件（8 类红旗短路） | ✅ | `app/core/safety.py`，命中直接 403 + 就医提示 |
 | BRLI 风险指数 | 🟡 | 规则版 V1 有单测，已接 `/posture/risk`，未校准 |
-| 姿态分类推理（ModelArts） | 🟡 | v1 训练包与离线报告已完成（特征契约 v2，5 个派生特征 MLP，只要求头肩入画；合成数据 test macro-F1 0.9670）；v3 内部 LOSO 完成（B 版 141 维，OOF macro-F1 0.7305，forward_head F1 0.603）；**尚未部署、无真实 endpoint**，现走 v3 mock + 端侧降级 |
+| 姿态分类推理（ModelArts） | 🟡 | v1 训练包是合成数据历史包（test macro-F1 0.9670，不能外推）；v3 head 内部 LOSO 用 16 维（9 公开 + 7 头部 delta），A 版 OOF macro-F1 0.7759、forward_head F1 0.7142，报告在 `reports/v3-loso-head/`；**尚未部署、无真实 endpoint**，现走 v3 mock + 端侧降级 |
 | 循证知识库 | ✅ | 39 条证据台账（PubMed 36 / WHO 1 / CDC 1 / NIOSH 1，共 40 个主题归属）+ `articles.json` 7 条问答语料，`scripts/validate_evidence.py` 0 error |
 | 知识库问答 | ✅ | 本地检索 + citations（`data/knowledge/articles.json` 8 条）；无命中明确回答“资料中没有”。AgentArts 增强为可选，未接入 |
 | 限流 | ✅ | `app/core/ratelimit.py`：按 token 指纹或 IP 滑动窗口，登录类接口单独更严；超限 429 + `Retry-After` |
@@ -53,7 +53,7 @@
 | 动作页（分步展示 + 反馈） | ✅ | 去掉动作标题与多动作标签页：一个动作按步骤一步步展示、字号放大，计时器按步骤倒计时（按步骤文字里的「秒/次/组」推算，压进 10–75 秒后整体拟合到标签时长，估短了等比放大、估长了等比缩回，每步留 20%、至少 3 秒弹性），做完自动进下一步；S2 一轮串 2–3 条动作、合计满 5 分钟才进反馈，其余状态一条做完即进反馈；反馈卡只在全程走完、或点「结束运动」后出现；倒计时改由 Rust 会话推进，窗口隐藏也不掉秒；左栏摄像头与参考图同宽成组，计时块固定在右栏底部 |
 | 动作页取景 | ✅ | 取景按动作算（`src/data/actionFraming.js`）：坐姿只框上体、站立才要求膝盖、呼吸类不要求对齐；只画两端都看得见的骨头；「只看骨架」开关默认关、记忆在本地；画面默认显示可折叠，收起即关摄像头 |
 | 干预遮罩与倒计时 | ✅ | 覆盖 content-pane，含权威来源 |
-| 姿态监测与隐私开关 | 🟡 | 端侧关键点已通，真人关键点经手动验证正常；侧倾/前倾识别精度未量化 |
+| 姿态监测与隐私开关 | 🟡 | 端侧关键点已通，真人关键点经手动验证正常；10 秒中立位校准已接 `/posture/baseline`，侧倾/前倾精度待扩样验证 |
 | 摄像头按需采样 | ✅ | 到点才开摄像头、采一帧就关；窗口在后台或动作页占用时跳过；头像菜单「会话记录」里分「操作记录 / 摄像头」两个页签，摄像头页显示当前状态与最近记录；日志落在 `%LOCALAPPDATA%\com.riseloop.app\logs\camera.log` |
 | 动作推荐排序 | ✅ | 当前状态优先；同状态先挑「不起身的工位可做」动作（`desk_friendly`），再按部位重合与时长；S1 补了坐姿伸膝与踝泵，云端 `_rank_actions`、MCP `get_actions_by_state` 两处同规则 |
 | 动作库文案 | ✅ | 15 个动作都拆成 4–5 步、每步自成一句（不出现「重复 N 轮」这种概括写法），深呼吸之间留出停顿；`duration_minutes` 按推算时长对齐到 1–3 分钟；工位动作在选择框、通知窗、方案卡三处标「工位可做」。11.15 增补 6 条：坐姿收下巴、坐姿胸椎旋转、靠墙俯卧撑、坐姿小腿泵、靠墙静蹲、坐姿髋绕环 |
@@ -69,7 +69,7 @@
 |---|---|---|
 | README（四问） | ✅ | 保持现状，不再往里面堆进度；两处占位图（demo.gif、architecture.png）已移除，仓库内无死链 |
 | `infra/docker` | ✅ | `docker-compose.cloud.yml`、`docker-compose.dev.yml`、`env.example` 三个文件；镜像由 `apps/cloud-api/Dockerfile` 构建 |
-| `infra/huawei-cloud` | ✅ | `README.md`：云服务接入与公网验证步骤，对齐 README 部署命令 |
+| `infra/huawei-cloud` | ✅ | `README.md`：云服务接入与公网验证步骤；`cloud-test-checklist.md`：一次性链路测试的规格、预算与删除清单；云端资源仍未开通 |
 | `infra/k8s` | ⬜ | 不存在，本期部署走 Docker Compose on ECS，不上 CCE |
 | 架构图 / 演示素材 | ⬜ | 目录已删除，图未画；logo 现成：`apps/desktop-tauri/src-tauri/icons/appIcon.{ico,svg}` |
 | 演示数据脚本 | ⬜ | 未生成；落地时新建 `data/seeds` |
@@ -133,7 +133,17 @@
 - [x] v3 部署包生成脚本 `package_model.py` + 本地 `customize_service.Model` 冒烟通过
 - [x] mock 回退开关 `RISELOOP_POSTURE_MOCK_POLICY=unavailable`：无 endpoint 时 `/posture/infer` 返回 503，不输出 mock 分类
 - [ ] 重采动作不一致的 s01 / s03 / s20，把受试者扩到 ≥20
-- [ ] 扩样后重跑 LOSO；forward_head F1 稳定过 0.65 再考虑部署；v3 部署前补线上个人基线校准
+- [ ] 扩样后重跑 LOSO；未扩样前不对外发布准确率
+
+### 11.28 姿态 v3 head 与密钥清理
+- [x] 特征契约保持公开 9 特征；模型内部增加 7 个头部几何 delta（16 维），个人基线用 10 字段中位数
+- [x] 14 折 LOSO：A 版 16 维、3,300 参数，OOF macro-F1 0.7759、accuracy 0.7765、forward_head F1 0.7142；B 版 148 维 0.7722
+- [x] 部署钉在 A 版（`--deploy-version A`），B 版 OOF 仍写入报告；报告在 `scripts/modelarts/reports/v3-loso-head/`
+- [x] `/posture/baseline` 接收 3–120 帧并取 10 字段中位数；客户端「校准坐姿 · 10 秒」后随 `/posture/infer` 发送 `baseline`
+- [x] 部署包重新生成并用当前 `customize_service.Model` 冒烟通过
+- [x] 密钥清理：`SecretStr` 包裹 JWT/RDS/Redis/OBS/KMS/ModelArts/CodeArts 密钥，删除未使用的 KMS AK/SK，prod 拒绝默认 JWT secret
+- [x] 后端 167 个测试、api-client 12 个测试、Tauri 前端构建通过
+- [ ] 开通 ModelArts endpoint 后按 `cloud-test-checklist.md` 验证真实调用与三条降级
 
 ### 11.26 演示与录屏
 - [ ] 录屏脚本按最新界面重写
