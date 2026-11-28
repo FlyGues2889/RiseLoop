@@ -36,6 +36,8 @@ docker compose version
 
 ## 3. 传代码
 
+> 2026-11-28 起部署改用 git pull，不再手工传 tar 包；完整步骤见 [git-deploy.md](git-deploy.md)。下面的 tar/scp 方式仅作离线兜底。
+
 镜像构建上下文是**仓库根**，所以以下四项必须保持原有层级一起上传：
 
 ```text
@@ -173,6 +175,14 @@ OK
 场景 A 时第 3 行应为 `store_backend=sql cloud_provider=huawei`，其余流程一致。
 脚本自带断言：ready 非 200、久坐时间未触发提醒、反馈缺字段都会直接非零退出。
 
+AI 建议链路（姿态推理 → BRLI → 推荐动作 → 问答 → 周复盘 → 安全短路）：
+
+```bash
+python3 ~/riseloop/infra/huawei-cloud/ai_checks.py http://<公网IP>:8000
+```
+
+通过标准与失败定位见 [`ai-test-checklist.md`](ai-test-checklist.md)。
+
 ### 7.3 落库与实时状态
 
 ```bash
@@ -192,7 +202,8 @@ docker run --rm redis:7-alpine redis-cli -h <DCS地址> -p 6379 -a '<密码>' --
 ```dotenv
 RISELOOP_MODELARTS_ENDPOINT=<在线服务URL>
 RISELOOP_MODELARTS_API_KEY=<鉴权值>
-RISELOOP_MODELARTS_AUTH_HEADER=x-auth-token
+RISELOOP_MODELARTS_AUTH_HEADER=authorization
+RISELOOP_MODELARTS_TLS_VERIFY=false
 ```
 
 未配置或服务停掉时 `/posture/infer` 返回 503 `modelarts_unavailable`，不影响启动与 ready。
