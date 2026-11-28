@@ -40,11 +40,9 @@ function onPainChange(event) {
   <m3e-card variant="elevated" class="surface-card">
     <div class="surface-body">
       <header class="page-head">
-        <h1>你的情况</h1>
-        <p class="lead">填完这几项，方案会按你的久坐时长和能挤出的空档来配。</p>
+        <h1>了解你的情况</h1>
+        <p class="lead">填完这几项，让方案按你的久坐时长和能挤出的空档来配。</p>
       </header>
-
-      <MedicalNote />
 
       <m3e-list variant="segmented" class="assessForm">
         <m3e-list-item>
@@ -75,7 +73,7 @@ function onPainChange(event) {
 
         <m3e-list-item>
           不适部位
-          <m3e-chip-set class="chips">
+          <m3e-chip-set class="chips" slot="trailing">
             <m3e-filter-chip v-for="option in bodyPartOptions" :key="option.value" :value="option.value"
               :selected.prop="form.body_parts.includes(option.value)" @change="togglePart(option.value)">
               {{ option.label }}

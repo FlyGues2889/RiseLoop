@@ -1,5 +1,6 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
+import AdviceLine from "./AdviceLine.vue";
 import LoadingOverlay from "./LoadingOverlay.vue";
 import {
   applyPostureRecommendation,
@@ -563,6 +564,8 @@ onBeforeUnmount(() => {
           </p>
           <p class="risk-line muted" v-else>{{ risk.reason }}</p>
           <p class="risk-line muted" v-if="guidanceText">{{ guidanceText }}</p>
+          <AdviceLine surface="posture" :fallback="guidanceText"
+            :context="{ brli: risk?.brli, level: risk?.risk_level, posture: risk?.posture_class }" />
           <p class="risk-line danger" v-if="risk.needs_medical_advice">如出现明显不适，请暂停并就医。</p>
           <m3e-button v-if="risk.actions?.length && !props.inline" class="risk-action" variant="outlined" size="small"
             @click="adoptRisk">

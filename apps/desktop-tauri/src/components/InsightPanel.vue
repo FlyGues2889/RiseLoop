@@ -2,6 +2,7 @@
 import { computed, onMounted, watch } from "vue";
 import ErrorBanner from "./ErrorBanner.vue";
 import EvidenceCallout from "./EvidenceCallout.vue";
+import AdviceLine from "./AdviceLine.vue";
 import LoadingOverlay from "./LoadingOverlay.vue";
 import MarkdownText from "./MarkdownText.vue";
 import MedicalNote from "./MedicalNote.vue";
@@ -82,6 +83,8 @@ watch(
       </m3e-list>
 
       <EvidenceCallout v-if="hasNotes" v-bind="REVIEW_SOURCE" />
+      <AdviceLine surface="weekly" :fallback="state.weekly?.suggestions?.[0] ?? ''"
+        :context="{ completion_rate: state.weekly?.interventions?.completion_rate, trend: state.weekly?.pain?.trend, safety_events: state.weekly?.safety_events }" />
 
       <header class="title-head">
         <h2>问答</h2>

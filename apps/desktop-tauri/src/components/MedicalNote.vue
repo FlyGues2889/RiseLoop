@@ -5,8 +5,8 @@ defineProps({
 </script>
 
 <template>
-  <m3e-callout class="medical-note" variant="surface">
-    <span class="material-symbols-rounded" slot="icon">info</span>
+  <m3e-callout class="medical-note" variant="outlined">
+    <span class="material-symbols-rounded" slot="icon">medical_services</span>
     <span slot="label">{{ label }}</span>
     <p>
       本产品为健康行为指导工具，不提供医疗诊断或治疗建议。

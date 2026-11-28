@@ -3,6 +3,7 @@ import { computed, ref } from "vue";
 import ErrorBanner from "./ErrorBanner.vue";
 import EvidenceCallout from "./EvidenceCallout.vue";
 import LoadingOverlay from "./LoadingOverlay.vue";
+import AdviceLine from "./AdviceLine.vue";
 import RiskReport from "./RiskReport.vue";
 import TimeToolbar from "./TimeToolbar.vue";
 import { sourceForAction } from "../data/actionSources.js";
@@ -115,6 +116,8 @@ function pickField(event, field, value) {
             </i>{{ result.to_state }}
           </h1>
           <p class="reason">{{ result.reason }}</p>
+          <AdviceLine surface="transition" :fallback="result.reason"
+            :context="{ transition: result.transition_type, from: result.from_state, to: result.to_state }" />
         </div>
 
         <m3e-list variant="segmented">
@@ -145,6 +148,8 @@ function pickField(event, field, value) {
         <header class="page-head">
           <h2>久坐计时</h2>
           <p class="lead">连续久坐达到提醒间隔后，将按当前阶段推荐一个最短有效动作；起身后计时重新开始。</p>
+          <AdviceLine surface="timer" :fallback="''"
+            :context="{ state: state.currentState, sitting_minutes: state.timer.sitting_seconds / 60 }" />
         </header>
 
         <div class="timer-slot">

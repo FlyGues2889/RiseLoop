@@ -382,10 +382,8 @@ onBeforeUnmount(() => {
     <m3e-callout v-if="action.caution && !feedbackOpen" variant="surface" class="caution-callout">
       <span slot="icon" class="material-symbols-rounded">info</span>
       <span slot="label">提示</span>
-      {{ action.caution }}
+      <small>{{ action.caution }}</small>
     </m3e-callout>
-
-    <MedicalNote v-if="action && !feedbackOpen" />
 
     <m3e-dialog :open.prop="refOpen" class="ref-dialog" @closed="refOpen = false">
       <h2 slot="header">{{ action?.name }}</h2>

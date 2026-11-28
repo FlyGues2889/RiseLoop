@@ -32,7 +32,7 @@ function choose(planId) {
       </m3e-selection-list>
 
       <section v-if="plan" class="two-week">
-        <h3>两周方案</h3>
+        <h2>两周方案</h2>
         <p>{{ plan.week1_goal }}</p>
         <p class="muted">{{ plan.week2_goal }}</p>
         <span class="mono plan-meta">提醒间隔 {{ plan.push_threshold_minutes }} 分钟</span>
@@ -64,12 +64,11 @@ function choose(planId) {
 }
 
 .two-week {
-  margin-top: 1.2rem;
+  margin-top: 1.6rem;
   padding-top: 1rem;
-  border-top: 0.2rem solid var(--md-sys-color-outline-variant);
 }
 
-.two-week h3 {
+.two-week h2 {
   margin: 0 0 0.4rem;
 }
 
